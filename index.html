@@ -1039,6 +1039,8 @@ viewer /data/grch38/chr21.gpxil.tif chr21:30,000,001-30,500,000 --plane=ref</cod
 
 <h2>Genotype</h2>
 <p>Each base as the person has it, both haplotypes at once, as one IUPAC code (<a href="#h-codes">The codes</a>). Where the haplotypes agree, the base’s colour; where they differ, the mix of their two colours, so a heterozygous A/G base has the colour of R, half red and half green. A haplotype that wasn’t called, or that has a complex variant, counts as N, so its base is grey. A base deleted from one haplotype shows the other haplotype’s base – so look for deletions in the next two views – and a base deleted from both is paper. Soft-masked bases stay paler, as in the reference.</p>
+<p>The key lists the colours in view, with each heterozygous pair that is there – A and G, C and T and so on – and how many bases have it. In TP53, HG002 is heterozygous at only three bases, all of them A and G; in the 150,000 bases around it, every pair turns up. In the classic palette, C and T mix to the same grey as N (not known), so to tell them apart, choose the Okabe–Ito palette, or use the Variants view, where every heterozygous base is orange.</p>
+<div class="tryrow"><button class="do" type="button" data-viewer="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,600,001-7,750,000" data-mode="genotype">HG002’s genotype around TP53</button></div>
 
 <h2>Haplotypes</h2>
 <p>The two haplotypes separately, as two rows of pixels for each row of bases: haplotype 1 above, haplotype 2 below. Each pixel is that haplotype’s own base: a substitution in its new base’s colour, a deleted base paper (as is haplotype 2 where the person has only one copy), and a base that wasn’t called, or a complex variant, grey. A heterozygous variant shows in one row and not the other; a homozygous one in both.</p>
@@ -2533,11 +2535,9 @@ grep '>' ~/results/P72/TP53-proteins.fa</code></pre>
 <p class="lede">The packages that run here are ordinary Python packages, so every command and every piece of Python that the studio shows you works on your own computer too: in a pipeline, on a server, or on a whole genome at once, with as much memory as the computer has rather than what a browser tab allows.</p>
 
 <h2>Installing them</h2>
-<p>gpxiltools, gpxil2pxil and pxil are installed with pip. gpxiltools and gpxil2pxil need Python 3.10 or later, pxil 3.9 or later; pip installs what they need with them (NumPy, tifffile, imagecodecs, Pillow and jsonschema).</p>
+<p>gpxiltools, gpxil2pxil and pxil are on PyPI, at the versions the studio runs (<a href="#h-versions">Versions, and how to cite</a>), so pip installs them. gpxiltools and gpxil2pxil need Python 3.10 or later, pxil 3.9 or later; pip installs what they need with them (NumPy, tifffile, imagecodecs, Pillow and jsonschema).</p>
 <pre class="code"><code>pip install gpxiltools gpxil2pxil pxil</code></pre>
-<p>If pip says it can’t find them, they haven’t reached PyPI yet. Install them from GitHub instead, which gives you the versions the studio runs (<a href="#h-versions">Versions, and how to cite</a>):</p>
-<pre class="code"><code>pip install "git+https://github.com/comparativechrono/Gpxil-tools" "git+https://github.com/comparativechrono/pxil"
-pip install "git+https://github.com/comparativechrono/gpxil2pxil"</code></pre>
+<p>To try changes that aren’t released yet, install a package from its repository on GitHub instead, such as <code>pip install "git+https://github.com/comparativechrono/Gpxil-tools"</code>.</p>
 <p>Each package installs its command: <code>gpxil</code>, <code>gpxil2pxil</code> and <code>pxil</code>. They take the same options as in the Terminal tab, so the commands the Tools tab shows work on your computer once you change the paths to those of your own files. In Python, the imports are the ones in <a href="#h-python">The packages in Python</a>. The notebooks you download from the Notebook tab run in Jupyter as they are, apart from paths such as <code>/data/examples</code>: download the files they read too, from the Files tab.</p>
 
 <h2>The whole genome</h2>
@@ -2590,12 +2590,12 @@ python3 serve.py 8000 --reference DIR      # the GRCh38 reference from a copy on
 
 <h2>The packages</h2>
 <ul>
-  <li><b>gpxiltools 0.3.0</b> reads gpxil files on web servers a piece at a time (with HTTP range requests), takes a gpxil file as the reference, such as a chromosome of GRCh38 from the Gpxil browser, writes VCF of chosen regions (<code>gpxil vcf --region</code>), and runs without imagecodecs, which Pyodide doesn’t have. 0.3.0 is built from the Gpxil-tools repository on GitHub, and will be its next release on PyPI.</li>
+  <li><b>gpxiltools 0.3.0</b> reads gpxil files on web servers a piece at a time (with HTTP range requests), takes a gpxil file as the reference, such as a chromosome of GRCh38 from the Gpxil browser, writes VCF of chosen regions (<code>gpxil vcf --region</code>), and runs without imagecodecs, which Pyodide doesn’t have.</li>
   <li><b>gpxil2pxil 0.1.0</b> is new: it makes pxil pictures of genes, transcripts and proteins from a gpxil genome, from the reference or from either of a person’s haplotypes, with the genes of Ensembl from the Gpxil browser’s files or from a GTF file, and says how a person’s protein differs from the reference’s.</li>
   <li><b>pxil 0.1.0</b> reads and writes pxil files, and has a command, <code>pxil</code>, that prints them as FASTA.</li>
   <li><b>gpxilwb 1.0.0</b> is the studio’s own runner, which joins the page to the packages. You don’t need it anywhere else.</li>
 </ul>
-<p>The formats have versions too: the files here follow version 0.1 of the gpxil specification and version 0.1 of the pxil specification. <a href="#h-own-computer">On your own computer</a> explains how to install the same packages outside the browser.</p>
+<p>The studio’s copies of gpxiltools, gpxil2pxil and pxil are their releases on PyPI, unchanged, so <code>pip install gpxiltools gpxil2pxil pxil</code> on your own computer gives exactly the code that runs here (<a href="#h-own-computer">On your own computer</a>). The formats have versions too: the files here follow version 0.1 of the gpxil specification and version 0.1 of the pxil specification.</p>
 
 <h2>The data</h2>
 <ul>

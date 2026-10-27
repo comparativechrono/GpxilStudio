@@ -53,6 +53,14 @@ async (opts) => {
       await wait(() => V.data && V.data.mode === m, 20000);
     }
     check(V.data.mode === 'ps' && document.querySelector('.vw-legend').innerText.length > 0, 'Viewer: every mode draws, with its key');
+    // the key lists what is in view: in TP53, HG002's only heterozygous bases are A and G; around it, every pair
+    await MG.app.viewerOpen('/data/examples/HG002_chr17.gpxil.tif', { region: 'chr17:7,661,779-7,687,546', mode: 'genotype' });
+    await wait(() => V.data && V.data.mode === 'genotype' && V.data.start === 7661778, 20000);
+    const key1 = document.querySelector('.vw-legend').innerText;
+    await MG.app.viewerOpen('/data/examples/HG002_chr17.gpxil.tif', { region: 'chr17:7,600,001-7,750,000', mode: 'genotype' });
+    await wait(() => V.data && V.data.mode === 'genotype' && V.data.start === 7600000, 20000);
+    const key2 = document.querySelector('.vw-legend').innerText;
+    check(/A and G: heterozygous[^\n]*\(3 bases\)/.test(key1) && !/C and T/.test(key1) && /C and T: heterozygous[^\n]*\(59 bases\)/.test(key2) && /A and C: heterozygous/.test(key2), 'Viewer: the key lists the heterozygous pairs in view, with how many');
     V.regionIn.value = 'chr17:7,676,101-7,676,300';
     V.regionIn.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
     await wait(() => V.data && V.data.start === 7676100 && V.data.end === 7676300, 20000);

@@ -170,15 +170,12 @@ keeps a copy).
 | [gpxil2pxil](https://github.com/comparativechrono/gpxil2pxil) | pictures of genes, transcripts and proteins from a gpxil genome; `gpxil2pxil` | PyPI (`pip install gpxil2pxil`) |
 | [pxil](https://github.com/comparativechrono/pxil) | one sequence as a picture: read and write pxil files; `pxil` | PyPI (`pip install pxil`) |
 
-`python/vendor/SOURCES.json` records which commit each of the studio's copies
-was built from. Each is published to PyPI from a GitHub release by its
-repository's release workflow; until the first releases, `pip install` them
-from GitHub (the help's *On your own computer* gives the commands):
-
-```sh
-pip install "git+https://github.com/comparativechrono/Gpxil-tools" "git+https://github.com/comparativechrono/pxil"
-pip install "git+https://github.com/comparativechrono/gpxil2pxil"
-```
+The studio's copies are the wheels of those releases on PyPI, unchanged, in
+`python/vendor`; `python/vendor/SOURCES.json` records each one's source and
+checksum. Each package is published to PyPI from a GitHub release by its
+repository's release workflow. To update one in the studio, replace its wheel
+and its record, then run `python3 python/build_bundle.py` and
+`python3 build/make_page.py`.
 
 ## Files
 

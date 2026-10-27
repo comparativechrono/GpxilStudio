@@ -1,5 +1,5 @@
 {
- "about": "The wheels python/build_bundle.py packs into assets/py/gpxil-tools.zip, and where each came from. Replace a wheel and its record here to update a package; once all are on PyPI, take them from there.",
+ "about": "The wheels python/build_bundle.py packs into assets/py/gpxil-tools.zip, and where each came from: PyPI, unchanged. Replace a wheel and its record here to update a package.",
  "wheels": [
   {
    "project": "gpxiltools",
@@ -8,7 +8,7 @@
    "modules": [
     "gpxiltools"
    ],
-   "source": "https://github.com/comparativechrono/Gpxil-tools/pull/4 (commit 19dedce, on main from pull request #3), until 0.3.0 is on PyPI",
+   "source": "https://pypi.org/project/gpxiltools/0.3.0/ (released from https://github.com/comparativechrono/Gpxil-tools, tag v0.3.0)",
    "sha256": "c751088edaa4ac183d11039263fbad910c5117170917fb7b15981a54613dd42a"
   },
   {
@@ -18,8 +18,8 @@
    "modules": [
     "gpxil2pxil"
    ],
-   "source": "https://github.com/comparativechrono/gpxil2pxil (commit 5c0d967: the code of 0.1.0, moved there with its history from Gpxil-scratchpad 14afbc1), until 0.1.0 is on PyPI",
-   "sha256": "702e9d935941cb82166a85961461f7de48e951561b59b7593312efb09f467a5f"
+   "source": "https://pypi.org/project/gpxil2pxil/0.1.0/ (released from https://github.com/comparativechrono/gpxil2pxil, tag v0.1.0)",
+   "sha256": "527922cf04cb94e7f349c815ae75fcfa311b2852a6e25e68064b67c16e6c4a00"
   },
   {
    "project": "pxil",
@@ -28,8 +28,8 @@
    "modules": [
     "pxil"
    ],
-   "source": "https://github.com/comparativechrono/pxil (commit a0a6d28), until 0.1.0 is on PyPI",
-   "sha256": "19a8b60bb5318e513d5f919ec46544cbb3168765001413ded0a0bae55cf37e8f"
+   "source": "https://pypi.org/project/pxil/0.1.0/ (released from https://github.com/comparativechrono/pxil, tag v0.1.0)",
+   "sha256": "1eaf61ba609b4208154882d61f15c0a1fc364613e8ce610ee0519cbf8d716542"
   },
   {
    "project": "tifffile",

@@ -7,12 +7,12 @@
 
 <h2>The packages</h2>
 <ul>
-  <li><b>gpxiltools 0.3.0</b> reads gpxil files on web servers a piece at a time (with HTTP range requests), takes a gpxil file as the reference, such as a chromosome of GRCh38 from the Gpxil browser, writes VCF of chosen regions (<code>gpxil vcf --region</code>), and runs without imagecodecs, which Pyodide doesn’t have. 0.3.0 is built from the Gpxil-tools repository on GitHub, and will be its next release on PyPI.</li>
+  <li><b>gpxiltools 0.3.0</b> reads gpxil files on web servers a piece at a time (with HTTP range requests), takes a gpxil file as the reference, such as a chromosome of GRCh38 from the Gpxil browser, writes VCF of chosen regions (<code>gpxil vcf --region</code>), and runs without imagecodecs, which Pyodide doesn’t have.</li>
   <li><b>gpxil2pxil 0.1.0</b> is new: it makes pxil pictures of genes, transcripts and proteins from a gpxil genome, from the reference or from either of a person’s haplotypes, with the genes of Ensembl from the Gpxil browser’s files or from a GTF file, and says how a person’s protein differs from the reference’s.</li>
   <li><b>pxil 0.1.0</b> reads and writes pxil files, and has a command, <code>pxil</code>, that prints them as FASTA.</li>
   <li><b>gpxilwb 1.0.0</b> is the studio’s own runner, which joins the page to the packages. You don’t need it anywhere else.</li>
 </ul>
-<p>The formats have versions too: the files here follow version 0.1 of the gpxil specification and version 0.1 of the pxil specification. <a href="#h-own-computer">On your own computer</a> explains how to install the same packages outside the browser.</p>
+<p>The studio’s copies of gpxiltools, gpxil2pxil and pxil are their releases on PyPI, unchanged, so <code>pip install gpxiltools gpxil2pxil pxil</code> on your own computer gives exactly the code that runs here (<a href="#h-own-computer">On your own computer</a>). The formats have versions too: the files here follow version 0.1 of the gpxil specification and version 0.1 of the pxil specification.</p>
 
 <h2>The data</h2>
 <ul>

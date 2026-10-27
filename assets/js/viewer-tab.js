@@ -430,6 +430,8 @@
         px[o + 3] = 255;
       };
       const P = d.planes;
+      // (how many bases of each code are drawn, for the key: the reference's, the genotype's or the haplotypes' codes)
+      const seen = new Uint32Array(256);
       for (let i = 0; i < n; i++) {
         const x = i % W, y = Math.floor(i / W);
         const ref = P.ref ? P.ref[i] : 15;
@@ -440,18 +442,22 @@
         switch (d.mode) {
           case 'reference':
             c = refRgb[ref];
+            seen[ref]++;
             break;
           case 'genotype': {
             // the IUPAC code of the bases on both haplotypes (A and G: R, their colours mixed); deleted from both: paper
             let code = hapBase(ref, h1) | hapBase(ref, h2) | soft;
             if (code === 16) code = 0;
             c = refRgb[code];
+            seen[code]++;
             break;
           }
           case 'haplotypes':
             for (const [k, st] of [[0, h1], [1, h2]]) {
               const b = hapBase(ref, st);
-              put(x, y * 2 + k, refRgb[(b !== 0 && b !== 15) || st === REF ? b | soft : b]);
+              const code = (b !== 0 && b !== 15) || st === REF ? b | soft : b;
+              put(x, y * 2 + k, refRgb[code]);
+              seen[code]++;
             }
             continue;
           case 'variants': {
@@ -498,19 +504,45 @@
       g.imageSmoothingEnabled = false;
       g.drawImage(small, 0, 0, C.width, C.height);
       this.infoEl.innerHTML = `<b>${esc(d.contig.name)}:${fmt(d.start + 1)}-${fmt(d.end)}</b> · ${fmt(n)} bases · ${fmt(W)} bases a row, ${rows > 1 ? fmt(rows) + ' rows' : 'one row'} · ${scale} pixel${scale > 1 ? 's' : ''} a base${two ? ' (two rows for each row of bases: haplotype 1 above, 2 below)' : ''}${P._refFrom ? ` · the bases come from ${esc(P._refFrom)}` : ''}`;
-      this.drawLegend(pal, refRgb);
+      this.drawLegend(pal, refRgb, seen);
       this.drawCommand();
     }
-    drawLegend(pal, refRgb) {
+    /** the key under the picture. For the reference, genotype and haplotypes views it lists the colours in view
+        (seen: how many bases of each code were drawn): each base, each heterozygous pair present with how many bases
+        have it, N and deleted bases. The other views have a fixed key of their classes. */
+    drawLegend(pal, refRgb, seen) {
       const sw = (c, label) => `<span class="vw-sw"><i style="background:rgb(${c.join(',')})"></i>${esc(label)}</span>`;
       const note = (t) => `<span class="vw-note">${esc(t)}</span>`;
       const m = this.data.mode;
-      const bases = [sw(pal.A, 'A'), sw(pal.C, 'C'), sw(pal.G, 'G'), sw(pal.T, 'T'), sw(pal.N, 'N, or not known')];
-      if (pal.fade) bases.push(sw(refRgb[17], 'soft-masked (a repeat): paler'));
       let items = [];
-      if (m === 'reference') items = bases.concat(sw(refRgb[5], 'R, A or G (two bases mixed)'));
-      if (m === 'genotype') items = bases.concat(sw(refRgb[5], 'A and G: heterozygous, mixed'), sw(pal.gap, 'deleted from both copies'));
-      if (m === 'haplotypes') items = bases.concat(sw(pal.gap, 'deleted (no base)'), note('haplotype 1 above haplotype 2, in each pair of rows'));
+      if (m === 'reference' || m === 'genotype' || m === 'haplotypes') {
+        const count = new Array(16).fill(0);
+        let soft = 0;
+        for (let k = 0; k < 32; k++) {
+          if (!seen || !seen[k]) continue;
+          count[k & 15] += seen[k];
+          if (k & 16) soft += seen[k];
+        }
+        const NAME = { 1: 'A', 2: 'C', 4: 'G', 8: 'T' };
+        const basesOf = (code) => [1, 2, 4, 8].filter((b) => code & b).map((b) => NAME[b]);
+        const list = (xs, word) => (xs.length === 2 ? `${xs[0]} ${word} ${xs[1]}` : `${xs.slice(0, -1).join(', ')} ${word} ${xs[xs.length - 1]}`);
+        const times = (k) => `${fmt(count[k])} base${count[k] === 1 ? '' : 's'}`;
+        // (gpxil render's order: the bases, the pairs, the threes, N, then no base)
+        for (const k of [1, 2, 4, 8, 3, 5, 9, 6, 10, 12, 7, 11, 13, 14, 15, 0]) {
+          if (!count[k]) continue;
+          const xs = basesOf(k);
+          let label;
+          if (k === 15) label = m === 'reference' ? 'N: not known (a gap in the assembly)' : 'N, or not known';
+          else if (k === 0) label = m === 'genotype' ? 'deleted from both copies' : m === 'haplotypes' ? 'deleted (no base)' : 'no base';
+          else if (xs.length === 1) label = xs[0];
+          else if (m === 'genotype' && xs.length === 2) label = `${list(xs, 'and')}: heterozygous, the two colours mixed (${times(k)})`;
+          else label = `${'-ACMGRSVTWYHKDBN'[k]}: ${list(xs, 'or')}, an ambiguity code of the reference (${times(k)})`;
+          items.push(sw(refRgb[k], label));
+        }
+        if (soft && pal.fade) items.push(sw(refRgb[17], 'soft-masked (a repeat): paler'));
+        if (m === 'genotype' && ![3, 5, 9, 6, 10, 12].some((k) => count[k])) items.push(note('no heterozygous bases in view: a heterozygous base would be drawn in its two bases’ colours, mixed'));
+        if (m === 'haplotypes') items.push(note('haplotype 1 above haplotype 2, in each pair of rows'));
+      }
       if (m === 'variants') items = [sw(VAR.het, 'heterozygous'), sw(VAR.hom, 'homozygous'), sw(VAR.del, 'deletion'), sw(VAR.ins, 'insertion after the base'), sw(VAR.nocall, 'no call'), sw(VAR.complex, 'complex'), sw(refRgb.map((c) => c.map((v) => Math.floor(v + (255 - v) * 0.8)))[1], 'the reference, faded')];
       if (m === 'flags') items = [sw([200, 210, 235], 'phased'), sw([120, 150, 200], 'a VCF record (variant site)'), sw([60, 110, 220], 'a phased variant site'), sw([0, 160, 80], 'an insertion follows'), sw([220, 30, 30], 'filtered (not PASS)'), sw([250, 250, 250], 'nothing')];
       if (m === 'gq' || m === 'dp') items = [sw([255, 255, 255], '0'), sw([40, 95, 215], m === 'gq' ? '99 or more' : '60 or more'), sw(MISSING, 'missing (255)')];

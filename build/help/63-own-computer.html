@@ -3,11 +3,9 @@
 <p class="lede">The packages that run here are ordinary Python packages, so every command and every piece of Python that the studio shows you works on your own computer too: in a pipeline, on a server, or on a whole genome at once, with as much memory as the computer has rather than what a browser tab allows.</p>
 
 <h2>Installing them</h2>
-<p>gpxiltools, gpxil2pxil and pxil are installed with pip. gpxiltools and gpxil2pxil need Python 3.10 or later, pxil 3.9 or later; pip installs what they need with them (NumPy, tifffile, imagecodecs, Pillow and jsonschema).</p>
+<p>gpxiltools, gpxil2pxil and pxil are on PyPI, at the versions the studio runs (<a href="#h-versions">Versions, and how to cite</a>), so pip installs them. gpxiltools and gpxil2pxil need Python 3.10 or later, pxil 3.9 or later; pip installs what they need with them (NumPy, tifffile, imagecodecs, Pillow and jsonschema).</p>
 <pre class="code"><code>pip install gpxiltools gpxil2pxil pxil</code></pre>
-<p>If pip says it can’t find them, they haven’t reached PyPI yet. Install them from GitHub instead, which gives you the versions the studio runs (<a href="#h-versions">Versions, and how to cite</a>):</p>
-<pre class="code"><code>pip install "git+https://github.com/comparativechrono/Gpxil-tools" "git+https://github.com/comparativechrono/pxil"
-pip install "git+https://github.com/comparativechrono/gpxil2pxil"</code></pre>
+<p>To try changes that aren’t released yet, install a package from its repository on GitHub instead, such as <code>pip install "git+https://github.com/comparativechrono/Gpxil-tools"</code>.</p>
 <p>Each package installs its command: <code>gpxil</code>, <code>gpxil2pxil</code> and <code>pxil</code>. They take the same options as in the Terminal tab, so the commands the Tools tab shows work on your computer once you change the paths to those of your own files. In Python, the imports are the ones in <a href="#h-python">The packages in Python</a>. The notebooks you download from the Notebook tab run in Jupyter as they are, apart from paths such as <code>/data/examples</code>: download the files they read too, from the Files tab.</p>
 
 <h2>The whole genome</h2>
