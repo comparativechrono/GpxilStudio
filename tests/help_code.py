@@ -44,12 +44,15 @@ def boxes():
             yield "notebook " + name, "py", "\n".join(cells)
 
 
-def needs_web(code):
+def needs_web(code, kind="term"):
     """a box that reads the GRCh38 reference or the Gpxil browser's genes, which come from the web in the studio"""
     if "/data/grch38" in code or "comparativechrono.github.io" in code or "BrowserData(" in code:
         return True
-    # gpxil2pxil without a GTF of its own uses the Gpxil browser's genes
+    # the command gpxil2pxil without a GTF of its own uses the Gpxil browser's genes: in a terminal box, or on a ! line
+    # of a Python box (in Python itself, `from gpxil2pxil import …` needs no web; BrowserData() does, above)
     for line in code.split("\n"):
+        if kind == "py" and not line.lstrip().startswith("!"):
+            continue
         if re.search(r"(^|[\s!;|&(])gpxil2pxil\s", line) and not re.search(r"\s(-a|--annotation)[\s=]", line) and "--help" not in line:
             return True
     return False
@@ -95,7 +98,7 @@ def main():
 
     failed, ran, skipped = [], 0, 0
     for page, kind, code in boxes():
-        if needs_web(code) and not have_ref:
+        if needs_web(code, kind) and not have_ref:
             skipped += 1
             continue
         code = paths(code)

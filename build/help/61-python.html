@@ -101,14 +101,19 @@ for f in make(g, gene, kinds=["protein"], haplotypes=(None, 1, 2), out_dir="/hom
     print(f.path, f.length, f.notes)</code></pre>
 
 <h2>pxil files</h2>
-<p>A pxil file is a PNG picture of one sequence, so <code>pxil.read</code> needs nothing but Pillow. <code>pxil.write</code> makes one from any sequence: <code>kind</code> is <code>gene</code>, <code>transcript</code>, <code>protein</code> or <code>sequence</code>, and other keywords go into its metadata.</p>
+<p>A pxil file is a PNG picture of one sequence, so <code>pxil.read</code> needs nothing but Pillow. <code>pxil.write</code> makes one from any sequence: <code>kind</code> is <code>gene</code>, <code>transcript</code>, <code>protein</code> or <code>sequence</code>, and other keywords go into its metadata, such as <code>sample</code> and <code>haplotype</code> for a person’s own version of a sequence. <code>pxil.fasta_name</code> gives the name <code>pxil</code> gives it in a FASTA file.</p>
 <pre class="code" data-run="py"><code>import pxil
+from gpxiltools import GpxilFile
+from gpxil2pxil import GTF, Source
 
-# (a file that the box above wrote)
-sequence, meta = pxil.read("/home/user/results/pxil-python/TP53-201_ENSP00000269305_HG002-hap1.protein.pxil.png")
-print(meta["kind"], meta["length"], meta["notes"], sequence[60:80])
-pxil.write("/home/user/results/TP53_start.pxil.png", sequence[:40], kind="protein", name="TP53, amino acids 1-40", source="HG002, haplotype 1")
-print(pxil.read("/home/user/results/TP53_start.pxil.png"))</code></pre>
+g = GpxilFile("/data/examples/HG002_chr17.gpxil.tif")
+t = GTF("/data/examples/TP53.gtf").find("TP53").canonical()
+protein = Source(g, 1).protein(t)                       # TP53's protein from HG002's first haplotype
+pxil.write("/home/user/results/TP53_HG002-hap1.pxil.png", protein, kind="protein", id=t.protein, name=t.name,
+           sample=g.sample_id, haplotype=1, source="HG002_chr17.gpxil.tif")
+sequence, meta = pxil.read("/home/user/results/TP53_HG002-hap1.pxil.png")
+print(sequence == protein, meta["length"], meta["width"], sequence[60:80])
+print(pxil.fasta_name(meta))</code></pre>
 
 <h2>Many files at once</h2>
 <pre class="code" data-run="py"><code>import glob, os
