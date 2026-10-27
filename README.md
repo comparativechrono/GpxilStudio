@@ -167,7 +167,7 @@ keeps a copy).
 | Package | What it does | Source |
 |---|---|---|
 | [gpxiltools](https://github.com/comparativechrono/Gpxil-tools) | read, write, check, draw and print gpxil files; `gpxil` | PyPI (`pip install gpxiltools`) |
-| [gpxil2pxil](https://github.com/comparativechrono/Gpxil-scratchpad/tree/main/packages/gpxil2pxil) | pictures of genes, transcripts and proteins from a gpxil genome; `gpxil2pxil` | PyPI (`pip install gpxil2pxil`) |
+| [gpxil2pxil](https://github.com/comparativechrono/gpxil2pxil) | pictures of genes, transcripts and proteins from a gpxil genome; `gpxil2pxil` | PyPI (`pip install gpxil2pxil`) |
 | [pxil](https://github.com/comparativechrono/pxil) | one sequence as a picture: read and write pxil files; `pxil` | PyPI (`pip install pxil`) |
 
 `python/vendor/SOURCES.json` records which commit each of the studio's copies
@@ -177,7 +177,7 @@ from GitHub (the help's *On your own computer* gives the commands):
 
 ```sh
 pip install "git+https://github.com/comparativechrono/Gpxil-tools" "git+https://github.com/comparativechrono/pxil"
-pip install "git+https://github.com/comparativechrono/Gpxil-scratchpad#subdirectory=packages/gpxil2pxil"
+pip install "git+https://github.com/comparativechrono/gpxil2pxil"
 ```
 
 ## Files

@@ -18,7 +18,7 @@
    "modules": [
     "gpxil2pxil"
    ],
-   "source": "https://github.com/comparativechrono/Gpxil-scratchpad/tree/main/packages/gpxil2pxil (commit 14afbc1), until it is on PyPI",
+   "source": "https://github.com/comparativechrono/gpxil2pxil (commit 5c0d967: the code of 0.1.0, moved there with its history from Gpxil-scratchpad 14afbc1), until 0.1.0 is on PyPI",
    "sha256": "702e9d935941cb82166a85961461f7de48e951561b59b7593312efb09f467a5f"
   },
   {
