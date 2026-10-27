@@ -1,0 +1,64 @@
+<!-- id: h-walk-render | title: Draw a gene, a region or a chromosome | group: Walkthroughs | summary: Pictures for the screen or for print, in four views, with rows of any width or a Hilbert curve | keys: render draw picture png tiff cmyk print region gene chromosome mitochondrion repeat satellite period width scale hilbert palette colours variants haplotypes genotype reference -->
+<h1><!--ICON:image-->Draw a gene, a region or a chromosome</h1>
+<p class="lede">A gpxil file is already a picture: each base is a pixel. Drawing a region means choosing which bases, how to colour them and how to lay them out. This walkthrough draws HG002’s TP53 in each of the four views, a satellite repeat that appears only when the rows are the right width, and a whole chromosome, the mitochondrion’s.</p>
+
+<h2>1 · Find the region in the Viewer</h2>
+<p>The Viewer is the quickest way to find a region worth drawing. Type a region such as <code>chr17:7,661,779-7,687,546</code> (TP53), move along with the arrows, and zoom with + and −. Under the picture, the Viewer gives the <code>gpxil render</code> command that draws what you see as a file, and <b>Save the picture</b> saves the view as it is.</p>
+<div class="tryrow"><button class="do" type="button" data-viewer="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,661,779-7,687,546" data-mode="variants">View TP53</button></div>
+<p>Regions count from 1 and include both ends, as in a genome browser: <code>chr17:7,661,779-7,687,546</code> is 25,768 bases. A contig’s name alone means all of it.</p>
+
+<h2>2 · Draw it</h2>
+<p><b>Draw a region as a picture</b> writes the region as a PNG (or a TIFF). For a region the size of a gene, it suggests 256 bases a row and 4 pixels a base, so each base is a square you can see.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="render" data-input="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,661,779-7,687,546" data-mode="variants">Draw TP53’s variants</button></div>
+
+<h2>3 · The four views</h2>
+<table>
+<tr><th>Show</th><th>What each pixel is</th></tr>
+<tr><td><b>reference</b></td><td>the reference’s base, in the palette’s colours. Bases in soft-masked repeats (lower case in the reference) are paler, an unknown base (N) is grey and a gap is paper.</td></tr>
+<tr><td><b>genotype</b></td><td>the person’s two bases at once: where both copies agree, their base’s colour; where they differ, a mix of the two colours. A base deleted from both copies is paper.</td></tr>
+<tr><td><b>haplotypes</b></td><td>the two copies separately, in two rows of pixels for each row of bases: the first haplotype above the second. With <b>Mark where insertions are</b>, a base that an insertion follows is magenta.</td></tr>
+<tr><td><b>variants</b></td><td>the reference, faded, with the person’s variants on top: heterozygous orange, homozygous red, a deletion dark, a base an insertion follows green, no call grey, a complex variant purple.</td></tr>
+</table>
+<div class="tryrow"><button class="do" type="button" data-tool="render" data-input="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,661,779-7,687,546" data-mode="haplotypes">Draw TP53’s two haplotypes</button> <button class="do" type="button" data-tool="render" data-input="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,661,779-7,687,546" data-mode="genotype">Draw TP53’s genotype</button></div>
+<p>The <b>Colours</b> are one of gpxil’s palettes: <b>classic</b> (A red, C blue, G green, T yellow), <b>okabe-ito</b>, whose colours people with colour-blindness can tell apart, <b>gpxi</b>, the greys of Albrecht-Buehler’s original genome pixel images, and <b>process</b>, the four printing inks. <a href="#h-tool-palettes">The palettes</a> gives their exact colours.</p>
+
+<h2>4 · The width of the rows</h2>
+<p>The width of the rows changes nothing in the data, only how it is laid out, but it can change what you see. A repeat whose unit is as long as a row lines up in columns. Near the middle of chromosome 17 lies alpha satellite, the repeat that makes up centromeres, in units of 171 bases. At 171 bases a row it shows as vertical stripes; at 200 it looks like noise.</p>
+<div class="tryrow"><button class="do" type="button" data-viewer="/data/grch38/chr17.gpxil.tif" data-region="chr17:22,815,001-22,835,000" data-mode="reference">View the alpha satellite</button> <button class="do" type="button" data-tool="render" data-input="/data/grch38/chr17.gpxil.tif" data-region="chr17:22,815,001-22,835,000" data-mode="reference">Draw it</button></div>
+<p>In the form, set <b>Bases per row</b> to 171, then to 200, and compare the two pictures. This is how Albrecht-Buehler found repeats by eye: by wrapping a sequence at the width of its period.</p>
+
+<h2>5 · A Hilbert curve</h2>
+<p>In rows, bases that are next to each other in the genome can end up far apart in the picture: the last base of one row and the first of the next. A <b>Hilbert curve</b> layout folds the sequence into a square so that neighbours stay neighbours, and any stretch of the sequence is a compact blob. A gene shows as a patch rather than a band.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="render" data-input="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,661,779-7,687,546" data-mode="variants">Draw TP53 again</button></div>
+<p>(Choose <b>a Hilbert curve</b> under <b>Layout</b>.) TP53’s 25,768 bases fill a square of 256 by 256 pixels, with room to spare.</p>
+
+<h2>6 · A whole chromosome</h2>
+<p>The mitochondrial chromosome is small enough to draw whole: 16,569 bases, its name alone as the region.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="render" data-input="/data/grch38/chrM.gpxil.tif" data-region="chrM" data-mode="reference">Draw chrM</button></div>
+<p>In the browser, a picture may have up to 25 million bases and 64 million pixels: a region of any chromosome, but not a large chromosome in one go (chromosome 21, the shortest autosome, has 46.7 million bases). To see a whole chromosome at one dot a base, print it as a book (<a href="#h-walk-book">Print a chromosome as a book</a>); on your own computer, <code>gpxil render</code> has no such limit.</p>
+
+<h2>7 · For print</h2>
+<p>A PNG is for the screen. For print, choose <b>TIFF in CMYK</b> under <b>Picture</b>: each base’s colour is then given directly in ink, in the palette’s own CMYK values, rather than converted from screen colours. Give the <b>Dots per inch</b> you will print at, and with one pixel a base, each base is one printed dot.</p>
+
+<h2>The same in the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil render /data/examples/HG002_chr17.gpxil.tif chr17:7661779-7687546 -o ~/results/TP53_variants.png --mode variants --width 256 --scale 4
+gpxil render /data/examples/HG002_chr17.gpxil.tif chr17:7661779-7687546 -o ~/results/TP53_haplotypes.png --mode haplotypes --width 256 --scale 4 --mark-insertions
+gpxil render /data/examples/HG002_chr17.gpxil.tif chr17:7661779-7687546 -o ~/results/TP53_hilbert.png --mode variants --layout hilbert --scale 2
+gpxil render /data/grch38/chr17.gpxil.tif chr17:22815001-22835000 -o ~/results/alpha_171.png --mode reference --width 171 --scale 3
+gpxil render /data/grch38/chr17.gpxil.tif chr17:22815001-22835000 -o ~/results/alpha_200.png --mode reference --width 200 --scale 3
+gpxil render /data/grch38/chrM.gpxil.tif chrM -o ~/results/chrM.png --mode reference --width 128 --palette okabe-ito
+gpxil render /data/examples/HG002_chr17.gpxil.tif chr17:7661779-7687546 -o ~/results/TP53_print.tif --mode genotype --width 256 --cmyk --dpi 300</code></pre>
+
+<h2>The same in Python</h2>
+<p><code>render</code> returns the picture as palette indices, with its screen and print colour tables, so you can scale it, save it, or look at it in a notebook:</p>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.render import render
+
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    picture = render(g["chr17"], mode="variants", start=7_661_778, end=7_687_546, bases_per_row=256)
+picture = picture.scaled(2)
+picture.save_png("/home/user/results/TP53_from_python.png")
+print(picture.shape, picture.title)
+for label, index in picture.legend:
+    print(label, picture.rgb[index])</code></pre>
+<!--CITE: gpxiltools gpxi hilbert okabe-ito-->

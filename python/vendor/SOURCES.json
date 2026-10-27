@@ -1,0 +1,45 @@
+{
+ "about": "The wheels python/build_bundle.py packs into assets/py/gpxil-tools.zip, and where each came from. Replace a wheel and its record here to update a package; once all are on PyPI, take them from there.",
+ "wheels": [
+  {
+   "project": "gpxiltools",
+   "version": "0.3.0",
+   "wheel": "gpxiltools-0.3.0-py3-none-any.whl",
+   "modules": [
+    "gpxiltools"
+   ],
+   "source": "https://github.com/comparativechrono/Gpxil-tools/pull/4 (commit 19dedce, on main from pull request #3), until 0.3.0 is on PyPI",
+   "sha256": "c751088edaa4ac183d11039263fbad910c5117170917fb7b15981a54613dd42a"
+  },
+  {
+   "project": "gpxil2pxil",
+   "version": "0.1.0",
+   "wheel": "gpxil2pxil-0.1.0-py3-none-any.whl",
+   "modules": [
+    "gpxil2pxil"
+   ],
+   "source": "https://github.com/comparativechrono/Gpxil-scratchpad/tree/main/packages/gpxil2pxil (commit 14afbc1), until it is on PyPI",
+   "sha256": "702e9d935941cb82166a85961461f7de48e951561b59b7593312efb09f467a5f"
+  },
+  {
+   "project": "pxil",
+   "version": "0.1.0",
+   "wheel": "pxil-0.1.0-py3-none-any.whl",
+   "modules": [
+    "pxil"
+   ],
+   "source": "https://github.com/comparativechrono/pxil (commit a0a6d28), until 0.1.0 is on PyPI",
+   "sha256": "19a8b60bb5318e513d5f919ec46544cbb3168765001413ded0a0bae55cf37e8f"
+  },
+  {
+   "project": "tifffile",
+   "version": "2026.10.15",
+   "wheel": "tifffile-2026.10.15-py3-none-any.whl",
+   "modules": [
+    "tifffile"
+   ],
+   "source": "https://pypi.org/project/tifffile/2026.10.15/",
+   "sha256": "3dcf6c56731a45c1f85c81e90dad922b0a380a2d639e77f71207e010f8ef0f7b"
+  }
+ ]
+}

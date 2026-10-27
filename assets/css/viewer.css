@@ -1,0 +1,48 @@
+/* =====================================================================
+   GpxilStudio – the Viewer tab (viewer-tab.js): a gpxil file's planes,
+   drawn one pixel (or square) per base. Built on app.css's tokens.
+   ===================================================================== */
+.vw-root { height: 100%; min-height: 0; overflow: auto; background: var(--bg); display: flex; flex-direction: column; }
+/* (the pane scrolls as a whole: nothing in it is squeezed to fit) */
+.vw-root > * { flex: none; }
+.vw-bar { position: sticky; top: 0; z-index: 3; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--panel); }
+.vw-field { display: inline-flex; align-items: center; gap: 6px; min-width: 0; font-size: 13px; }
+.vw-field > span:first-child { font-weight: 600; color: var(--ink-2); }
+.vw-field select, .vw-field input { font: 13px var(--font); color: var(--ink); background: var(--panel-2); border: 1px solid var(--line-2); border-radius: var(--radius-s); padding: 4px 6px; min-width: 0; }
+.vw-field select:focus-visible, .vw-field input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.vw-file { max-width: 30ch; }
+.vw-contig { max-width: 18ch; }
+.vw-region { width: 24ch; font-family: var(--mono) !important; }
+.vw-nav { gap: 2px; }
+.vw-nav .icon-btn { border: 1px solid var(--line); background: var(--panel-2); padding: 4px; }
+.vw-nav .icon-btn:hover { border-color: var(--line-2); }
+.vw-info { padding: 8px 12px 4px; font-size: 13px; color: var(--ink-2); min-height: 1.5em; }
+.vw-stage { margin: 4px 12px; padding: 1px; align-self: flex-start; max-width: calc(100% - 24px); overflow-x: auto; border: 1px solid var(--line-2); border-radius: 4px; background: #fff; box-shadow: var(--shadow); }
+.vw-stage[hidden] { display: none; }
+.vw-canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; cursor: crosshair; outline: none; }
+.vw-canvas:focus-visible { box-shadow: 0 0 0 3px var(--accent); }
+.vw-hover { margin: 4px 12px 0; padding: 6px 10px; min-height: 2.2em; font-size: 13px; color: var(--ink-2); background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-s); font-variant-numeric: tabular-nums; }
+.vw-hover b { color: var(--ink); font-family: var(--mono); font-weight: 600; }
+.vw-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 8px 12px 0; font-size: 12.5px; color: var(--ink-2); }
+.vw-legend:empty { display: none; }
+.vw-sw { display: inline-flex; align-items: center; gap: 5px; }
+.vw-sw i { display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0, 0, 0, 0.25); }
+.vw-note { color: var(--muted); font-size: 12.5px; }
+.vw-cmd { margin: 10px 12px 24px; max-width: 110ch; }
+.vw-cmd p { margin: 6px 0; }
+.vw-cmd pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12.5px; }
+.vw-root > .vw-empty { flex: 1 0 auto; }
+.vw-empty { display: flex; align-items: center; justify-content: center; padding: 20px; }
+.vw-empty[hidden] { display: none; }
+.vw-empty .ex-empty p { max-width: 48ch; margin: 6px auto; }
+
+@media (max-width: 700px) {
+  .vw-bar { gap: 6px; padding: 6px 8px; }
+  .vw-field { flex: 1 1 100%; }
+  .vw-field > span:first-child { width: 4.6em; flex: none; }
+  .vw-file, .vw-region { flex: 1 1 auto; width: auto; max-width: none; }
+  .vw-contig { max-width: 30vw; }
+  .vw-nav { flex: 0 1 auto; }
+  .vw-stage { margin: 4px 8px; max-width: calc(100% - 16px); }
+  .vw-info, .vw-hover, .vw-legend, .vw-cmd { margin-left: 8px; margin-right: 8px; }
+}

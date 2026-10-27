@@ -1,0 +1,32 @@
+<!-- id: h-workflows | title: Workflows | group: Tools | summary: Tools chained together: the editor, inputs and steps, running, the run’s folder, and the workflow file | keys: workflow workflows galaxy pipeline editor steps inputs connections run record commands.sh notebook share file json -->
+<h1><!--ICON:workflow-->Workflows</h1>
+<p class="lede">A workflow is a set of the Tools tab’s tools joined together, so that each reads the files the ones before it wrote. Draw one in the editor, start from an example, or make one from the tools you’ve run; then run it on the same files again, or on new ones. They work like the workflows of Galaxy. <a href="#h-walk-workflow">The walkthrough</a> takes you through one.</p>
+<div class="tryrow"><button class="do" type="button" data-workflows="list">Open Workflows</button></div>
+
+<h2>Inputs and steps</h2>
+<p>A workflow has <b>inputs</b>, the files it is given when it runs, and <b>steps</b>, each a tool. Each input says which kinds of file it takes – a gpxil file, a VCF, a reference (FASTA or gpxil), a BED file, a GTF file, pxil pictures – and can suggest a file, which the run page offers. An input can be optional, for a file a step can do without, such as a VCF’s BED file of callable regions.</p>
+<p>Every tool can be a step except <b>The palettes</b>, which reads and writes nothing. <b>What’s in a gpxil file</b> and <b>Check a gpxil file</b> write no files, so nothing can follow them, but they say what they found in the run. <b>Genes, transcripts and proteins as pxil pictures</b> writes a set of files, which goes as a whole into a step that reads several, such as <b>pxil pictures → FASTA</b>.</p>
+
+<h2>The editor</h2>
+<ul>
+  <li>Each step is a box, with its input files on the left and the files it writes on the right. Drag from a file’s dot to an input of another step to connect them; only files of a kind the input takes will connect, and never in a loop.</li>
+  <li>The <b>+</b> by a file lists the tools that can read it, and adds the one you choose, connected to it.</li>
+  <li>Click a box to see its settings beside the boxes. A step’s settings are its tool’s form, without the files, which come from the connections, and without where to save, which the run decides.</li>
+  <li><b>+ Input file</b> and <b>+ Add a step</b> add boxes; <b>Tidy</b> arranges them in columns, inputs on the left. Changes are saved as you make them.</li>
+  <li>Click an empty part of the editor for the workflow’s own name and description, and its <b>Checks</b>: anything that stops it running, such as an input not connected.</li>
+</ul>
+
+<h2>Running</h2>
+<p>The run page asks for a file for each input, and for the folder for the results, by default <code>~/results/<i>workflow</i>/<i>first input</i></code>. Press <b>Run it</b>, and the steps run one after another, in an order in which each runs after the steps it reads from. Each step shows its state as it goes, and when it’s done, what it did; open it for its command, what it printed and the files it wrote. If a step fails, the steps that need its files are skipped, and the rest still run. <b>Stop</b> stops the run after the step that is running.</p>
+<p>A step that would write a file with the same name as one an earlier step wrote writes into a folder of its own, so nothing is overwritten.</p>
+
+<h2>What a run leaves</h2>
+<ul>
+  <li>The files the steps wrote, in the run’s folder.</li>
+  <li><code>workflow-run.json</code>, the record of the run, which opens as the run’s page, step by step.</li>
+  <li><code>commands.sh</code>, the steps as terminal commands, to run again with <code>bash commands.sh</code>, here or on your own computer.</li>
+  <li>On the run’s page, <b>Open the steps as a notebook</b> makes a notebook with a cell of Python for each step.</li>
+</ul>
+
+<h2>The workflow file</h2>
+<p>A workflow is a file of its own, <code>~/workflows/<i>name</i>.workflow.json</code>: JSON that lists the inputs and steps, the settings of each step that differ from the tool’s, and the connections. Download it from the editor to keep it or to send it to someone; <b>Add a workflow file…</b> on the Workflows page adds one you’ve been given. The examples, in <code>/data/examples/workflows</code>, can’t be changed, but <b>Edit a copy</b> makes one of your own.</p>

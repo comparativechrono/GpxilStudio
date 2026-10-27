@@ -1,0 +1,47 @@
+<!-- id: h-walk-export | title: Get sequences and variants back out | group: Walkthroughs | summary: A person’s haplotypes, their genotype in IUPAC codes and their variants, as FASTA and VCF for other programs | keys: export fasta vcf haplotype sequence iupac genotype consensus variants records no-call blocks round trip other programs bcftools -->
+<h1><!--ICON:convert-->Get sequences and variants back out</h1>
+<p class="lede">Other programs read FASTA and VCF, not gpxil. This walkthrough writes a person’s two versions of a region as FASTA, their genotype as a single sequence of IUPAC codes, and their variants as a VCF file – and then turns that VCF back into a gpxil file, to show that nothing was lost on the way.</p>
+
+<h2>1 · A person’s two haplotypes</h2>
+<p><b>Sequences as FASTA</b> writes the sequence of either haplotype over a region. It is the reference with the person’s variants applied: substitutions replace bases, deletions remove them, insertions are put after their anchor base, and bases that weren’t called become N. So a haplotype’s sequence can be shorter or longer than the region. Lower case, for the reference’s soft-masked repeats, is kept.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="fasta" data-input="/data/examples/HG002_chr17.gpxil.tif" data-which="1" data-region="chr17:7,661,779-7,687,546">HG002’s first TP53</button> <button class="do" type="button" data-tool="fasta" data-input="/data/examples/HG002_chr17.gpxil.tif" data-which="2" data-region="chr17:7,661,779-7,687,546">His second</button></div>
+<p>TP53 is 25,768 bases in the reference; HG002’s first copy of it is 25,757 bases, his second 25,767.</p>
+
+<h2>2 · The genotype as one sequence</h2>
+<p><b>the genotype, in IUPAC codes</b> writes one sequence as long as the reference, with each base where the two haplotypes differ as the IUPAC code of both: R for A and G, Y for C and T, and so on. It’s the form many programs that expect one sequence for a person can read. A base deleted from one haplotype shows the other’s base; one not called is N.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="fasta" data-input="/data/examples/worked-example.gpxil.tif" data-which="iupac" data-region="chrT">The worked example’s genotype</button></div>
+<p>For the worked example, whose reference is <code>ACGTACGTac</code>, the two haplotypes are <code>ACGTGTGGnc</code> and <code>ATGTACGTGGgc</code>, and the genotype is <code>AYGTACGTNc</code>: Y where one haplotype has C and the other T.</p>
+
+<h2>3 · The variants, as VCF</h2>
+<p><b>Variants as VCF</b> writes a VCF record for each place where either haplotype differs from the reference, with the genotype phased (<code>|</code>) where the file says it was, and with the genotype quality, read depth and phase set where the file has them. A record that didn’t pass its filters is marked <code>gpxil_filtered</code>.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="vcf" data-input="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,661,779-7,687,546">TP53’s variants as VCF</button></div>
+<p>For TP53 it writes 21 variants and 9 <b>no-call blocks</b>: records with ALT <code>&lt;*&gt;</code>, an <code>END</code> and genotype <code>./.</code>, for the stretches that weren’t called with confidence. They let a program tell “not called” from “the same as the reference”; untick <b>Write no-call blocks</b> to leave them out. The VCF of a region has exactly the records that the VCF of the whole chromosome has there, so a deletion that starts just before the region is written whole.</p>
+<p>The records are equivalent to the ones the file was made from, not copies of them: each says what the two haplotypes carry over a stretch of the reference, and neighbouring changes may be joined into one record. IDs, QUAL, INFO and the other FORMAT fields of the original aren’t kept in a gpxil file, so they aren’t written.</p>
+
+<h2>4 · And back again</h2>
+<p>Encoding the exported VCF again, with the gpxil file itself as the reference, gives the same planes. The example workflow <b>Back to FASTA and VCF, and round again</b> does all of this in one go – both haplotypes, the VCF, the new gpxil file, and a check of it.</p>
+<div class="tryrow"><button class="do" type="button" data-workflow="/data/examples/workflows/round-trip.workflow.json">Open the round-trip workflow</button></div>
+
+<h2>The same in the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil fasta /data/examples/HG002_chr17.gpxil.tif --which 1 --region chr17:7661779-7687546 -o ~/results/TP53_hap1.fa
+gpxil fasta /data/examples/HG002_chr17.gpxil.tif --which 2 --region chr17:7661779-7687546 -o ~/results/TP53_hap2.fa
+gpxil fasta /data/examples/worked-example.gpxil.tif --which iupac
+gpxil vcf /data/examples/HG002_chr17.gpxil.tif --region chr17:7661779-7687546 -o ~/results/TP53.vcf
+grep -v '^#' ~/results/TP53.vcf | grep -v '&lt;\*&gt;' | head -4
+gpxil vcf /data/examples/worked-example.gpxil.tif -o ~/results/worked-example.vcf
+gpxil encode /data/examples/worked-example.fa -v ~/results/worked-example.vcf --width 4 -o ~/results/worked-example.again.gpxil.tif
+gpxil fasta ~/results/worked-example.again.gpxil.tif --which 2</code></pre>
+<p>Without <code>-o</code>, <code>gpxil fasta</code> and <code>gpxil vcf</code> print to the screen, so their output can go straight into another command. <code>--region</code> can be given more than once to <code>gpxil vcf</code>, and <code>--contigs chr1,chr2</code> writes whole contigs.</p>
+
+<h2>The same in Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.export import genotype_iupac_sequence, haplotype_sequence, write_vcf
+
+with GpxilFile("/data/examples/worked-example.gpxil.tif") as g:
+    c = g["chrT"]
+    print(c.sequence())                                  # the reference
+    print(haplotype_sequence(c, 1).decode(), haplotype_sequence(c, 2).decode())
+    print(genotype_iupac_sequence(c).decode())
+    with open("/home/user/results/worked-example.vcf", "w") as out:
+        print(write_vcf(g, out), "records")</code></pre>
+<!--CITE: gpxiltools vcf iupac-->

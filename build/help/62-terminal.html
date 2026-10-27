@@ -1,0 +1,58 @@
+<!-- id: h-terminal | title: The Terminal | group: Notebook and terminal | summary: gpxil, gpxil2pxil and pxil as commands, in a shell in the browser | keys: terminal shell bash command line commands programs gpxil gpxil2pxil pxil encode info validate render book fasta vcf palettes viewer man help pipe grep cut loop script curl wget download open nano session ctrl c stop redirect binary -->
+<h1><!--ICON:terminal-->The Terminal</h1>
+<p class="lede">The Terminal tab is a Linux-style shell in your browser. <code>gpxil</code>, <code>gpxil2pxil</code> and <code>pxil</code> are commands in it, and they run exactly as they do on a computer where the packages have been installed with pip, with the same options and the same output. Every tool in the Tools tab shows its command, with a button to run it here.</p>
+<div class="tryrow"><button class="do" type="button" data-term-run="help">Show the commands</button> <button class="do" type="button" data-term-run="man gpxil">man gpxil</button></div>
+
+<h2>The gpxil programs</h2>
+<table>
+<tr><th>Command</th><th>What it does</th></tr>
+<tr><td><code>gpxil encode</code></td><td>a reference (FASTA, or a gpxil file such as those in <code>/data/grch38</code>) and a person’s VCF → a gpxil file (<a href="#h-tool-encode">Make a gpxil file</a>)</td></tr>
+<tr><td><code>gpxil info</code></td><td>what a gpxil file holds; <code>--json</code> prints all its metadata</td></tr>
+<tr><td><code>gpxil validate</code></td><td>checks a file against the specification; it ends with status 1 if the file isn’t valid</td></tr>
+<tr><td><code>gpxil render</code></td><td>a contig or a region as a picture: PNG for the screen, TIFF in RGB or CMYK for print</td></tr>
+<tr><td><code>gpxil book</code></td><td>a PDF to print, one dot per base</td></tr>
+<tr><td><code>gpxil fasta</code></td><td>the reference’s sequence, one of the person’s haplotypes (<code>--which 1</code> or <code>2</code>), or their genotype in IUPAC letters (<code>--which iupac</code>), as FASTA</td></tr>
+<tr><td><code>gpxil vcf</code></td><td>the person’s genotypes as VCF, for the whole file or <code>--region</code>s of it</td></tr>
+<tr><td><code>gpxil palettes</code></td><td>the colours of each palette, on screen and in print</td></tr>
+<tr><td><code>gpxil2pxil</code></td><td>pictures (pxil files) of genes, transcripts and proteins, from the reference or from each of the person’s haplotypes; <code>--list</code> lists a gene’s transcripts</td></tr>
+<tr><td><code>pxil</code></td><td>pxil files as FASTA; <code>--info</code> prints their metadata</td></tr>
+<tr><td><code>viewer FILE [REGION]</code></td><td>opens a gpxil file in the Viewer tab, at a region if you give one; <code>--mode=haplotypes</code> (or <code>reference</code>, <code>genotype</code>, <code>variants</code>) chooses the view, as for <code>gpxil render</code>, and <code>--plane=gq</code> shows a plane</td></tr>
+</table>
+<p><code>man NAME</code> shows examples, and <code>NAME --help</code> the options, from the program itself: <code>gpxil render --help</code>, for instance. Regions are written as genome browsers write them, <code>chr17:7,661,779-7,687,546</code>, counting from 1, with both ends included; commas are optional. Each program also runs as <code>python -m gpxilwb NAME …</code>, and gpxil as <code>python -m gpxiltools.cli …</code>.</p>
+<pre class="code" data-run="term"><code>cd ~/results
+gpxil info /data/examples/HG002_chr17.gpxil.tif
+gpxil fasta /data/examples/HG002_chr17.gpxil.tif --which iupac --region chr17:7,676,101-7,676,200 -o TP53_exon4.fa
+cat TP53_exon4.fa
+gpxil vcf /data/examples/HG002_chr17.gpxil.tif --region chr17:7,661,779-7,687,546 --no-nocall-blocks -o TP53.vcf
+grep -v '^#' TP53.vcf | cut -f 1,2,4,5,10 | head
+gpxil render /data/examples/HG002_chr17.gpxil.tif chr17:7,661,779-7,687,546 --mode variants --width 256 --scale 2 -o TP53.png
+ls -l</code></pre>
+
+<h2>The shell</h2>
+<ul>
+  <li>It’s bash: pipes, redirection, variables, loops, functions, <code>$( )</code>, here-documents and scripts (<code>bash script.sh</code>). <kbd>↑</kbd> and <kbd>↓</kbd> bring back earlier commands, <kbd>Tab</kbd> completes names, <kbd>Ctrl</kbd>+<kbd>L</kbd> clears the screen.</li>
+  <li><kbd>Ctrl</kbd>+<kbd>C</kbd> stops a command: the program that’s running finishes, and the rest of the line or script is skipped. Press it again to stop the program at once. For gpxil, gpxil2pxil, pxil and <code>python</code>, that restarts Python, so a notebook’s variables are forgotten too.</li>
+  <li>The text programs – <code>cat</code>, <code>head</code>, <code>tail</code>, <code>grep</code>, <code>sed</code>, <code>cut</code>, <code>sort</code>, <code>uniq</code>, <code>wc</code>, <code>tr</code>, <code>paste</code>, <code>diff</code>, <code>column</code>, <code>less</code> and others – were written for this terminal after the GNU ones. <code>NAME --help</code> says which options each has. So were the file programs: <code>ls</code>, <code>cp</code>, <code>mv</code>, <code>rm</code>, <code>mkdir</code>, <code>find</code>, <code>du</code>, <code>tree</code> and the rest, and <code>zip</code>, <code>unzip</code> and <code>tar</code>.</li>
+  <li><code>python</code> runs scripts, <code>python -c "…"</code> and <code>python -m json.tool FILE</code>, in the same Python as the notebooks. <code>pip install NAME</code> adds a package for this visit.</li>
+  <li><code>curl</code> and <code>wget</code> download through the browser, from servers that let web pages read them: the Gpxil browser, Ensembl’s REST API, raw.githubusercontent.com, EBI and Zenodo, among others. You don’t need them for GRCh38, which is in <code>/data/grch38</code> already.</li>
+  <li><code>open FILE</code> shows a file in its tab, <code>nano FILE</code> edits it in the Files tab, and <code>download FILE</code> (or a folder, as a .zip) saves it to your computer.</li>
+  <li>Not here: background jobs (<code>&amp;</code>), <code>sudo</code>, <code>apt</code> and <code>ssh</code>, and programs that aren’t in <code>help</code>’s list, such as bcftools and samtools. gpxil does much of their work on gpxil files: <code>gpxil vcf --region</code> cuts out a region as VCF, and <code>gpxil fasta --which 1</code> spells out a haplotype.</li>
+</ul>
+
+<div class="callout warn"><div class="co-t"><!--ICON:warning-->Save pictures with <code>-o</code>, not <code>&gt;</code></div><p>The shell’s redirection (<code>&gt;</code> and <code>|</code>) is for text. Pictures, PDFs and gpxil files are written properly only by the program itself, so give their names with <code>-o</code>, as every example here does.</p></div>
+
+<h2>Several at once</h2>
+<p>A loop does the same to many regions or files. These commands spell out the bases around TP53’s codon 72 from the reference and from each of HG002’s haplotypes, then make pictures of TP53’s protein from the reference and from both haplotypes, with the transcripts from a GTF file:</p>
+<pre class="code" data-run="term"><code>mkdir -p ~/results/P72
+for which in ref 1 2; do
+  gpxil fasta /data/examples/HG002_chr17.gpxil.tif --which $which --region chr17:7,676,140-7,676,170 -o ~/results/P72/P72.$which.fa
+done
+cat ~/results/P72/*.fa
+gpxil2pxil /data/examples/HG002_chr17.gpxil.tif TP53 -a /data/examples/TP53.gtf --kinds protein --haplotypes all -o ~/results/P72
+pxil ~/results/P72/*.pxil.png -o ~/results/P72/TP53-proteins.fa
+grep '>' ~/results/P72/TP53-proteins.fa</code></pre>
+<p>gpxil2pxil says how each haplotype’s protein differs from the reference’s (P72R), and pxil puts the three proteins into one FASTA file, each named by its Ensembl ID and, for a haplotype, the person and the haplotype, ready for an alignment program. Without <code>-a</code>, gpxil2pxil takes Ensembl’s genes and transcripts from the Gpxil browser’s gene files, so any gene of GRCh38 can be named: <code>gpxil2pxil /data/grch38/chr17.gpxil.tif BRCA1 --kinds protein -o ~/results</code>.</p>
+
+<h2>Keeping a session</h2>
+<p><code>export-session session.ipynb</code> saves the commands of this session, with what they printed, as a notebook, one <code>%%bash</code> cell a command; so does the <b>Save session</b> button above the terminal. <code>export-session session.sh</code> saves them as a script, which runs in Jupyter or a terminal on any computer where the packages are installed (<a href="#h-own-computer">On your own computer</a>).</p>
+<!--CITE: gpxiltools gpxil2pxil pxil-->

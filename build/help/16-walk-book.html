@@ -1,0 +1,43 @@
+<!-- id: h-walk-book | title: Print a chromosome as a book | group: Walkthroughs | summary: A PDF with one printed dot per base, page after page, in CMYK for a printer or RGB for the screen | keys: book print pdf printer paper a4 a3 dots per inch dpi cmyk ink proof pages chromosome genome -->
+<h1><!--ICON:print-->Print a chromosome as a book</h1>
+<p class="lede">At one dot a base, a page of A4 printed at 300 dots per inch holds 6,314,220 bases, so HG002’s chromosome 17 fills 14 pages and the whole human genome about 500. <b>Print it as a book</b> lays a gpxil file out as a PDF of such pages, ready to print, with each page’s first and last position in its header.</p>
+
+<h2>1 · A proof first</h2>
+<p>A whole chromosome takes a while to lay out, so start with a proof of the first few pages. A book begins with a cover (with a key to the colours), a page on how to read it and a title page for each chromosome; with <b>At most this many pages</b> set to 5, the proof has two pages of bases.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="book" data-input="/data/examples/HG002_chr17.gpxil.tif" data-contigs="chr17">Open Print it as a book</button></div>
+<p>Open the PDF in the Files tab, or download it. Zoom in on a page of bases and you will see each base as a square dot, as in the Viewer.</p>
+
+<h2>2 · Choose the look</h2>
+<dl>
+  <dt>Show</dt><dd>The same four views as a picture: the reference’s bases, the person’s <b>genotype</b> (the default for a file with a sample), their two <b>haplotypes</b> in pairs of rows, or their <b>variants</b> on the faded reference.</dd>
+  <dt>For</dt><dd><b>print</b> gives each colour directly in ink (CMYK), in the palette’s own ink values, so that nothing is lost in a conversion from screen colours. <b>the screen</b> gives RGB colours, for a PDF to read on a computer.</dd>
+  <dt>Paper, Dots per inch, Dots per base</dt><dd>A4 at 300 dots per inch, one dot a base, is the default. At 600 dots per inch a page holds four times as many bases (the whole genome then fills about 160 pages, rather than 530); with 2 dots per base, each base is a 2 × 2 square, easier to see and to scan back.</dd>
+  <dt>Colours</dt><dd>One of gpxil’s palettes (<a href="#h-tool-palettes">The palettes</a>). <b>process</b> uses the four printing inks at full strength, which print most faithfully.</dd>
+</dl>
+
+<h2>3 · The whole chromosome</h2>
+<p>Clear <b>At most this many pages</b> and run it again. HG002’s chromosome 17 becomes a PDF of 17 pages, about 22 MB. It takes about half a minute on a desktop computer, longer in the browser, and longer still on a phone. A small chromosome is quicker: the mitochondrion’s 16,569 bases fit on one page.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="book" data-input="/data/grch38/chrM.gpxil.tif" data-mode="reference">The mitochondrion as a book</button></div>
+<p>A book of a whole genome, several hundred pages, is better made on your own computer, where it has more memory and time (<a href="#h-own-computer">On your own computer</a>).</p>
+
+<div class="callout warn"><div class="co-t"><!--ICON:warning-->A book of a person is their genome</div>
+<p>A book printed at one dot a base holds the genome in printed form: scanned at a high enough resolution, it can be read back. A book made from a person’s gpxil file – in the genotype, haplotypes or variants views – is as identifying as the file itself, and says things about their relatives too. Treat it with the same care. A book of the reference alone identifies no one.</p></div>
+
+<h2>4 · Printing it</h2>
+<p>Print at the PDF’s actual size (“100 %” or “actual size”, not “fit to page”), on the paper you chose, at the printer’s full resolution. The colours are given in device CMYK, so ask the print shop to proof them with their printer’s colour profile. Every base is a square dot with smoothing turned off, so the PDF stays sharp at any zoom.</p>
+
+<h2>The same in the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil book /data/examples/HG002_chr17.gpxil.tif -o ~/results/HG002_chr17_proof.pdf --contigs chr17 --max-pages 5
+gpxil book /data/grch38/chrM.gpxil.tif -o ~/results/chrM_book.pdf --mode reference --palette process
+gpxil book /data/grch38/chrM.gpxil.tif -o ~/results/chrM_book_rgb.pdf --mode reference --rgb --dpi 150 --scale 2 --title "Our mitochondria"</code></pre>
+
+<h2>The same in Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.book import BookLayout, make_book
+
+layout = BookLayout(page="A4", dpi=300, margin_mm=15, scale=1)
+print(f"{layout.bases_per_page():,} bases a page")
+with GpxilFile("/data/grch38/chrM.gpxil.tif") as g:
+    info = make_book(g, "/home/user/results/chrM_from_python.pdf", mode="reference", palette="gpxi", colorspace="cmyk", layout=layout)
+print(info)</code></pre>
+<!--CITE: gpxiltools gpxil-->

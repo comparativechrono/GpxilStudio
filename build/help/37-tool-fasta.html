@@ -1,0 +1,39 @@
+<!-- id: h-tool-fasta | title: Sequences as FASTA | group: Tools | summary: gpxil fasta: the reference, either haplotype, or the genotype in IUPAC codes, as FASTA | keys: fasta sequence export haplotype reference iupac genotype consensus region soft-masked lower case -->
+<h1><!--ICON:dna-->Sequences as FASTA</h1>
+<p class="lede"><code>gpxil fasta</code> writes a sequence from a gpxil file as FASTA: the reference’s, either of the person’s two haplotypes, or their genotype as one sequence of IUPAC codes, for a region or for every contig.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="fasta" data-input="/data/examples/HG002_chr17.gpxil.tif" data-which="1" data-region="chr17:7,661,779-7,687,546">Try it with HG002’s TP53</button></div>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>Any gpxil file; one written without its reference needs <b>Its reference</b> too.</dd>
+  <dt>Sequence</dt><dd><b>the reference</b>; <b>haplotype 1</b> or <b>haplotype 2</b>: the reference with that haplotype’s variants applied – substitutions, deletions and insertions – so it can be longer or shorter than the region, with N where the haplotype wasn’t called; or <b>the genotype, in IUPAC codes</b>: as long as the reference, with each base where the haplotypes differ as the code of both (R for A or G, Y for C or T …). A file without a sample has only the reference.</dd>
+  <dt>Region</dt><dd>A contig, or <code>CONTIG:START-END</code> counting from 1. Empty: every contig, whole. In the browser, at most 50 million bases go into one file.</dd>
+  <dt>Save as</dt><dd>The FASTA file, named after the file, the region and the sequence, in <code>~/results</code>.</dd>
+</dl>
+
+<h2>What it writes</h2>
+<p>A FASTA file with a record for each contig or region, 60 bases a line. Its name says which sequence it is: <code>&gt;chr17:7661779-7687546_hap1</code>, say, or just <code>&gt;chr17</code> for the whole of a contig’s reference. Lower case, for the reference’s soft-masked repeats, is kept.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil fasta /data/examples/worked-example.gpxil.tif
+gpxil fasta /data/examples/worked-example.gpxil.tif --which 1
+gpxil fasta /data/examples/worked-example.gpxil.tif --which iupac
+gpxil fasta /data/examples/HG002_chr17.gpxil.tif --which 2 --region chr17:7676101-7676200 -o ~/results/hap2_P72R.fa</code></pre>
+<table>
+<tr><th>Option</th><th></th></tr>
+<tr><td><code>--which ref|1|2|iupac</code></td><td>the sequence (the reference if you don’t say)</td></tr>
+<tr><td><code>--region REGION</code></td><td>one region; without it, every contig</td></tr>
+<tr><td><code>-o FILE</code></td><td>the FASTA file; without it, the sequence is printed</td></tr>
+<tr><td><code>--reference FILE</code></td><td>the reference, for a file written without one</td></tr>
+</table>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.export import genotype_iupac_sequence, haplotype_sequence
+
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    c = g["chr17"]
+    print(c.sequence(7_676_100, 7_676_200))                          # the reference
+    print(haplotype_sequence(c, 1, 7_676_100, 7_676_200).decode())   # haplotype 1
+    print(genotype_iupac_sequence(c, 7_676_100, 7_676_200).decode())</code></pre>
+<!--CITE: gpxiltools iupac-->

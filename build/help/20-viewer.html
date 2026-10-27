@@ -1,0 +1,36 @@
+<!-- id: h-viewer | title: The Viewer | group: The viewer | index: yes | summary: Any gpxil file as pixels: choose a file, a region and a view, move around, point at a base | keys: viewer view look see pixels region zoom pan move keyboard hover point base file add upload web grch38 save picture command render -->
+<h1><!--ICON:grid-->The Viewer</h1>
+<p class="lede">The Viewer shows a gpxil file as it is: one pixel, or a square of pixels, for each base, in rows that read from left to right and from top to bottom like a page of text. It reads only the part of the file it shows, straight from the file, without Python, so a whole genome opens at once – even one on the web.</p>
+<div class="tryrow"><button class="do" type="button" data-viewer="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,661,779-7,687,546" data-mode="variants">Open HG002’s TP53</button></div>
+
+<h2>Choosing what to see</h2>
+<dl>
+  <dt>File</dt><dd>Any gpxil file: yours, the examples, or a chromosome of the GRCh38 reference, read from the Gpxil browser. <b>Add a file…</b> puts one from your computer into <code>~/genomes</code> and opens it; it stays in this browser.</dd>
+  <dt>Region</dt><dd>Choose a contig, or type a region and press <b>Go</b> (or Enter): <code>chr17:7,661,779-7,687,546</code>, counting from 1 and including both ends, with or without the commas. A contig’s name alone means all of it, and one position, such as <code>chr17:7676154</code>, that base.</dd>
+  <dt>Show</dt><dd>What to draw: the reference’s bases, the person’s genotype, their two haplotypes, their variants, or the flags, genotype quality, read depth or phase sets. Only the views the file can show are offered: a file without a sample has only the reference. <a href="#h-viewer-views">The views and their colours</a></dd>
+  <dt>Colours</dt><dd>One of gpxil’s palettes: classic, Okabe–Ito (safe for colour-blind readers), the GPxI greys, or the process inks (<a href="#h-tool-palettes">The palettes</a>).</dd>
+</dl>
+<p>A file opens at TP53 if it has chromosome 17, and otherwise at the middle 100,000 bases of its first contig. The Viewer remembers the file, region, view and colours you had last time.</p>
+
+<h2>Moving around</h2>
+<ul>
+  <li>The arrow buttons move left and right by half the view; the magnifier zooms in to half as many bases, and − zooms out to twice as many.</li>
+  <li>Double-click a base to zoom in around it.</li>
+  <li>Click the picture, and then the keys ← and → move by a quarter of the view, + and − zoom.</li>
+</ul>
+<p>The picture is as wide as the tab: as many bases a row as fit, at 1 to 24 pixels a base, so a small region shows big squares and a large one single pixels. The line above the picture gives the region, the number of bases, how many a row and how many pixels each. The Viewer draws at most 4 million bases at once; a bigger region shows its first 4 million.</p>
+
+<h2>Pointing at a base</h2>
+<p>Point at a pixel, and the line under the picture says what the file holds there: the position, the reference’s base (and whether it is soft-masked), each haplotype’s state and the <code>gt</code> value they make, the flags, the genotype quality, the read depth and the phase set. At HG002’s <code>chr17:7,676,154</code>, for example: reference G, haplotype 1 C, haplotype 2 C (gt 34), flags VARIANT_SITE, GQ 254, DP 254. <a href="#h-codes">The codes</a> explains every value.</p>
+
+<h2>Keeping what you see</h2>
+<p>Under the picture is the <code>gpxil render</code> command that draws the same picture, pixel for pixel, as a file, ready to run in the terminal; <b>Save the picture</b> saves the view as it is, as a PNG in <code>~/results</code>. For the flags, quality, depth and phase-set views, which <code>gpxil render</code> doesn’t draw, there’s a Python cell instead, which reads the plane’s values for the region as a NumPy array: <b>Add to notebook</b> puts it in the open notebook.</p>
+
+<h2>Files on the web, and files without a reference</h2>
+<p>A file on the web, such as GRCh38’s chromosomes in <code>/data/grch38</code>, is read a piece at a time as you move around: the first view of a chromosome takes a moment, and parts you’ve seen are kept for a while. A file written without its reference plane (<code>--no-ref</code>) has only the person’s genotype; if its metadata says its reference is GRCh38, the Viewer reads the bases from <code>/data/grch38</code> and says so above the picture.</p>
+
+<h2>From the terminal</h2>
+<p><code>viewer FILE [REGION]</code> opens a file in the Viewer from the terminal, with <code>--plane=gt</code> (or ref, flags, gq, dp, ps) for a view:</p>
+<pre class="code"><code>viewer /data/examples/HG002_chr17.gpxil.tif chr17:7,661,779-7,687,546
+viewer /data/grch38/chr21.gpxil.tif chr21:30,000,001-30,500,000 --plane=ref</code></pre>
+<!--GROUP-->

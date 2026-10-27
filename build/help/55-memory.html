@@ -1,0 +1,58 @@
+<!-- id: h-memory | title: Big files and memory | group: gpxil and pxil | summary: How the studio works with files of hundreds of megabytes in a browser tab, its limits, and how to write code that stays small | keys: memory big large files lazy strips range requests web worker pyodide webassembly blob storage limits out of memory memoryerror crash restart encode chromosome whole genome 8 mb 4 mb 25 mb 50 mb 1 gb 2000 mb -->
+<h1><!--ICON:memory-->Big files and memory</h1>
+<p class="lede">A gpxil file of a chromosome is tens of megabytes, and of a whole genome nearly a gigabyte, while a browser tab has a few gigabytes at most – and Python less. So the studio never copies a big file whole: everything reads just the part it needs. This page explains how, what the limits are, and how to stay within them. <a href="#h-walk-big">A whole genome without running out of memory</a> walks through it with examples.</p>
+
+<h2>The format makes it possible</h2>
+<p>Each plane of a gpxil file is stored in strips of 32 rows – 262,144 bases – each compressed on its own (<a href="#h-gpxil">The gpxil format</a>). A reader opens a file by reading its metadata and the TIFF’s list of pages, a few kilobytes, and then decompresses only the strips a region needs. A gene is a strip or two, whether the file holds one chromosome or the whole genome.</p>
+
+<h2>Without Python: the Viewer and the Files tab</h2>
+<p>The Viewer and the Files tab read gpxil files themselves, in the page: the list of pages, then only the strips they show, decompressed by the browser. A file in your home folder is read where the browser keeps it, and a file on the web, such as GRCh38’s chromosomes, with HTTP range requests, which fetch just those bytes. So any gpxil file opens at once. The Viewer draws at most 4 million bases at a time.</p>
+
+<h2>Python: big files are lent, not copied</h2>
+<p>Python runs in a web worker – Pyodide, CPython compiled to WebAssembly – with a memory of its own. Small files are copied into it before a cell or a command runs, and the changes copied back afterwards. Files of 8 MB or more never are:</p>
+<ul>
+  <li><b>Your big files</b> stay where the browser keeps them, and are lent to Python as files it reads a piece at a time.</li>
+  <li><b>The examples and the GRCh38 reference</b> are read from the web a megabyte at a time, as Python asks for them, with HTTP range requests.</li>
+  <li><b>A big file that Python writes</b>, such as a new gpxil file, is handed to the browser to keep when the command ends, and Python’s copy is freed.</li>
+</ul>
+<p>gpxiltools reads only the strips of the region it is asked for, so <code>gpxil info</code> on chromosome 1 reads a few kilobytes, and a gene a few hundred. In the experiment that led to the studio, the whole genome as one file, 809 MB, opened in 72 MB of Python’s memory.</p>
+
+<h2>What does take memory</h2>
+<table>
+<tr><th>What</th><th>How much</th><th>What to do</th></tr>
+<tr><td>Make a gpxil file (<code>gpxil encode</code>)</td><td>each contig’s planes, whole, while they’re made: about 6 bytes a base with <code>gt</code> and <code>flags</code>, so 0.5 GB for chromosome 17 and about 1.5 GB for chromosome 1; <code>gq</code>, <code>dp</code> and <code>ps</code> as much again</td><td>one chromosome at a time (<b>Only these contigs</b>, <code>--contigs</code>); the biggest chromosomes, or a whole genome, on your own computer</td></tr>
+<tr><td>a whole plane read at once</td><td>a byte a base (4 for <code>ps</code>): <code>c.read("gt")</code> on chromosome 1 is 249 MB</td><td>read in pieces, and keep only what you work out from each</td></tr>
+<tr><td>a picture (<code>gpxil render</code>)</td><td>held whole: in the browser, at most 25 million bases and 64 million pixels</td><td>a smaller region, or fewer pixels a base</td></tr>
+<tr><td>FASTA (<code>gpxil fasta</code>)</td><td>text, a byte a base: in the browser, at most 50 million bases in one go</td><td>a region at a time</td></tr>
+<tr><td>a book (<code>gpxil book</code>)</td><td>a picture for each page: hundreds of pages take a while and a lot of memory</td><td>a proof first (<b>At most this many pages</b>), and a chromosome at a time</td></tr>
+</table>
+<p>On your own computer, the same commands have none of the browser’s limits, only your computer’s.</p>
+
+<h2>Keeping your own code small</h2>
+<ul>
+  <li>Read regions – <code>c.read(plane, start, end)</code> – not whole planes, and go through a chromosome in pieces: a strip (262,144 bases) or a megabase at a time.</li>
+  <li>Keep arrays as they come, 8-bit (<code>uint8</code>): chromosome 1’s plane as 64-bit numbers is 2 GB instead of 249 MB. Count with <code>np.count_nonzero</code> rather than building big arrays of results.</li>
+  <li><code>del</code> big arrays you’ve finished with. Python’s memory doesn’t shrink, but what is freed is used again.</li>
+  <li>If Python stops with a <i>MemoryError</i>, or stops answering, restart it: <b>Restart</b> in the Notebook, or the Python pill in the Tools tab. Your files are safe; only Python’s variables are lost.</li>
+</ul>
+<p>This counts HG002’s substitutions on chromosome 17, a strip at a time, so that it never holds more than a quarter of a megabyte of the plane:</p>
+<pre class="code" data-run="py"><code>import numpy as np
+from gpxiltools import GpxilFile
+from gpxiltools import codes as C
+
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    c = g["chr17"]
+    step = 32 * c.width                    # one strip: 262,144 bases
+    het = hom = pieces = 0
+    for a in range(0, c.length, step):
+        gt = c.read("gt", a, min(a + step, c.length))
+        h1, h2 = C.hap1(gt), C.hap2(gt)
+        s1, s2 = np.isin(h1, C.HAP_SUB_CODES), np.isin(h2, C.HAP_SUB_CODES)
+        hom += np.count_nonzero(s1 &amp; s2 &amp; (h1 == h2))
+        het += np.count_nonzero((s1 &amp; (h2 == C.HAP_REF)) | (s2 &amp; (h1 == C.HAP_REF)) | (s1 &amp; s2 &amp; (h1 != h2)))
+        pieces += 1
+print(f"{het:,} heterozygous and {hom:,} homozygous substitutions, read in {pieces} pieces")</code></pre>
+
+<h2>The browser’s storage</h2>
+<p>Your files are kept in the browser’s storage for the site (<a href="#h-files/kept">Where your files are kept</a>). A single file bigger than 1 GB is there while the page is open but isn’t kept, so download it before you leave. The studio warns when your files come to more than 2,000 MB, and browsers limit what a site may keep, usually to a share of the free disk space. A whole genome with one person fits, but not many: for many people, keep files without the reference plane (<code>--no-ref</code>), a small fraction of the size, which borrow GRCh38 from the web when they need its bases.</p>
+<!--CITE: gpxiltools pyodide numpy tifffile-->

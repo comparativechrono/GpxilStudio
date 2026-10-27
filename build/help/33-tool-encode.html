@@ -1,0 +1,50 @@
+<!-- id: h-tool-encode | title: Make a gpxil file (encode) | group: Tools | summary: gpxil encode: a reference, and one person’s VCF, as a gpxil file | keys: encode make create convert vcf fasta reference gpxil sample callable bed planes no-ref sex haploid width compression palette contigs -->
+<h1><!--ICON:genome-->Make a gpxil file (encode)</h1>
+<p class="lede"><code>gpxil encode</code> turns a reference genome, and one person’s variants from a VCF, into a gpxil file. Every base of the reference becomes a pixel of the <code>ref</code> plane, and every call in the VCF is written base by base into the <code>gt</code> and <code>flags</code> planes, as the specification sets out, so that any two programs that follow it make the same planes from the same VCF.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="encode" data-reference="/data/examples/worked-example.fa" data-vcf="/data/examples/worked-example.vcf">Try it with the worked example</button> <button class="do" type="button" data-goto="h-walk-encode">The walkthrough</button></div>
+
+<h2>The form</h2>
+<dl>
+  <dt>The reference genome</dt><dd>A FASTA file (plain, gzip or bgzip), or a gpxil file with its reference plane, such as a chromosome of GRCh38 from <code>/data/grch38</code>. From a gpxil file, only the contigs you encode are read; a FASTA file is read a record at a time.</dd>
+  <dt>The person’s variants (VCF)</dt><dd>A VCF (or <code>.vcf.gz</code>) with the person’s genotypes, version 4.2 or later. Without one, the file holds the reference alone.</dd>
+  <dt>Sample</dt><dd>For a VCF of several people, the column to encode; by default, the first.</dd>
+  <dt>Regions called with confidence (BED)</dt><dd>Bases outside these regions are UNKNOWN – not called – rather than taken to be the reference. Give one whenever you have it: a VCF of variant sites says nothing about the bases it doesn’t list. A BED file with the same name as the VCF is chosen for you.</dd>
+  <dt>Only these contigs</dt><dd>Contigs of the reference, separated by commas, such as <code>chr17</code>. By default, all of the reference’s contigs; one with no calls in the VCF, and no callable regions, is stored as reference only.</dd>
+  <dt>Planes from the VCF</dt><dd><code>gt</code> and <code>flags</code> (the default here), or all the VCF has: also its genotype qualities (<code>gq</code>), read depths (<code>dp</code>) and phase sets (<code>ps</code>), which take as much memory again.</dd>
+  <dt>Leave out the reference plane</dt><dd>A much smaller file, which names its reference by the checksums of its sequences. Reading its bases then needs the reference too.</dd>
+  <dt>Sex chromosomes</dt><dd><b>XY</b>: chromosomes X and Y outside the pseudo-autosomal regions of GRCh38 have one copy, so haplotype 2 is ABSENT there. <b>XX</b> records the sex without changing anything.</dd>
+  <dt>The reference’s name</dt><dd>Such as GRCh38, recorded in the metadata. A gpxil file as the reference gives its own.</dd>
+  <dt>Bases per row of each page</dt><dd>The layout of the pictures, 8,192 by default. It changes nothing in the data – any reader can re-wrap a plane – but small rows make small strips, so a region reads quickly.</dd>
+  <dt>Compression</dt><dd>Deflate, which every TIFF reader supports, or none.</dd>
+  <dt>Colours stored for image viewers</dt><dd>The palette of the colour map stored with the <code>ref</code> plane, so that an ordinary image viewer shows the file in colour. It doesn’t change the data.</dd>
+  <dt>Save as</dt><dd>The new file, <code>~/genomes/<i>name</i>.gpxil.tif</code> by default.</dd>
+</dl>
+
+<h2>What it writes</h2>
+<p>One gpxil file, and a line saying how many contigs and bases it holds, how big it is and how long it took. Under that may come notes, such as VCF contigs that the reference doesn’t have (skipped), or calls that conflict with each other (the later one wins, and the metadata counts them). <a href="#h-vcf">How a VCF becomes gpxil</a> explains exactly how each kind of call is written.</p>
+<p>It holds each contig’s planes whole while it works – about 6 bytes a base with the planes <code>gt</code> and <code>flags</code> – so the biggest contig sets the memory needed. HG002’s variants on chromosome 17 (83 million bases) take about half a gigabyte, and about a minute in the browser (12 seconds on a computer’s own Python); chromosome 1 (249 million bases) would need about 1.5 GB, more than a browser tab may have. So in the browser, encode one chromosome at a time, with <b>Only these contigs</b>, and encode the biggest chromosomes, or a whole genome, on your own computer (<a href="#h-own-computer">On your own computer</a>).</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil encode /data/examples/worked-example.fa -v /data/examples/worked-example.vcf --width 4 -o ~/genomes/worked-example.gpxil.tif
+gpxil encode /data/grch38/chr17.gpxil.tif -v /data/examples/HG002_TP53.vcf --callable /data/examples/HG002_TP53.bed --planes gt,flags --no-ref -o ~/genomes/HG002_TP53.noref.gpxil.tif</code></pre>
+<table>
+<tr><th>Option</th><th></th></tr>
+<tr><td><code>-v VCF</code>, <code>-s SAMPLE</code></td><td>the variants, and which sample</td></tr>
+<tr><td><code>--callable BED</code></td><td>the regions called with confidence</td></tr>
+<tr><td><code>--haploid BED</code>, <code>--haploid-contig NAME</code></td><td>regions, or whole contigs, where the person has one copy</td></tr>
+<tr><td><code>--sex XY</code></td><td>one copy of chrX and chrY outside the pseudo-autosomal regions</td></tr>
+<tr><td><code>--contigs A,B</code>, <code>--ucsc-names</code></td><td>which contigs; rename 1–22, X, Y and MT to chr1 … chrM</td></tr>
+<tr><td><code>--no-ref</code>, <code>--planes gt,flags</code></td><td>leave out the reference plane; which planes from the VCF (without <code>--planes</code>, the command takes <code>gq</code>, <code>dp</code> and <code>ps</code> too when the VCF has them, unlike the form)</td></tr>
+<tr><td><code>--width N</code>, <code>--compression NAME</code>, <code>--level N</code></td><td>the layout and the compression (on your own computer, also zstd, lzw, lzma and packbits, with the imagecodecs package)</td></tr>
+<tr><td><code>--palette NAME</code>, <code>--reference-name NAME</code></td><td>the colours for image viewers; the reference’s name</td></tr>
+<tr><td><code>--invalid-to-n</code></td><td>turn characters of the FASTA that aren’t IUPAC codes into N, rather than stopping</td></tr>
+<tr><td><code>--bigtiff</code></td><td>BigTIFF from the start; otherwise gpxil switches to it by itself if the file might pass 4 GB</td></tr>
+</table>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools.encode import encode
+
+summary = encode("/data/examples/worked-example.fa", "/home/user/genomes/worked-example.gpxil.tif",
+                 vcf="/data/examples/worked-example.vcf", width=4, reference_name="worked example")
+print(summary)</code></pre>
+<!--CITE: gpxiltools vcf refget iupac-->

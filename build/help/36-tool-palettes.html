@@ -1,0 +1,24 @@
+<!-- id: h-tool-palettes | title: The palettes | group: Tools | summary: gpxil palettes: the colours of A, C, G and T in each palette, for the screen and in ink | keys: palettes colours colors classic okabe-ito gpxi process cmyk srgb ink colour-blind grey albrecht-buehler -->
+<h1><!--ICON:palette-->The palettes</h1>
+<p class="lede">A gpxil file holds codes, not colours. A palette turns them into colours when a picture is drawn: into screen colours (sRGB) for a PNG, or directly into ink (CMYK percentages) for print, so neither is converted from the other. <code>gpxil palettes</code> lists them.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="palettes">Show the palettes</button></div>
+
+<table>
+<tr><th>Palette</th><th>A</th><th>C</th><th>G</th><th>T</th><th></th></tr>
+<tr><td><code>classic</code></td><td>red</td><td>blue</td><td>green</td><td>yellow</td><td>the colours of the original gpxil notebooks, and the default</td></tr>
+<tr><td><code>okabe-ito</code></td><td>bluish green</td><td>blue</td><td>orange</td><td>vermilion</td><td>colours that people with any common colour-blindness can tell apart</td></tr>
+<tr><td><code>gpxi</code></td><td>black</td><td>dark grey</td><td>white</td><td>light grey</td><td>the grey levels of Albrecht-Buehler’s genome pixel images, after which gpxil is named</td></tr>
+<tr><td><code>process</code></td><td>cyan</td><td>magenta</td><td>yellow</td><td>black</td><td>one pure printing ink for each base, which prints most faithfully</td></tr>
+</table>
+<p>Every palette also has a colour for N (an unknown base) and for “no base” (paper). The other codes are worked out from the four bases: an ambiguous base, or a heterozygous one in the genotype view, is the mean of its bases’ colours (in the process palette, the inks overprint), and a base in a soft-masked repeat is faded 45 % towards white (not in gpxi, whose greys need all their levels).</p>
+<p>With the process palette, the code of a base <i>is</i> its ink: the four bits of a <code>ref</code> code, A, C, G and T, lay down cyan, magenta, yellow and black. A heterozygous A/G base prints cyan and yellow, green.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil palettes</code></pre>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools.palettes import describe
+
+for p in describe():
+    print(p["name"], p["srgb"]["A"], p["cmyk_percent"]["A"], "–", p["description"])</code></pre>
+<!--CITE: gpxiltools gpxi okabe-ito-->

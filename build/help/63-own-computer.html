@@ -1,0 +1,34 @@
+<!-- id: h-own-computer | title: On your own computer | group: Notebook and terminal | summary: The same packages and commands outside the browser, for whole genomes, pipelines and servers | keys: own computer local install pip pypi github python packages download bundle zip pythonpath offline server pipeline whole genome grch38 curl reference serve.py run studio locally memory imagecodecs -->
+<h1><!--ICON:download-->On your own computer</h1>
+<p class="lede">The packages that run here are ordinary Python packages, so every command and every piece of Python that the studio shows you works on your own computer too: in a pipeline, on a server, or on a whole genome at once, with as much memory as the computer has rather than what a browser tab allows.</p>
+
+<h2>Installing them</h2>
+<p>gpxiltools, gpxil2pxil and pxil are installed with pip. gpxiltools and gpxil2pxil need Python 3.10 or later, pxil 3.9 or later; pip installs what they need with them (NumPy, tifffile, imagecodecs, Pillow and jsonschema).</p>
+<pre class="code"><code>pip install gpxiltools gpxil2pxil pxil</code></pre>
+<p>If pip says it can’t find them, they haven’t reached PyPI yet. Install them from GitHub instead, which gives you the versions the studio runs (<a href="#h-versions">Versions, and how to cite</a>):</p>
+<pre class="code"><code>pip install "git+https://github.com/comparativechrono/Gpxil-tools" "git+https://github.com/comparativechrono/pxil"
+pip install "git+https://github.com/comparativechrono/Gpxil-scratchpad#subdirectory=packages/gpxil2pxil"</code></pre>
+<p>Each package installs its command: <code>gpxil</code>, <code>gpxil2pxil</code> and <code>pxil</code>. They take the same options as in the Terminal tab, so the commands the Tools tab shows work on your computer once you change the paths to those of your own files. In Python, the imports are the ones in <a href="#h-python">The packages in Python</a>. The notebooks you download from the Notebook tab run in Jupyter as they are, apart from paths such as <code>/data/examples</code>: download the files they read too, from the Files tab.</p>
+
+<h2>The whole genome</h2>
+<p>The GRCh38 reference that the studio reads a chromosome at a time from the Gpxil browser is also one file of the whole genome, about 850 MB. Download it once, and give it to <code>gpxil encode</code> as the reference for a whole genome’s VCF:</p>
+<pre class="code"><code>curl -LO https://github.com/comparativechrono/Gpxil-browser/releases/download/grch38-ensembl116/GRCh38.gpxil.tif
+gpxil encode GRCh38.gpxil.tif -v HG002.vcf.gz --callable HG002.callable.bed --sex XY --no-ref -o HG002.gpxil.tif
+gpxil render HG002.gpxil.tif chr21 --mode variants -o chr21.png --reference GRCh38.gpxil.tif</code></pre>
+<p>Encoding holds a chromosome’s planes in memory while it works, about 6 bytes a base, so the largest, chromosome 1, needs about 1.5 GB. HG002’s whole genome took 12 minutes and at most 2 GB of memory on an ordinary computer, and made a file of 888 MB with the reference plane. The Gpxil browser’s <a href="https://comparativechrono.github.io/Gpxil-browser/" target="_blank" rel="noopener">downloads</a> also have each chromosome on its own, and a checksum to check the download with. Files without their reference plane (<code>--no-ref</code>) are a hundred times smaller; give the reference with <code>--reference</code> to the commands that need its bases (<a href="#h-reference">The GRCh38 reference</a>).</p>
+
+<h2>The studio’s own copies</h2>
+<p>You can also download the exact copies of the packages that the studio runs, in one archive with tifffile and the studio’s own runner, <code>gpxilwb</code>. This is handy on a computer that can’t reach PyPI or GitHub. It needs NumPy, Pillow and jsonschema (<code>pip install numpy pillow jsonschema</code>), and imagecodecs only for files compressed with Zstandard or LZW.</p>
+<div class="tryrow"><a class="do" href="assets/py/gpxil-tools.zip" download="gpxil-tools.zip">Download the packages (.zip, about 350 KB)</a></div>
+<pre class="code"><code>unzip gpxil-tools.zip -d gpxil-tools
+export PYTHONPATH="$PWD/gpxil-tools"
+python -m gpxilwb gpxil info HG002_chr17.gpxil.tif
+python -m gpxilwb gpxil2pxil HG002_chr17.gpxil.tif TP53 --kinds protein -o pictures</code></pre>
+<p><code>python -m gpxilwb PROGRAM …</code> runs any of the three programs, as the terminal here does; <code>python -m gpxiltools.cli</code>, <code>python -m gpxil2pxil</code> and <code>python -m pxil</code> run them too.</p>
+
+<h2>Running the studio itself</h2>
+<p>GpxilStudio is a web page with no server behind it, so you can run your own copy: download its repository from <a href="https://github.com/comparativechrono/GpxilStudio" target="_blank" rel="noopener">GitHub</a> and start the small server that comes with it, which answers range requests as GitHub Pages does.</p>
+<pre class="code"><code>python3 serve.py 8000                      # then open http://localhost:8000/
+python3 serve.py 8000 --reference DIR      # the GRCh38 reference from a copy on this computer</code></pre>
+<p>With <code>--reference</code>, the studio reads <code>/data/grch38</code> from a copy of the Gpxil browser’s <code>data/grch38</code> folder, so it needs the web only for Python itself, the first time.</p>
+<!--CITE: gpxiltools gpxil2pxil pxil grch38-->

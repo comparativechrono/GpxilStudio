@@ -1,0 +1,69 @@
+<!-- id: h-walk-big | title: A whole genome without running out of memory | group: Walkthroughs | summary: Regions and strips, a chromosome a piece at a time, files without the reference that borrow it, and the whole genome on your own computer | keys: memory big large whole genome chromosome chunks pieces strips lazy region reference borrow no-ref noref download curl sha256 out of memory crash slow -->
+<h1><!--ICON:memory-->A whole genome without running out of memory</h1>
+<p class="lede">A human genome is 3.1 billion bases. As one byte a base, a single plane of it is 3.1 GB in memory, more than Python in a browser can use, although the file that holds it is under 1 GB. Yet the studio opens a whole genome at once, because it never reads more of a file than it needs. This walkthrough shows how, and how to write your own code the same way.</p>
+
+<h2>1 · Read regions, not files</h2>
+<p>Each plane of a gpxil file is stored in strips of whole rows: 32 rows of 8,192 bases, 262,144 bases a strip, in a file made with the default layout. Reading a region decompresses only the strips that hold it. A gene is one strip or two, so reading it costs the same in a file of one chromosome as in a file of the whole genome.</p>
+<p>The studio adds one more step. A file of 8 MB or more is never copied into Python’s memory: Python reads it where the browser keeps it, or from the web, a piece at a time. The chromosomes of GRCh38 in <code>/data/grch38</code> are read from the Gpxil browser’s site like this, a megabyte at a time, as they’re needed. And the Viewer and the Files tab read gpxil files without Python at all.</p>
+<div class="tryrow"><button class="do" type="button" data-viewer="/data/grch38/chr1.gpxil.tif" data-region="chr1:11,785,723-11,806,455" data-mode="reference">View MTHFR, on chromosome 1, from the web</button></div>
+
+<h2>2 · A chromosome, a piece at a time</h2>
+<p>To go through a whole chromosome, read it in pieces and keep only what you work out from each. This finds the GC content of each megabase of chromosome 21, read from the web: at any moment, Python holds one megabase.</p>
+<pre class="code" data-run="py"><code>import numpy as np
+from gpxiltools import GpxilFile
+from gpxiltools import codes as C
+
+c = GpxilFile("/data/grch38/chr21.gpxil.tif")["chr21"]
+step = 1_000_000
+gc = []
+for a in range(0, c.length, step):
+    base = C.ref_base_nibble(c.read("ref", a, min(a + step, c.length)))
+    acgt = np.isin(base, (C.BASE_A, C.BASE_C, C.BASE_G, C.BASE_T)).sum()
+    gc.append(np.isin(base, (C.BASE_G, C.BASE_C)).sum() / acgt if acgt else np.nan)
+gc = np.array(gc)
+print(f"{c.length:,} bases in {gc.size} pieces, {np.isnan(gc).sum()} of them all N")
+print(f"GC from {np.nanmin(gc):.1%} to {np.nanmax(gc):.1%}, highest in megabase {np.nanargmax(gc) + 1}")</code></pre>
+<p>Chromosome 21’s first five megabases are all N – the short arm, which GRCh38 doesn’t spell out – and its GC content runs from 34.6 % to 53.0 %, highest near the end of its long arm. A loop over all the chromosomes of a genome works the same way, contig by contig: <code>for c in g:</code>.</p>
+
+<h2>3 · Files without the reference, which borrow it</h2>
+<p>A person’s genome as a gpxil file is mostly their reference: the same bases for everyone. Written without the reference plane (<code>gpxil encode --no-ref</code>), it is a small fraction of the size, and names its reference by checksums. Open it with the reference, and gpxiltools reads just the region you ask for from the reference, after checking that its checksums match. The Viewer does the same by itself for a file made on GRCh38.</p>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.encode import encode
+from gpxiltools.export import haplotype_sequence
+
+encode("/data/grch38/chr17.gpxil.tif", "/home/user/genomes/HG002_TP53.noref.gpxil.tif",
+       vcf="/data/examples/HG002_TP53.vcf", callable_bed="/data/examples/HG002_TP53.bed",
+       planes=["gt", "flags"], include_ref=False)
+with GpxilFile("/home/user/genomes/HG002_TP53.noref.gpxil.tif", reference="/data/grch38/chr17.gpxil.tif") as g:
+    c = g["chr17"]
+    print(c.planes, "plus the borrowed reference:", c.has("ref"))
+    print(haplotype_sequence(c, 1, 7_676_100, 7_676_200).decode())</code></pre>
+
+<h2>4 · What uses memory, and what doesn’t</h2>
+<ul>
+  <li><b>Doesn’t:</b> opening a file, its metadata, the Viewer, the Files tab, reading a region, a loop over pieces, <code>gpxil info</code>, <code>gpxil vcf</code> and <code>gpxil fasta</code> (which write as they go), <code>gpxil validate</code> (which checks a piece at a time).</li>
+  <li><b>Does:</b> <code>gpxil encode</code>, which holds each contig’s planes whole while it works: about 6 bytes a base with the planes <code>gt</code> and <code>flags</code>, so half a gigabyte for chromosome 17 and about 1.5 GB for chromosome 1, more than a browser tab may have. In the browser, encode one chromosome at a time (<b>Only these contigs</b>, or <code>--contigs</code>), and the biggest chromosomes, or a whole genome, on your own computer (section 5). Also a whole plane read at once (<code>c.read("gt")</code> on chromosome 1 is 249 MB), and big pictures, which is why the tools stop at 25 million bases a picture in the browser.</li>
+  <li>Keep arrays small: <code>uint8</code> as they come, not converted to 64-bit numbers. <code>del</code> big arrays you’ve finished with, and if Python gets slow or stops with a <i>MemoryError</i>, restart it (the Notebook’s <b>Restart</b>, or the Python pill in the Tools tab): your files are safe, only Python’s variables are lost.</li>
+</ul>
+
+<h2>5 · The whole genome on your own computer</h2>
+<p>On your own computer, memory is less tight and the files can be local. The Gpxil browser offers the whole of GRCh38 as one gpxil file, 848.5 MB, which every command here can use as a reference or read like any other:</p>
+<pre class="code"><code>curl -LO https://github.com/comparativechrono/Gpxil-browser/releases/download/grch38-ensembl116/GRCh38.gpxil.tif
+curl -LO https://github.com/comparativechrono/Gpxil-browser/releases/download/grch38-ensembl116/GRCh38.gpxil.tif.sha256
+sha256sum -c GRCh38.gpxil.tif.sha256          # on a Mac: shasum -a 256 -c GRCh38.gpxil.tif.sha256
+gpxil info GRCh38.gpxil.tif
+gpxil encode GRCh38.gpxil.tif -v my.vcf.gz --callable my.bed --no-ref -o my.gpxil.tif</code></pre>
+<p>(<code>curl -C - -LO …</code> carries on with a download that was interrupted.) <a href="#h-own-computer">On your own computer</a> says how to install the programs there.</p>
+
+<h2>The limits in the browser</h2>
+<table>
+<tr><th>What</th><th>At most</th><th>Why</th></tr>
+<tr><td>a file copied into Python</td><td>under 8 MB; bigger ones are read a piece at a time</td><td>Python’s memory</td></tr>
+<tr><td>Make a gpxil file (encode)</td><td>one chromosome at a time; about 6 bytes a base, so 0.5 GB for chromosome 17</td><td>a contig’s planes are held whole while they’re made</td></tr>
+<tr><td>the Viewer</td><td>4 million bases drawn at once</td><td>the screen; zoom and move for more</td></tr>
+<tr><td>Draw a region as a picture</td><td>25 million bases and 64 million pixels</td><td>a picture is held in memory whole</td></tr>
+<tr><td>Sequences as FASTA</td><td>50 million bases in one go</td><td>the file is text, a byte a base</td></tr>
+<tr><td>a file kept in the browser</td><td>1 GB each; a warning above 2 GB in all</td><td>what browsers let a site keep</td></tr>
+</table>
+<p>On your own computer, the same commands have no such limits.</p>
+<!--CITE: gpxiltools gpxil-browser grch38-->

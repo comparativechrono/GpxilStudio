@@ -1,0 +1,95 @@
+{
+  "gpxilstudio_workflow": 1,
+  "name": "Pictures of a gene, and a proof to print",
+  "annotation": "TP53 is drawn three ways – the reference, the two haplotypes, and the variants on a Hilbert curve – and the first two pages of chromosome 17 are made into a PDF to print, in CMYK.",
+  "steps": [
+    {
+      "id": "s1",
+      "type": "input",
+      "label": "The gpxil file",
+      "kinds": [
+        "gpxil"
+      ],
+      "x": 16,
+      "y": 16,
+      "default": "/data/examples/HG002_chr17.gpxil.tif"
+    },
+    {
+      "id": "s2",
+      "type": "tool",
+      "tool": "render",
+      "params": {
+        "region": "chr17:7661779-7687546",
+        "mode": "reference",
+        "width": "256",
+        "scale": "2"
+      },
+      "connections": {
+        "input": {
+          "step": "s1",
+          "output": "file"
+        }
+      },
+      "x": 286,
+      "y": 16
+    },
+    {
+      "id": "s3",
+      "type": "tool",
+      "tool": "render",
+      "params": {
+        "region": "chr17:7661779-7687546",
+        "mode": "haplotypes",
+        "width": "256",
+        "scale": "2"
+      },
+      "connections": {
+        "input": {
+          "step": "s1",
+          "output": "file"
+        }
+      },
+      "x": 286,
+      "y": 168
+    },
+    {
+      "id": "s4",
+      "type": "tool",
+      "tool": "render",
+      "params": {
+        "region": "chr17:7661779-7687546",
+        "mode": "variants",
+        "layout": "hilbert",
+        "scale": "2"
+      },
+      "connections": {
+        "input": {
+          "step": "s1",
+          "output": "file"
+        }
+      },
+      "x": 286,
+      "y": 320
+    },
+    {
+      "id": "s5",
+      "type": "tool",
+      "tool": "book",
+      "params": {
+        "contigs": "chr17",
+        "mode": "genotype",
+        "maxPages": "5"
+      },
+      "connections": {
+        "input": {
+          "step": "s1",
+          "output": "file"
+        }
+      },
+      "x": 286,
+      "y": 472
+    }
+  ],
+  "created": "2026-10-20T12:00:00.000Z",
+  "updated": "2026-10-20T12:00:00.000Z"
+}

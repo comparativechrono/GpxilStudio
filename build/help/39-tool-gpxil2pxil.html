@@ -1,0 +1,58 @@
+<!-- id: h-tool-gpxil2pxil | title: Genes, transcripts and proteins as pxil pictures | group: Tools | summary: gpxil2pxil: a gene, its transcripts and proteins, from the reference or a person’s haplotypes, as pxil files | keys: gpxil2pxil gene transcript protein pxil picture haplotype annotation gtf ensembl canonical mane coding list width tp53 p72r -->
+<h1><!--ICON:protein-->Genes, transcripts and proteins as pxil pictures</h1>
+<p class="lede"><code>gpxil2pxil</code> spells out a gene from a gpxil file – from its reference, or from either of the person’s haplotypes – splices its transcripts and translates their proteins, and writes each as a pxil file: a PNG picture of the sequence, one pixel a residue, which holds the sequence exactly. A picture made from a haplotype says how it differs from the reference’s.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="gpxil2pxil" data-input="/data/examples/HG002_chr17.gpxil.tif" data-genes="TP53" data-haplotypes="all">Try it with HG002’s TP53</button> <button class="do" type="button" data-goto="h-walk-genes">The walkthrough</button></div>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>A gpxil file on the assembly of the genes (GRCh38 for the default genes): a person’s, or a chromosome of the reference from <code>/data/grch38</code>.</dd>
+  <dt>Genes</dt><dd>Symbols (<code>TP53</code>) or Ensembl gene IDs (<code>ENSG00000141510</code>), separated by spaces. With the Gpxil browser’s genes, an alias that names only one gene will do too.</dd>
+  <dt>Transcripts</dt><dd><b>the canonical transcript</b>, Ensembl’s choice of one for each gene (the default); <b>the MANE transcripts</b>, MANE Select and MANE Plus Clinical, which Ensembl and NCBI agree on; <b>every protein-coding transcript</b>; or <b>every transcript</b>. In the terminal, you can also name transcripts: <code>-t TP53-201,ENST00000420246</code>.</dd>
+  <dt>Pictures of</dt><dd>The gene (its genomic sequence, introns included), the transcripts (spliced) and the proteins; or some of these.</dd>
+  <dt>From</dt><dd><b>both haplotypes</b> for a file with a sample, else <b>the reference</b> (the default); the reference and both haplotypes; or one of them.</dd>
+  <dt>Genes from</dt><dd>By default, the Gpxil browser’s gene files: every transcript of Ensembl release 116 on GRCh38, read from the web a gene at a time. Or a GTF file (Ensembl or GENCODE), for another annotation or another assembly, or to work without the web: <code>/data/examples/TP53.gtf</code> has TP53’s lines.</dd>
+  <dt>Residues per row</dt><dd>By default, about square: in steps of 10 for a protein, 30 for a transcript (whole codons) and 100 for a gene.</dd>
+  <dt>Its reference</dt><dd>Only for a file written without its reference plane.</dd>
+  <dt>Only list each gene’s transcripts</dt><dd>No pictures: each transcript’s name, ID, biotype, protein and tags, with a star by the canonical one.</dd>
+  <dt>Save in</dt><dd>The folder for the pictures, <code>~/results/pxil/<i>gene</i></code> by default.</dd>
+</dl>
+
+<h2>What it writes</h2>
+<p>For each transcript and each source, the pictures you asked for, named with their Ensembl IDs, and with the sample and haplotype when they come from one:</p>
+<table>
+<tr><th>File</th><th>What it holds</th></tr>
+<tr><td><code>TP53_ENSG00000141510.gene.pxil.png</code></td><td>the gene’s genomic sequence, 5′ to 3′, introns and soft-masked repeats included</td></tr>
+<tr><td><code>TP53-201_ENST00000269305.transcript.pxil.png</code></td><td>the spliced transcript, 5′ to 3′</td></tr>
+<tr><td><code>TP53-201_ENSP00000269305.protein.pxil.png</code></td><td>the protein, from the start codon to the stop codon (<code>*</code>)</td></tr>
+<tr><td><code>TP53-201_ENSP00000269305_HG002-hap1.protein.pxil.png</code></td><td>the same protein, made from HG002’s first haplotype</td></tr>
+</table>
+<p>It prints a line for each file, with what changed: <i>39 changes from the reference</i> for a gene, <i>2 changes from the reference in its exons</i> for a transcript, <i>differs from the reference: P72R</i> for a protein (or <i>the same as the reference</i>). The same notes are in each picture’s metadata, with its coordinates, exons, coding region, genetic code and source. <a href="#h-walk-genes">The walkthrough</a> says how the sequences are made, and <a href="#h-pxil">pxil pictures of sequences</a> how the pictures hold them.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil2pxil /data/examples/HG002_chr17.gpxil.tif TP53 --annotation /data/examples/TP53.gtf --kinds protein --haplotypes all -o ~/results/pxil/TP53
+gpxil2pxil /data/examples/HG002_chr17.gpxil.tif TP53 BRCA1 --kinds protein -o ~/results/pxil/TP53_BRCA1</code></pre>
+<table>
+<tr><th>Option</th><th></th></tr>
+<tr><td><code>FILE GENE …</code></td><td>the gpxil file (a path, or the address of one on the web), and genes</td></tr>
+<tr><td><code>-t canonical|mane|coding|all|NAMES</code></td><td>which transcripts</td></tr>
+<tr><td><code>-k gene,transcript,protein</code></td><td>which pictures</td></tr>
+<tr><td><code>--haplotypes ref,1,2,both,all,auto</code></td><td>from whom</td></tr>
+<tr><td><code>-a GTF|FOLDER|URL</code></td><td>the genes, if not the Gpxil browser’s</td></tr>
+<tr><td><code>-o FOLDER</code>, <code>--width N</code></td><td>where to write; residues per row</td></tr>
+<tr><td><code>--reference FILE</code>, <code>--list</code></td><td>the reference for a file written without one; list the transcripts only</td></tr>
+</table>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxil2pxil import GTF, Source, make, translate
+
+gene = GTF("/data/examples/TP53.gtf").find("TP53")
+for t in gene.select("mane"):
+    print(t.name, t.id, t.protein, t.tags())
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    spliced = Source(g, 2).spliced(gene.canonical())       # haplotype 2's transcript
+    print(len(spliced.letters()), "bases; coding from", spliced.cds_start)
+    files = make(g, gene, kinds=["transcript"], haplotypes=(None, 2), out_dir="/home/user/results/pxil/TP53-transcripts")
+print([f.notes for f in files])
+print(translate("ATGGAGGAGCCGCAGTCAGATCCTAGCTAA"))</code></pre>
+<!--CITE: gpxil2pxil pxil ensembl mane-->

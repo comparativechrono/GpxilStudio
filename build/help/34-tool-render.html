@@ -1,0 +1,49 @@
+<!-- id: h-tool-render | title: Draw a region as a picture | group: Tools | summary: gpxil render: a region in four views, as PNG for the screen or TIFF (RGB or CMYK) for print | keys: render draw picture png tiff cmyk rgb print region mode reference genotype haplotypes variants palette width scale hilbert layout dpi insertions -->
+<h1><!--ICON:image-->Draw a region as a picture</h1>
+<p class="lede"><code>gpxil render</code> draws a region of a gpxil file as a picture, one pixel (or a square of pixels) a base: a PNG for the screen, or a TIFF in RGB or in CMYK for print. The colours come from a palette when the picture is drawn; the file holds codes, not colours, which is why the same file gives exact colours on a screen and in ink.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="render" data-input="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,661,779-7,687,546" data-mode="variants">Try it with HG002’s TP53</button> <button class="do" type="button" data-goto="h-walk-render">The walkthrough</button></div>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>Any gpxil file with a reference plane, or one written without it together with its reference (below).</dd>
+  <dt>Region</dt><dd>A contig, or <code>CONTIG:START-END</code>, counting from 1 and including both ends, such as <code>chr17:7,661,779-7,687,546</code>. When you choose a file, the form suggests TP53 for a file with chromosome 17, or else a contig. In the browser, a picture may have up to 25 million bases.</dd>
+  <dt>Show</dt><dd><b>reference</b>: the reference’s bases. <b>genotype</b>: the person’s two bases at once, a heterozygous base as the mix of its two colours, a base deleted from both as paper. <b>haplotypes</b>: the two haplotypes in two rows of pixels for each row of bases, haplotype 1 above. <b>variants</b>: the faded reference with the variants on it: heterozygous orange, homozygous red, a deletion dark, a base followed by an insertion green, no call grey, a complex variant purple. A file without a sample can only show the reference.</dd>
+  <dt>Colours</dt><dd>classic, okabe-ito, gpxi or process (<a href="#h-tool-palettes">The palettes</a>).</dd>
+  <dt>Bases per row</dt><dd>By default the file’s own width (8,192); for a region of 200,000 bases or fewer, the form suggests 256. A width equal to a repeat’s period lines the repeat up in columns.</dd>
+  <dt>Pixels per base</dt><dd>Each base as a square of this many pixels a side; the form suggests 4 for a region of 50,000 bases or fewer, so that each base can be seen. The whole picture may have up to 64 million pixels in the browser.</dd>
+  <dt>Layout</dt><dd><b>rows</b>, like text, or <b>a Hilbert curve</b>, which folds the region into a square so that bases next to each other in the genome stay next to each other in the picture. Not for the haplotypes view.</dd>
+  <dt>Picture</dt><dd><b>PNG</b> for the screen; <b>TIFF in RGB</b>; or <b>TIFF in CMYK</b> for print, with each colour given directly in the palette’s ink values.</dd>
+  <dt>Dots per inch to record</dt><dd>The resolution written into the picture, which tells printing software how big to print it.</dd>
+  <dt>Mark where insertions are</dt><dd>In the haplotypes view, a base that an insertion follows is magenta.</dd>
+  <dt>Its reference</dt><dd>Only for a file written without its reference plane: the same reference, a FASTA file or a gpxil file with its reference plane. For GRCh38, the form fills in the chromosome from <code>/data/grch38</code>, and gpxil checks it against the file’s checksums.</dd>
+  <dt>Save as</dt><dd>The picture, named after the file, the region and the view, in <code>~/results</code>.</dd>
+</dl>
+
+<h2>What it writes</h2>
+<p>One picture, and a line giving its size in pixels and the region. A PNG is an indexed-colour picture: small, and exact.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil render /data/examples/HG002_chr17.gpxil.tif chr17:7661779-7687546 -o ~/results/TP53.png --mode variants --width 256 --scale 4
+gpxil render /data/examples/worked-example.gpxil.tif chrT -o ~/results/worked-example.png --mode haplotypes --width 4 --scale 16 --mark-insertions</code></pre>
+<table>
+<tr><th>Option</th><th></th></tr>
+<tr><td><code>FILE REGION -o PICTURE</code></td><td>the file, the region, and the picture to write: <code>.png</code>, or <code>.tif</code></td></tr>
+<tr><td><code>--mode reference|genotype|haplotypes|variants</code></td><td>the view (genotype if you don’t say)</td></tr>
+<tr><td><code>--palette NAME</code></td><td>classic, okabe-ito, gpxi or process</td></tr>
+<tr><td><code>--width N</code>, <code>--scale N</code></td><td>bases per row; pixels per base, each way</td></tr>
+<tr><td><code>--layout raster|hilbert</code></td><td>rows, or a Hilbert curve</td></tr>
+<tr><td><code>--cmyk</code>, <code>--dpi N</code></td><td>a CMYK TIFF for print; the resolution to record</td></tr>
+<tr><td><code>--mark-insertions</code></td><td>in the haplotypes view, mark the bases insertions follow</td></tr>
+<tr><td><code>--reference FILE</code></td><td>the reference, for a file written without one</td></tr>
+</table>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.render import render
+
+with GpxilFile("/data/examples/worked-example.gpxil.tif") as g:
+    picture = render(g["chrT"], mode="haplotypes", bases_per_row=4, mark_insertions=True)
+print(picture.shape)          # 6 rows of pixels: 2 for each of the 3 rows of bases
+print(picture.index)          # palette indices
+picture.scaled(16).save_png("/home/user/results/worked-example-haplotypes.png")</code></pre>
+<!--CITE: gpxiltools gpxi hilbert okabe-ito pillow-->

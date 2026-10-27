@@ -1,0 +1,67 @@
+<!-- id: h-walk-genes | title: See a person’s own version of a protein | group: Walkthroughs | summary: TP53’s gene, transcript and protein from each of HG002’s haplotypes, as pxil pictures, and their sequences back as FASTA | keys: gene transcript protein haplotype person own version pxil gpxil2pxil tp53 p72r brca1 variant amino acid translation splice exon canonical mane fasta picture -->
+<h1><!--ICON:protein-->See a person’s own version of a protein</h1>
+<p class="lede">A gpxil file holds both copies of each of a person’s chromosomes, base by base, so their own versions of a gene can be spelt out, spliced into transcripts and translated into proteins. This walkthrough does it for TP53 in HG002, whose two copies of the TP53 protein both differ from the reference’s at amino acid 72. The results are pxil files: pictures with one pixel for each base or amino acid, which hold the sequence exactly.</p>
+
+<h2>1 · The gene and its transcripts</h2>
+<p>TP53 lies on the minus strand of chromosome 17, at <code>chr17:7,661,779-7,687,546</code>. Ensembl knows 40 transcripts of it. Its canonical transcript, TP53-201 (ENST00000269305), which is also the MANE Select transcript, has 11 exons and makes the 393 amino acids of the protein ENSP00000269305. To list a gene’s transcripts, tick <b>Only list each gene’s transcripts</b> in the tool, or use <code>--list</code> in the terminal (below).</p>
+<div class="tryrow"><button class="do" type="button" data-viewer="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,661,779-7,687,546" data-mode="haplotypes">View TP53’s two haplotypes</button></div>
+
+<h2>2 · Make the pictures</h2>
+<p><b>Genes, transcripts and proteins as pxil pictures</b> makes, for each transcript you choose, a picture of the gene’s sequence, of the spliced transcript and of the protein. <b>From</b> says whose: the reference, either of the person’s haplotypes, or all three, so you can compare them.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="gpxil2pxil" data-input="/data/examples/HG002_chr17.gpxil.tif" data-genes="TP53" data-haplotypes="all">Make TP53’s pictures</button></div>
+<p>It writes nine files into <code>~/results/pxil/TP53</code> – three pictures each from the reference and from HG002’s two haplotypes – and says how each differs from the reference’s:</p>
+<pre class="code"><code>TP53_ENSG00000141510_HG002-hap1.gene.pxil.png (25,757 bases): 39 changes from the reference
+TP53-201_ENST00000269305_HG002-hap1.transcript.pxil.png (2,511 bases): 2 changes from the reference in its exons
+TP53-201_ENSP00000269305_HG002-hap1.protein.pxil.png (394 amino acids): differs from the reference: P72R</code></pre>
+<p>HG002’s copies of the gene differ from the reference at dozens of places, almost all of them in introns, which are spliced out. Two changes fall in the transcript’s exons. One changes the protein: proline 72 becomes arginine. The other, one T fewer in a run of Ts, is in the 3′ untranslated region, after the stop codon, which is why the transcript is a base shorter. The protein has 394 residues: 393 amino acids and the stop codon, written <code>*</code>.</p>
+
+<h2>3 · Look at a picture</h2>
+<p>Open a protein picture in the Files tab. It is an ordinary PNG, 20 pixels a row for 394 residues, each amino acid in its own colour, and the Files tab shows it large, with what it says about itself – the protein, its transcript and gene, its chromosome, and the note <i>differs from the reference: P72R</i> – and its sequence underneath. Its name says whose it is: <code>_HG002-hap1</code>. Amino acid 72 is in the fourth row, twelfth from the left. Point at it: in HG002’s picture the line under it says <i>amino acid 72: R (arginine)</i>, in the reference’s <i>amino acid 72: P (proline)</i>, and the two pixels have different colours.</p>
+<div class="tryrow"><button class="do" type="button" data-edit="~/results/pxil/TP53/TP53-201_ENSP00000269305_HG002-hap1.protein.pxil.png">Open HG002’s first TP53 protein</button> <button class="do" type="button" data-edit="~/results/pxil/TP53/TP53-201_ENSP00000269305.protein.pxil.png">Open the reference’s</button></div>
+<p>The colours are only for the eye. What matters is the pixel values: each one is a residue’s place in the file’s alphabet, so the sequence can be read back exactly, by any program that reads PNG – the Files tab reads it in the page, without Python. <b>Copy the sequence</b> puts it on the clipboard. <a href="#h-pxil">pxil pictures of sequences</a> explains the format.</p>
+
+<h2>4 · The sequences back, as FASTA</h2>
+<p><b>pxil pictures → FASTA</b> reads the sequences back from the pictures. Choose the three protein pictures, and the FASTA file has the reference’s TP53 and HG002’s two, which you can compare in any alignment program.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="pxil-fasta" data-input="~/results/pxil/TP53/TP53-201_ENSP00000269305.protein.pxil.png">Open pxil → FASTA</button></div>
+<p>Tick <b>Their metadata (JSON) instead of their sequences</b> to see what each picture says about itself: its gene, transcript and protein IDs, its exons and coding region, the sample and haplotype it came from, and its notes, such as <i>differs from the reference: P72R</i>.</p>
+
+<h2>5 · How the sequences are made</h2>
+<ul>
+  <li>A haplotype’s sequence is the reference with the person’s variants applied: substitutions replace bases, deletions remove them, insertions are put after their anchor base, and bases whose state isn’t known become N.</li>
+  <li>The transcript is the haplotype’s sequence over each exon, joined, and read 5′ to 3′: for a gene on the minus strand, such as TP53, that means reverse-complemented.</li>
+  <li>The protein is translated from the annotated start codon to the first stop codon. A frameshift is followed into the 3′ untranslated region, and a protein whose stop codon is lost runs to the end of the transcript (and the file says so).</li>
+  <li>Selenocysteines (TGA read as U) are kept where Ensembl annotates them, and genes on the mitochondrion use the vertebrate mitochondrial code.</li>
+</ul>
+
+<h2>6 · Other genes, other transcripts</h2>
+<ul>
+  <li><b>Genes</b> takes several symbols or Ensembl IDs, separated by spaces. HG002’s example file holds only chromosome 17, so its genes must be there (BRCA1 is, and HG002’s copies of its protein are the same as the reference’s).</li>
+  <li>Any gene of GRCh38 can be drawn from the reference itself, from its chromosome in <code>/data/grch38</code>: CFTR from <code>/data/grch38/chr7.gpxil.tif</code>, say.</li>
+  <li><b>Transcripts</b>: the canonical one (the default), the MANE transcripts, every protein-coding one, or every one.</li>
+  <li><b>Genes from</b>: by default, the Gpxil browser’s gene files, every transcript of Ensembl release 116 on GRCh38, read from the web a gene at a time. For another annotation, or another assembly, give a GTF file, such as <code>/data/examples/TP53.gtf</code>, TP53’s lines of Ensembl 116’s GTF, which also works without the web.</li>
+</ul>
+<div class="tryrow"><button class="do" type="button" data-tool="gpxil2pxil" data-input="/data/grch38/chr7.gpxil.tif" data-genes="CFTR" data-kinds="protein">Draw CFTR’s protein from GRCh38</button> <button class="do" type="button" data-tool="gpxil2pxil" data-input="/data/examples/HG002_chr17.gpxil.tif" data-genes="TP53" data-annotation="/data/examples/TP53.gtf" data-transcripts="mane">TP53 with the example GTF</button></div>
+
+<h2>The same in the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil2pxil /data/examples/HG002_chr17.gpxil.tif TP53 --annotation /data/examples/TP53.gtf --list &gt; ~/results/TP53-transcripts.txt
+head -3 ~/results/TP53-transcripts.txt
+gpxil2pxil /data/examples/HG002_chr17.gpxil.tif TP53 --haplotypes all --annotation /data/examples/TP53.gtf -o ~/results/pxil/TP53
+pxil ~/results/pxil/TP53/*.protein.pxil.png -o ~/results/TP53-proteins.fa
+grep -c '&gt;' ~/results/TP53-proteins.fa
+pxil --info ~/results/pxil/TP53/TP53-201_ENSP00000269305_HG002-hap1.protein.pxil.png</code></pre>
+<p>Without <code>--annotation</code>, gpxil2pxil uses the Gpxil browser’s gene files, as the tool does: <code>gpxil2pxil /data/grch38/chr7.gpxil.tif CFTR --kinds protein -o ~/results/pxil/CFTR</code>.</p>
+
+<h2>The same in Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxil2pxil import GTF, Source, make
+
+gene = GTF("/data/examples/TP53.gtf").find("TP53")
+t = gene.canonical()
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    ref = Source(g).protein(t)        # the reference's protein, as a string
+    hap1 = Source(g, 1).protein(t)    # HG002's first haplotype's
+    print(t.name, len(ref), ref[66:76], hap1[66:76])
+    print([f"{a}{i + 1}{b}" for i, (a, b) in enumerate(zip(ref, hap1)) if a != b])
+    for f in make(g, gene, kinds=["protein"], haplotypes=(None, 1, 2), out_dir="/home/user/results/pxil/TP53-python"):
+        print(f.path, f.notes)</code></pre>
+<!--CITE: gpxil2pxil pxil ensembl mane giab-->

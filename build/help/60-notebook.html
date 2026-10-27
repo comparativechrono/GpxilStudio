@@ -1,0 +1,51 @@
+<!-- id: h-notebook | title: The Notebook | group: Notebook and terminal | summary: Python notebooks with gpxiltools, gpxil2pxil and pxil, in the browser | keys: notebook jupyter ipynb python cells run shift enter markdown pip magic cd bash writefile capture time download restart stop variables starter gpxil-in-python numpy pillow matplotlib plot picture display -->
+<h1><!--ICON:notebook-->The Notebook</h1>
+<p class="lede">The Notebook tab runs Python notebooks in your browser, with gpxiltools, gpxil2pxil and pxil installed, and NumPy and Pillow beside them. They’re the same <code>.ipynb</code> files that Jupyter uses. Use a notebook for what the forms don’t do: your own questions of a genome, the same steps over many files, or a record of an analysis that anyone can run again.</p>
+<div class="tryrow"><button class="do" type="button" data-open-nb="~/notebooks/gpxil-in-python.ipynb">Open the starting notebook</button> <button class="do" type="button" data-new-nb>Start a new notebook</button></div>
+
+<h2>The notebook to start from</h2>
+<p><code>~/notebooks/gpxil-in-python.ipynb</code> goes through gpxil files in Python, on HG002’s chromosome 17: opening a file, a region of each plane as a NumPy array, the codes, each variant base as the file holds it, HG002’s P72R in TP53, his two sequences, a picture, the whole chromosome a piece at a time, the GRCh38 reference from the web, pictures of genes with gpxil2pxil and pxil, and the programs run from a cell. Run its cells from the top. If you’ve changed or deleted it, delete it (or rename it) and press <b>Open the starting notebook</b> for a fresh copy.</p>
+<p><a href="#h-walk-python">Work with a gpxil file pixel by pixel, in Python</a> covers the same ground step by step, and <a href="#h-python">The packages in Python</a> lists the main functions of each package.</p>
+
+<h2>Working in a notebook</h2>
+<ul>
+  <li><b>Run</b> a cell with <kbd>Shift</kbd>+<kbd>Enter</kbd>, or press <b>Run all</b> to run every cell from the top. The first cell you run starts Python, which takes a few seconds; the very first time, it also downloads about 15 MB, which your browser then keeps.</li>
+  <li><b>Code</b> and <b>Text</b> add cells; text cells are written in Markdown. A cell’s <b>⋯</b> menu moves, duplicates, clears or deletes it, or turns it from code into text and back.</li>
+  <li><b>Stop</b> stops a cell that is taking too long. It restarts Python to do so, so the notebook’s variables are forgotten. <b>Restart</b> does the same at any time, and the list button shows the variables the notebook has now.</li>
+  <li>The notebook is saved among your files as you work, outputs and all. <b>Download</b> gives you a copy as a Jupyter notebook (<code>.ipynb</code>), a Python script, or a web page with its results. The notebook opens in Jupyter, JupyterLab, VS Code or Google Colab on a computer where the packages are installed (<a href="#h-own-computer">On your own computer</a>).</li>
+  <li>As in Jupyter, a notebook starts in its own folder. It sees the same files as the other tabs: your home folder, <code>/home/user</code> (<code>~</code>), the examples in <code>/data/examples</code>, and the GRCh38 reference in <code>/data/grch38</code>.</li>
+  <li>To open a notebook you’ve made elsewhere, drag it onto the Notebook tab, or add it in the Files tab and click it.</li>
+</ul>
+
+<h2>What a cell shows</h2>
+<p>As in Jupyter, a cell shows what it prints, and the value of its last line: a number, a NumPy array, a dictionary. A Pillow picture as the last line is shown as a picture, with a button to save it as a PNG file, so <code>render(…).to_rgb()</code> made into an <code>Image</code> shows a region at once. matplotlib is loaded in the background once Python has started, and its plots are shown under the cell too. <code>display(…)</code> shows several things from one cell.</p>
+<pre class="code" data-run="py"><code>from PIL import Image
+from gpxiltools import GpxilFile
+from gpxiltools.render import render
+
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    picture = render(g["chr17"], mode="variants", start=7_661_778, end=7_687_546, bases_per_row=256)
+Image.fromarray(picture.scaled(2).to_rgb())</code></pre>
+
+<h2>Commands in a cell</h2>
+<p>As in Jupyter, a line that starts with <code>!</code> runs a command, and a line that starts with <code>%</code> is one of the notebook’s own commands. <code>gpxil</code>, <code>gpxil2pxil</code>, <code>pxil</code> and <code>python</code> run in the notebook’s own Python, at once; other commands run in the studio’s shell, as they would in the Terminal tab.</p>
+<pre class="code" data-run="py"><code>!gpxil info /data/examples/worked-example.gpxil.tif
+!gpxil fasta /data/examples/worked-example.gpxil.tif --which 2 -o /home/user/results/worked-example.hap2.fa
+!cat /home/user/results/worked-example.hap2.fa</code></pre>
+<table>
+<tr><th>Line</th><th>What it does</th></tr>
+<tr><td><code>!command</code></td><td>Runs a command. <code>files = !ls ~/genomes</code> keeps what it prints, as a list of lines.</td></tr>
+<tr><td><code>%cd</code>, <code>%pwd</code>, <code>%ls</code></td><td>Change or show the folder, or list the files in it</td></tr>
+<tr><td><code>%pip install NAME</code>, <code>%pip list</code></td><td>Install a package for this visit: a pure-Python one from PyPI, or one that Pyodide has built for the browser, such as pandas or SciPy. A reload forgets it.</td></tr>
+<tr><td><code>%time</code>, <code>%%time</code></td><td>How long a line, or the whole cell, takes</td></tr>
+<tr><td><code>%%writefile FILE</code></td><td>Writes the rest of the cell to a file, such as a script or a BED file</td></tr>
+<tr><td><code>%%bash</code></td><td>Runs the rest of the cell in the studio’s shell, as a script</td></tr>
+<tr><td><code>%%capture out</code></td><td>Keeps what the cell prints in <code>out</code>, instead of showing it</td></tr>
+<tr><td><code>%run script.py</code>, <code>%who</code>, <code>%env</code>, <code>%%html</code></td><td>Work as they do in Jupyter</td></tr>
+</table>
+
+<h2>Big files in a notebook</h2>
+<p>A notebook opens a gpxil file without reading it: <code>GpxilFile</code> reads the metadata, and <code>read</code> only the strips of a plane that hold the region you ask for. The studio never copies a file of 8 MB or more into Python’s memory, so a cell can open a whole genome, or a chromosome of the GRCh38 reference on the web, at once. What uses memory is what you read: one byte a base for each plane, so a whole chromosome 1 is 250 MB a plane. Read big regions in pieces, as the starting notebook does for chromosome 17, and let go of arrays you’ve finished with (<a href="#h-walk-big">A whole genome without running out of memory</a>, <a href="#h-memory">Big files and memory</a>).</p>
+
+<div class="callout info"><div class="co-t"><!--ICON:info-->One Python for every tab</div><p>The Tools tab, the Notebook tab and the Terminal tab share one Python. A tool you run waits until a notebook cell has finished, and the other way round. Files that one of them writes are there for the others at once.</p></div>
+<!--CITE: gpxiltools gpxil2pxil pxil pyodide numpy pillow-->

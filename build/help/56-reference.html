@@ -1,0 +1,49 @@
+<!-- id: h-reference | title: The GRCh38 reference | group: gpxil and pxil | summary: /data/grch38: GRCh38 as a gpxil file for each chromosome, read from the Gpxil browser; its genes; and the whole genome in one file to download | keys: grch38 hg38 reference genome assembly ensembl 116 chromosomes data grch38 gpxil browser download curl command line whole genome sha256 unplaced scaffolds soft-masked primary assembly genes transcripts hgnc aliases web -->
+<h1><!--ICON:genome-->The GRCh38 reference</h1>
+<p class="lede"><code>/data/grch38</code> holds the human reference genome, GRCh38, as gpxil files: one for each chromosome, and one for the unplaced scaffolds. They are the Gpxil browser’s files, read from its web site a piece at a time as they are used, so they are there at once without being downloaded. Every tool and the Viewer can use them: as the reference to encode a VCF against, as a genome to look at or draw, or to make a gene’s pictures from.</p>
+<div class="tryrow"><button class="do" type="button" data-viewer="/data/grch38/chr21.gpxil.tif" data-region="chr21:30,000,001-30,500,000" data-mode="reference">View chromosome 21</button> <button class="do" type="button" data-tool="info" data-input="/data/grch38/chr1.gpxil.tif">What’s in chromosome 1</button></div>
+
+<h2>What it is</h2>
+<ul>
+  <li>The <b>primary assembly</b> of GRCh38, from Ensembl release 116 (<code>Homo_sapiens.GRCh38.dna_sm.primary_assembly.fa.gz</code>): chromosomes 1 to 22, X, Y and the mitochondrion, and 169 unplaced and unlocalised scaffolds, such as <code>KI270728.1</code>. There are no alternative haplotypes or patches.</li>
+  <li><b>Soft-masked</b>: bases in repeats are lower case in Ensembl’s FASTA file, and marked as soft-masked in the <code>ref</code> plane, so the Viewer shows them paler.</li>
+  <li>The <b>reference plane only</b>, with no sample, written by gpxiltools 0.2.0 at 8,192 bases a row.</li>
+  <li>Named <code>chr1</code> … <code>chr22</code>, <code>chrX</code>, <code>chrY</code> and <code>chrM</code>, with Ensembl’s names (<code>1</code> … <code>MT</code>) as aliases, so a VCF that says <code>17</code> finds <code>chr17</code>. Each has its MD5 and refget checksums, which a file written without its reference plane is checked against.</li>
+</ul>
+<table>
+<tr><th>Files</th><th>Size</th></tr>
+<tr><td><code>chr1.gpxil.tif</code> … <code>chr22.gpxil.tif</code>, <code>chrX.gpxil.tif</code>, <code>chrY.gpxil.tif</code></td><td>from 70.5 MB (chromosome 2) and 66.7 MB (chromosome 1, more of which is unknown, N) down to 7.3 MB (Y)</td></tr>
+<tr><td><code>chrM.gpxil.tif</code></td><td>7 KB, for 16,569 bases</td></tr>
+<tr><td><code>unplaced.gpxil.tif</code></td><td>3.1 MB, for the 169 scaffolds</td></tr>
+<tr><td>all 26</td><td>848.5 MB</td></tr>
+</table>
+
+<h2>Read from the web, a piece at a time</h2>
+<p>The files live on the Gpxil browser’s web site, <code>comparativechrono.github.io/Gpxil-browser/data/grch38/</code>. Nothing is downloaded whole: the Viewer and the Files tab fetch the strips they show, and Python reads a megabyte at a time, with HTTP range requests, as it needs to (<a href="#h-memory">Big files and memory</a>). The first look at a chromosome takes a moment, and reading the reference needs a connection to the web.</p>
+<p>A file of your own on GRCh38 written without its reference plane (<code>--no-ref</code>) borrows its bases from here: the Viewer does so by itself, the tools with <b>Its reference</b>, which they fill in for you, and gpxiltools with <code>reference=</code>. The checksums make sure it is the same reference.</p>
+
+<h2>Using it</h2>
+<ul>
+  <li><b>To encode a VCF</b> called on GRCh38: give the chromosome’s file to <b>Make a gpxil file</b> as the reference, a chromosome at a time (<a href="#h-walk-encode">the walkthrough</a>). Only the contigs encoded are read from it.</li>
+  <li><b>To look at</b>: choose a chromosome in the Viewer, under <i>GRCh38 reference</i>.</li>
+  <li><b>To draw or print</b>: <code>gpxil render</code> and <code>gpxil book</code> take any region of it.</li>
+  <li><b>For genes</b>: gpxil2pxil makes any gene’s, transcript’s or protein’s picture from it, such as CFTR’s from <code>chr7.gpxil.tif</code>.</li>
+</ul>
+<pre class="code" data-run="term"><code>gpxil info /data/grch38/chr21.gpxil.tif
+gpxil fasta /data/grch38/chr17.gpxil.tif --region chr17:7676101-7676200
+gpxil render /data/grch38/chrM.gpxil.tif chrM -o ~/results/chrM.png --width 128 --scale 2</code></pre>
+
+<h2>Its genes</h2>
+<p>The Gpxil browser also has the genes of Ensembl release 116 on GRCh38 – all 78,941 of them, and their 646,577 transcripts – with the canonical and MANE transcripts marked, and HGNC’s symbols, names and aliases. gpxil2pxil reads them a gene at a time when you name a gene (<a href="#h-tool-gpxil2pxil">Genes, transcripts and proteins as pxil pictures</a>). To work without the web, or with another annotation, give it a GTF file instead.</p>
+
+<h2>The whole genome in one file</h2>
+<p>For your own computer, the Gpxil browser offers the whole of GRCh38 as one gpxil file, <code>GRCh38.gpxil.tif</code> (848.5 MB), with its SHA-256 checksum beside it. Download it from the command line, check it, and use it like any other gpxil file:</p>
+<pre class="code"><code>curl -LO https://github.com/comparativechrono/Gpxil-browser/releases/download/grch38-ensembl116/GRCh38.gpxil.tif
+curl -LO https://github.com/comparativechrono/Gpxil-browser/releases/download/grch38-ensembl116/GRCh38.gpxil.tif.sha256
+sha256sum -c GRCh38.gpxil.tif.sha256          # on a Mac: shasum -a 256 -c GRCh38.gpxil.tif.sha256
+gpxil info GRCh38.gpxil.tif</code></pre>
+<p>If the download stops, the same command with <code>-C -</code> after <code>curl</code> carries on from where it stopped. A chromosome at a time comes from the files the studio reads, such as <code>curl -O https://comparativechrono.github.io/Gpxil-browser/data/grch38/gpxil/chr21.gpxil.tif</code>. With the whole genome on your own computer, <code>gpxil encode GRCh38.gpxil.tif -v my.vcf.gz --callable my.bed --no-ref -o my.gpxil.tif</code> encodes a person’s whole genome in one go (<a href="#h-own-computer">On your own computer</a>). In the studio there is no need: it reads the reference from the web as it is.</p>
+
+<h2>Where it comes from</h2>
+<p>GRCh38 is the Genome Reference Consortium’s assembly of the human genome. The sequence, its soft-masking and the genes are Ensembl’s, release 116, and the gene names HGNC’s. The Gpxil browser made the gpxil files with gpxiltools 0.2.0. Cite the assembly and Ensembl when you use them:</p>
+<!--CITE: grch38 ensembl mane gpxil-browser-->

@@ -1,0 +1,38 @@
+<!-- id: h-tools | title: The Tools tab | group: Tools | index: yes | summary: A form for each job, the same job as a command and as Python, and the files it writes | keys: tools tab form run command python pill result files map tasks start choose file upload -->
+<h1><!--ICON:wrench-->The Tools tab</h1>
+<p class="lede">The Tools tab has a form for each job you can do with gpxil files. Each runs a command of gpxiltools, gpxil2pxil or pxil in the studio’s Python, exactly as the terminal would, and shows you that command, and the same job in Python, so you can do it again without the form.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="start">Open the Tools tab</button></div>
+
+<h2>The first page</h2>
+<p>The first page has the map of the formats and the tools between them: click an arrow to open its tool, or a box to see what you can do with that kind of file. Under the map, <b>Common tasks</b> lists the jobs most people come for, each with its tools in order and a walkthrough. <b>All tools</b> (on a narrow screen) or the list on the left has every tool, by group:</p>
+<table>
+<tr><th>Group</th><th>Tools</th></tr>
+<tr><td>Look inside and check</td><td><a href="#h-tool-info">What’s in a gpxil file</a> · <a href="#h-tool-validate">Check a gpxil file</a></td></tr>
+<tr><td>Make gpxil files</td><td><a href="#h-tool-encode">Make a gpxil file (encode)</a></td></tr>
+<tr><td>Pictures and print</td><td><a href="#h-tool-render">Draw a region as a picture</a> · <a href="#h-tool-book">Print it as a book (PDF)</a> · <a href="#h-tool-palettes">The palettes</a></td></tr>
+<tr><td>Back to FASTA and VCF</td><td><a href="#h-tool-fasta">Sequences as FASTA</a> · <a href="#h-tool-vcf">Variants as VCF</a></td></tr>
+<tr><td>Genes as pictures (pxil)</td><td><a href="#h-tool-gpxil2pxil">Genes, transcripts and proteins as pxil pictures</a> · <a href="#h-tool-pxil-fasta">pxil pictures → FASTA</a></td></tr>
+</table>
+
+<h2>A tool’s form</h2>
+<ul>
+  <li><b>Files</b> are chosen from a list: your files first, newest at the top, then the examples, then the chromosomes of GRCh38. <b>From my computer…</b> adds one, and <b>Look at it</b> opens the chosen file where it belongs.</li>
+  <li>When you choose a gpxil file, the form reads what it holds – its contigs, its sample, whether it has its reference – and suggests settings to suit it: a region on its contigs, a view for its sample, the reference for a file written without one. Anything you’ve changed yourself is left alone.</li>
+  <li>Under <b>Run</b>, the form says what it still needs, if anything: a region, say, or one small enough for the browser.</li>
+  <li><b>More about this tool</b> explains what it does, with a link to its page in the help.</li>
+  <li>The settings you used last are offered again when you come back to the tool on the same visit.</li>
+</ul>
+
+<h2>The same in the terminal, and in Python</h2>
+<p>Under every form, <b>The same in the terminal, and in Python</b> shows the command the form makes, and the same job as Python for a notebook, each with <b>Copy</b> and a button to run it there. As you change the form, they change too, so they’re a good way to learn the commands and the Python.</p>
+
+<h2>When it has run</h2>
+<p>The result says <b>Done</b> and how long it took, or what went wrong. What the program printed is shown under it: its progress in plain text, any warning or error in yellow. Then come the files it wrote, each with buttons to look at it, to view a gpxil file in the Viewer, to check it, to read a pxil picture’s sequence, or to download it. Some tools offer the next step, such as <b>Check it</b> after a gpxil file is made.</p>
+<p>A tool writes into your home folder, <code>~/results</code> unless you choose otherwise, and asks before it replaces a file that’s already there.</p>
+
+<h2>A file’s page</h2>
+<p><b>More…</b> on a file – in the Files tab, or under a result – opens the file’s page in the Tools tab: what is in it, and every tool that reads it.</p>
+
+<h2>Python</h2>
+<p>The pill at the top right says how Python is: not started, starting (with what it is loading), or ready. Python starts the first time you run a tool on each visit, which takes a few seconds; the very first time, it also downloads about 15 MB, which your browser keeps. Click the pill to see the versions of the packages, or to restart Python, which forgets its variables but not your files.</p>
+<!--GROUP-->

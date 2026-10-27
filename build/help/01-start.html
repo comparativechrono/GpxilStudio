@@ -1,0 +1,39 @@
+<!-- id: h-start | title: A first session | group: Start here | summary: Ten minutes: a real genome in the Viewer, a picture, a person’s TP53 protein, and a gpxil file of your own | keys: tour tutorial begin getting started first steps introduction example hg002 tp53 p72r -->
+<h1><!--ICON:play-->A first session</h1>
+<p class="lede">Take ten minutes to see what gpxil files are and what you can do with them. You’ll look at the genome of a real person, HG002, around the gene TP53; draw it as a picture; see how this person’s TP53 protein differs from the reference’s; and make a small gpxil file of your own. Each step has a button that does it for you.</p>
+
+<h2>1 · Look at a genome</h2>
+<p>The <b>Viewer</b> tab shows a gpxil file as pixels, one for every base. This button opens HG002’s chromosome 17 at TP53, a gene that is mutated in many cancers. HG002 is a man whose genome has been sequenced in great depth by the Genome in a Bottle project, so his genotype is known very reliably.</p>
+<div class="tryrow"><button class="do" type="button" data-viewer="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,661,779-7,687,546" data-mode="variants">Open TP53 in the Viewer</button></div>
+<p>Each square is one base, in rows that read from left to right and from top to bottom, like a page of text. In this view, <b>Variants</b>, the reference’s bases are faded, and the bases where HG002 differs from the reference stand out: orange where one of his two copies differs (heterozygous), red where both do (homozygous). Grey bases weren’t called with confidence. Point at a square to see what the file holds there.</p>
+<p>One of the red squares is at <code>chr17:7,676,154</code>. There, the reference has G, and both of HG002’s copies have C. This is a common variant, rs1042522, which changes amino acid 72 of the TP53 protein from proline to arginine (P72R). Try the other views in <b>Show</b>, such as <b>Haplotypes</b>, which draws his two copies of the chromosome in two rows.</p>
+
+<h2>2 · See what is in the file</h2>
+<p>A gpxil file is an ordinary TIFF picture with many pages: one page for each chromosome and each <i>plane</i>. The <b>ref</b> plane holds the reference’s bases, <b>gt</b> the person’s genotype, <b>flags</b> extra facts such as which calls are phased, and <b>gq</b>, <b>dp</b> and <b>ps</b> how good each call is. <b>What’s in a gpxil file</b>, in the Tools tab, lists them. Press <b>Run</b>. The first run starts Python in your browser, which takes a few seconds; the very first time, it also downloads about 15 MB.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="info" data-input="/data/examples/HG002_chr17.gpxil.tif">Open What’s in a gpxil file</button></div>
+<p>Under the form, <b>The same in the terminal, and in Python</b> shows exactly what the tool runs. You can use it to do the same job again without the form.</p>
+
+<h2>3 · Draw it as a picture</h2>
+<p><b>Draw a region as a picture</b> writes the same kind of picture as a PNG file, which you can download or put in a document. The button fills in TP53 and the <b>variants</b> view.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="render" data-input="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,661,779-7,687,546" data-mode="variants">Draw TP53</button></div>
+
+<h2>4 · This person’s TP53 protein</h2>
+<p>Because a gpxil file holds the person’s genotype at every base, their own version of a gene can be read from it, spliced and translated into protein. <b>Genes, transcripts and proteins as pxil pictures</b> does this for each of HG002’s two copies of chromosome 17. Each picture has one pixel for each amino acid, and says how the protein differs from the reference’s. For HG002, both say <i>differs from the reference: P72R</i>.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="gpxil2pxil" data-input="/data/examples/HG002_chr17.gpxil.tif" data-genes="TP53" data-kinds="protein">Make TP53’s protein pictures</button></div>
+<p>The genes come from the Gpxil browser’s gene files (Ensembl, GRCh38), which are read from the web as they’re needed.</p>
+
+<h2>5 · A gpxil file of your own</h2>
+<p><b>Make a gpxil file (encode)</b> turns a reference genome (FASTA) and a person’s variants (VCF) into a gpxil file. The specification’s worked example is tiny, ten bases and four variants, so you can see every pixel of the result.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="encode" data-reference="/data/examples/worked-example.fa" data-vcf="/data/examples/worked-example.vcf">Encode the worked example</button></div>
+<p>It writes <code>~/genomes/worked-example.gpxil.tif</code>. Press <b>View</b> under the result to look at it, then try <b>Check</b>, which checks it against the gpxil specification.</p>
+
+<h2>6 · The same in the terminal</h2>
+<p>Every step above is a command, so the whole session can be run again in one go. <b>Run in the terminal</b> types these commands into the Terminal tab and runs them.</p>
+<pre class="code" data-run="term"><code>gpxil info /data/examples/HG002_chr17.gpxil.tif
+gpxil render /data/examples/HG002_chr17.gpxil.tif chr17:7661779-7687546 -o ~/results/TP53_variants.png --mode variants --width 256 --scale 2
+gpxil2pxil /data/examples/HG002_chr17.gpxil.tif TP53 --kinds protein -o ~/results/pxil/TP53
+gpxil encode /data/examples/worked-example.fa -v /data/examples/worked-example.vcf -o ~/genomes/worked-example.gpxil.tif
+gpxil validate ~/genomes/worked-example.gpxil.tif</code></pre>
+
+<h2>7 · Keep your work</h2>
+<p>Everything you make is kept in this browser, on this computer. To take it elsewhere, use a file’s <b>Download</b> button, or <b>My files → Download all my files (.zip)</b> at the top right. <a href="#h-files">Your files</a> has the details. Where next? <a href="#h-walks">The walkthroughs</a> go through each job in turn, and <a href="#h-walk-python">Work with a gpxil file pixel by pixel, in Python</a> shows how to get at the data yourself.</p>

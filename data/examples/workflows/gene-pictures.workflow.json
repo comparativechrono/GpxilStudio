@@ -1,0 +1,69 @@
+{
+  "gpxilstudio_workflow": 1,
+  "name": "A person’s own TP53: pictures and sequences",
+  "annotation": "The TP53 gene, its canonical transcript and protein are made from both of HG002’s haplotypes as pxil pictures, and their sequences written out as FASTA. Each protein’s picture says how it differs from the reference’s (P72R).",
+  "steps": [
+    {
+      "id": "s1",
+      "type": "input",
+      "label": "The gpxil file",
+      "kinds": [
+        "gpxil"
+      ],
+      "x": 16,
+      "y": 16,
+      "default": "/data/examples/HG002_chr17.gpxil.tif"
+    },
+    {
+      "id": "s2",
+      "type": "input",
+      "label": "Genes (GTF)",
+      "kinds": [
+        "gtf"
+      ],
+      "x": 16,
+      "y": 127,
+      "default": "/data/examples/TP53.gtf",
+      "optional": true
+    },
+    {
+      "id": "s3",
+      "type": "tool",
+      "tool": "gpxil2pxil",
+      "params": {
+        "genes": "TP53",
+        "haplotypes": "all"
+      },
+      "connections": {
+        "input": {
+          "step": "s1",
+          "output": "file"
+        },
+        "annotation": {
+          "step": "s2",
+          "output": "file"
+        }
+      },
+      "x": 286,
+      "y": 16
+    },
+    {
+      "id": "s4",
+      "type": "tool",
+      "tool": "pxil-fasta",
+      "params": {},
+      "connections": {
+        "input": [
+          {
+            "step": "s3",
+            "output": "pxil"
+          }
+        ]
+      },
+      "x": 556,
+      "y": 16
+    }
+  ],
+  "created": "2026-10-20T12:00:00.000Z",
+  "updated": "2026-10-20T12:00:00.000Z"
+}

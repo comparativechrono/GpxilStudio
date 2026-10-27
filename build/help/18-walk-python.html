@@ -1,0 +1,161 @@
+<!-- id: h-walk-python | title: Work with a gpxil file pixel by pixel, in Python | group: Walkthroughs | summary: Planes as NumPy arrays: read a region, decode the codes, find variants, count, compare haplotypes, draw, and write files of your own | keys: python numpy array plane read region decode codes genotype heterozygous homozygous count variants unknown haplotype compare sequence picture pillow write extension plane gpxilwriter notebook manipulate analyse -->
+<h1><!--ICON:python-->Work with a gpxil file pixel by pixel, in Python</h1>
+<p class="lede">In Python, each plane of a gpxil file is a NumPy array with one number for each base, so the questions you ask of a genome – where does this person differ from the reference, and how; what wasn’t called; how do their two copies differ – are a line or two of array arithmetic. This walkthrough asks them of HG002’s TP53, and of his whole chromosome 17, and ends by writing a gpxil file with a plane of its own.</p>
+<p>Each box below is a cell to run in the Notebook tab: press <b>Add to notebook</b> on it, or open the starting notebook, which goes through the same ground. Every box starts by opening the file, so you can run any of them on its own.</p>
+<div class="tryrow"><button class="do" type="button" data-open-nb="~/notebooks/gpxil-in-python.ipynb">Open the starting notebook</button> <button class="do" type="button" data-new-nb>A new notebook</button></div>
+
+<h2>1 · Open a file</h2>
+<p><code>GpxilFile</code> opens a gpxil file: a path, or the address of one on the web. It reads only the metadata; each contig is an object that knows its name, its length, its layout width and its planes.</p>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+
+g = GpxilFile("/data/examples/HG002_chr17.gpxil.tif")
+print(g.sample_id, g.contigs)
+c = g["chr17"]
+print(f"{c.length:,} bases, {c.width} a row, {c.rows:,} rows; planes {c.planes}")</code></pre>
+
+<h2>2 · Read a region of each plane</h2>
+<p><code>c.read(plane, start, end)</code> gives a plane’s values over a region as a NumPy array. Positions in Python count from 0 and the end isn’t included, so TP53, <code>chr17:7,661,779-7,687,546</code> as a genome browser writes it, is <code>start=7_661_778, end=7_687_546</code>. Only the strips of the file that hold the region are read and decompressed: a few hundred kilobytes for a gene, however big the file.</p>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools import codes as C
+
+c = GpxilFile("/data/examples/HG002_chr17.gpxil.tif")["chr17"]
+start, end = 7_661_778, 7_687_546          # TP53
+ref = c.read("ref", start, end)
+gt = c.read("gt", start, end)
+flags = c.read("flags", start, end)
+print(ref.dtype, ref.shape, gt.dtype, flags.dtype)
+print(ref[:12])                            # codes …
+print(C.ref_to_ascii(ref[:60]).decode())   # … as letters (lower case: soft-masked)
+print(c.sequence(start, start + 60))       # the same, in one step</code></pre>
+
+<h2>3 · Decode the codes</h2>
+<p>Every value is a code (<a href="#h-codes">The codes</a>). A <code>ref</code> value is a base as a set of bits – A 1, C 2, G 4, T 8 – plus 16 for a soft-masked base. A <code>gt</code> value holds two states, one in each half of the byte: the high four bits for haplotype 1, the low four for haplotype 2. A state is 0 for the reference’s base, or the bits of another base, or one of the special states: 10 ABSENT, 12 COMPLEX, 13 DEL (deleted), 15 UNKNOWN. HG002’s variant at <code>chr17:7,676,154</code>, which changes TP53’s amino acid 72:</p>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools import codes as C
+
+c = GpxilFile("/data/examples/HG002_chr17.gpxil.tif")["chr17"]
+start, end = 7_661_778, 7_687_546
+ref, gt, flags = (c.read(p, start, end) for p in ("ref", "gt", "flags"))
+i = 7_676_154 - 1 - start                  # chr17:7,676,154 in the region
+print("reference", C.ref_to_ascii(ref[i:i + 1]).decode())
+print("gt", hex(gt[i]), "=", C.describe_gt_byte(int(gt[i])))
+print("haplotype 1:", C.hap1(gt)[i], " haplotype 2:", C.hap2(gt)[i])
+print("flags", flags[i], [name for bit, name in C.FLAG_NAMES.items() if flags[i] &amp; bit])</code></pre>
+<p>The reference has G; the <code>gt</code> value 0x22 is C on both haplotypes (2 is C); the flag is VARIANT_SITE, “a call covers this base”, without PHASED. The quality planes say how sure the call is: <code>c.read("gq", …)</code> and <code>c.read("dp", …)</code> are 254 here, their highest value (255 means not known).</p>
+
+<h2>4 · Find the variants</h2>
+<p>Whole arrays at once: split <code>gt</code> into its two haplotypes, and a base is heterozygous where one haplotype carries another base and the other the reference’s, homozygous where both carry the same other base.</p>
+<pre class="code" data-run="py"><code>import numpy as np
+from gpxiltools import GpxilFile
+from gpxiltools import codes as C
+
+c = GpxilFile("/data/examples/HG002_chr17.gpxil.tif")["chr17"]
+start, end = 7_661_778, 7_687_546
+gt, flags = c.read("gt", start, end), c.read("flags", start, end)
+h1, h2 = C.hap1(gt), C.hap2(gt)
+sub1, sub2 = np.isin(h1, C.HAP_SUB_CODES), np.isin(h2, C.HAP_SUB_CODES)
+het = (sub1 &amp; (h2 == C.HAP_REF)) | (sub2 &amp; (h1 == C.HAP_REF)) | (sub1 &amp; sub2 &amp; (h1 != h2))
+hom = sub1 &amp; sub2 &amp; (h1 == h2)
+deleted = (h1 == C.HAP_DEL) | (h2 == C.HAP_DEL)
+inserted = (flags &amp; (C.FLAG_INS1 | C.FLAG_INS2)) != 0
+unknown = (h1 == C.HAP_UNKNOWN) | (h2 == C.HAP_UNKNOWN)
+print("heterozygous", het.sum(), "homozygous", hom.sum(), "deleted bases", deleted.sum(),
+      "insertions after", inserted.sum(), "not called", unknown.sum())
+print("homozygous at", (np.nonzero(hom)[0] + start + 1).tolist())   # back to 1-based positions</code></pre>
+<p>In TP53, HG002 has 3 heterozygous and 11 homozygous substitutions, 27 deleted bases and 2 insertions, and 970 bases weren’t called. <code>np.nonzero</code> gives where in the region; adding <code>start + 1</code> turns those back into positions as a genome browser writes them.</p>
+
+<h2>5 · A whole chromosome, a piece at a time</h2>
+<p>The same counts over the whole of chromosome 17. Reading it in pieces of 8 million bases keeps the memory needed small – 8 MB for each plane read, and a few times that for the arrays worked out from it – however long the chromosome. This is how to go through a whole genome in the browser (<a href="#h-walk-big">A whole genome without running out of memory</a>).</p>
+<pre class="code" data-run="py"><code>import numpy as np
+from gpxiltools import GpxilFile
+from gpxiltools import codes as C
+
+c = GpxilFile("/data/examples/HG002_chr17.gpxil.tif")["chr17"]
+step = 8_388_608
+het = hom = unknown = 0
+for a in range(0, c.length, step):
+    gt = c.read("gt", a, min(a + step, c.length))
+    h1, h2 = C.hap1(gt), C.hap2(gt)
+    sub1, sub2 = np.isin(h1, C.HAP_SUB_CODES), np.isin(h2, C.HAP_SUB_CODES)
+    het += int(((sub1 &amp; (h2 == C.HAP_REF)) | (sub2 &amp; (h1 == C.HAP_REF)) | (sub1 &amp; sub2 &amp; (h1 != h2))).sum())
+    hom += int((sub1 &amp; sub2 &amp; (h1 == h2)).sum())
+    unknown += int(((h1 == C.HAP_UNKNOWN) &amp; (h2 == C.HAP_UNKNOWN)).sum())
+print(f"{het:,} heterozygous and {hom:,} homozygous substitutions")
+print(f"{unknown:,} of {c.length:,} bases not called ({unknown / c.length:.1%})")</code></pre>
+<p>HG002 has 54,935 heterozygous and 34,713 homozygous substitutions on chromosome 17, and 13.1 % of it wasn’t called with confidence by the benchmark: mostly centromeres, segmental duplications and other hard places.</p>
+
+<h2>6 · Compare the two haplotypes</h2>
+<p>Where do HG002’s two copies of TP53 differ from each other? Where their states differ. With phased calls (PHASED in <code>flags</code>), haplotype 1 is one parent’s copy throughout a phase set (the <code>ps</code> plane); HG002’s calls here aren’t phased, so it only says which bases are heterozygous. The sequences themselves come from <code>haplotype_sequence</code>, which applies the variants to the reference, insertions and deletions included.</p>
+<pre class="code" data-run="py"><code>import numpy as np
+from gpxiltools import GpxilFile
+from gpxiltools import codes as C
+from gpxiltools.export import haplotype_sequence
+
+c = GpxilFile("/data/examples/HG002_chr17.gpxil.tif")["chr17"]
+start, end = 7_661_778, 7_687_546
+gt = c.read("gt", start, end)
+differ = C.hap1(gt) != C.hap2(gt)
+print(differ.sum(), "bases where the two haplotypes differ:", (np.nonzero(differ)[0] + start + 1).tolist())
+s1 = haplotype_sequence(c, 1, start, end).decode()
+s2 = haplotype_sequence(c, 2, start, end).decode()
+print(len(s1), len(s2), "bases, against", end - start, "in the reference")</code></pre>
+
+<h2>7 · A picture of your own</h2>
+<p>Any array of colours is a picture. Here each base of TP53 is coloured by what HG002 has there, laid out 256 bases a row, and enlarged three times. Pillow saves it, and a notebook shows it when it is the last line of a cell.</p>
+<pre class="code" data-run="py"><code>import numpy as np
+from PIL import Image
+from gpxiltools import GpxilFile
+from gpxiltools import codes as C
+
+c = GpxilFile("/data/examples/HG002_chr17.gpxil.tif")["chr17"]
+start, end = 7_661_778, 7_687_546
+gt = c.read("gt", start, end)
+h1, h2 = C.hap1(gt), C.hap2(gt)
+sub1, sub2 = np.isin(h1, C.HAP_SUB_CODES), np.isin(h2, C.HAP_SUB_CODES)
+colour = np.full((gt.size, 3), 235, np.uint8)                       # the reference: light grey
+colour[(h1 == C.HAP_UNKNOWN) | (h2 == C.HAP_UNKNOWN)] = (170, 170, 190)  # not called
+colour[sub1 ^ sub2] = (255, 140, 0)                                 # one haplotype: orange
+colour[sub1 &amp; sub2] = (200, 0, 0)                                   # both: red
+colour[(h1 == C.HAP_DEL) | (h2 == C.HAP_DEL)] = (20, 20, 20)        # deleted: black
+width = 256
+rows = -(-gt.size // width)                                         # rounded up
+pixels = np.full((rows * width, 3), 255, np.uint8)
+pixels[:gt.size] = colour
+picture = Image.fromarray(pixels.reshape(rows, width, 3)).resize((width * 3, rows * 3), Image.NEAREST)
+picture.save("/home/user/results/TP53_my_picture.png")
+picture</code></pre>
+<p><code>gpxiltools.render</code> does the same with the palettes, views and print colours of <code>gpxil render</code> (<a href="#h-walk-render">Draw a gene, a region or a chromosome</a>).</p>
+
+<h2>8 · Write FASTA and VCF of a region</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.export import iter_haplotype, write_fasta_stream, write_vcf
+
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    c = g["chr17"]
+    with open("/home/user/results/TP53_haplotypes.fa", "wb") as out:
+        for h in (1, 2):
+            write_fasta_stream(out, f"TP53_HG002_hap{h}", iter_haplotype(c, h, 7_661_778, 7_687_546))
+    with open("/home/user/results/TP53_from_python.vcf", "w") as out:
+        n = write_vcf(g, out, regions=[("chr17", 7_661_778, 7_687_546)], nocall_blocks=False)
+print(n, "VCF records")</code></pre>
+
+<h2>9 · A gpxil file of your own, with a plane of your own</h2>
+<p><code>GpxilWriter</code> writes gpxil files: give it each contig’s planes as arrays. Besides the standard planes, a file can carry planes of your own, whose names start with <code>x-</code>. Here the mitochondrion’s reference is copied from GRCh38, with a new plane, <code>x-gc</code>: the percentage of G and C in the 101 bases around each base. The checksums are copied too, so the new file can prove that its reference is GRCh38’s.</p>
+<pre class="code" data-run="py"><code>import numpy as np
+from gpxiltools import GpxilFile, GpxilWriter
+from gpxiltools import codes as C
+from gpxiltools.validate import validate
+
+with GpxilFile("/data/grch38/chrM.gpxil.tif") as g:
+    c = g["chrM"]
+    ref = c.read("ref")
+    checksums = {k: c.entry[k] for k in ("md5", "refget")}
+    reference = g.metadata["reference"]
+base = C.ref_base_nibble(ref)                                   # without the soft-mask bit
+gc = np.isin(base, (C.BASE_G, C.BASE_C)).astype(float)
+gc_101 = np.round(np.convolve(gc, np.ones(101) / 101, mode="same") * 100).astype(np.uint8)
+with GpxilWriter("/home/user/genomes/chrM_gc.gpxil.tif", width=128, reference=reference) as w:
+    w.add_contig("chrM", {"ref": ref, "x-gc": gc_101}, **checksums)
+print(validate("/home/user/genomes/chrM_gc.gpxil.tif").ok, GpxilFile("/home/user/genomes/chrM_gc.gpxil.tif")["chrM"].planes)</code></pre>
+<p>A reader that doesn’t know a plane of your own ignores it, so the file is still a gpxil file to every tool, and <code>gpxil validate</code> passes it. A plane with a sample’s genotype needs <code>GpxilWriter(…, sample={"id": …})</code> and a <code>flags</code> plane beside its <code>gt</code>; <code>gpxil encode</code> makes those from a VCF.</p>
+<!--CITE: gpxiltools numpy gpxil-->

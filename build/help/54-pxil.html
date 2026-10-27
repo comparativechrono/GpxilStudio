@@ -1,0 +1,69 @@
+<!-- id: h-pxil | title: pxil pictures of sequences | group: gpxil and pxil | summary: The pxil format: one sequence as a PNG picture, one pixel a residue, with what it is in its metadata | keys: pxil png picture sequence protein transcript gene alphabet metadata itxt palette colours taylor pixel residue amino acid read write pillow fasta file names files tab point -->
+<h1><!--ICON:pixels-->pxil pictures of sequences</h1>
+<p class="lede">A pxil file holds one sequence – a gene, a transcript, a protein, or any other string of letters – as a picture: one pixel a residue, in rows like a page of text. It is an ordinary PNG, so anything that shows pictures shows it, and its pixels are the residues themselves, so the sequence comes back exactly. gpxil is for whole genomes; pxil is for single sequences, to look at, share and compare.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="gpxil2pxil" data-input="/data/examples/HG002_chr17.gpxil.tif" data-genes="TP53" data-haplotypes="all">Make TP53’s pictures</button> <button class="do" type="button" data-goto="h-walk-genes">The walkthrough</button></div>
+
+<h2>Pixels are residues</h2>
+<p>A pxil file is an 8-bit indexed-colour PNG. Each pixel’s value is a residue’s place in the file’s <b>alphabet</b>, a string of up to 256 letters stored with it: value <i>i</i> is the alphabet’s letter <i>i</i>. Residue <i>i</i>, counting from 0, is in row <i>i</i> ÷ <i>width</i> and column <i>i</i> mod <i>width</i>, and the pixels after the last residue are 0, which is kept for padding. The PNG’s palette gives each value a colour, so that the picture can be seen, but the colours mean nothing to a reader: change them, and the sequence is the same.</p>
+<p>Two alphabets are standard:</p>
+<table>
+<tr><th>Alphabet</th><th>Letters</th><th>Colours, as gpxil2pxil and pxil make them</th></tr>
+<tr><td>DNA, 32 letters</td><td><code>-ACMGRSVTWYHKDBN-acmgrsvtwyhkdbn</code></td><td>A red, C blue, G green, T yellow, N grey, ambiguity codes mixed, and soft-masked (lower-case) bases paler</td></tr>
+<tr><td>protein, 28 letters</td><td><code>-ACDEFGHIKLMNPQRSTVWYUOBZJX*</code></td><td>Taylor’s colours, one for each amino acid, and the stop codon <code>*</code> near black</td></tr>
+</table>
+<p>The DNA alphabet is gpxil’s <code>ref</code> code (<a href="#h-codes">The codes</a>), so a base’s pixel value is the same in both formats. Any other alphabet will do too, such as <code>-ACGUN</code> for RNA.</p>
+
+<h2>What it says about itself</h2>
+<p>The PNG has a text chunk (<code>iTXt</code>) named <code>pxil</code>, which holds JSON:</p>
+<table>
+<tr><th></th><th>Keys</th></tr>
+<tr><td>required</td><td><code>pxil</code> (the version, <code>"0.1"</code>), <code>kind</code> (<code>gene</code>, <code>transcript</code>, <code>protein</code> or <code>sequence</code>), <code>alphabet</code>, <code>length</code>, <code>width</code></td></tr>
+<tr><td>recommended</td><td><code>id</code>, <code>name</code>, <code>source</code>, <code>created</code>, <code>generator</code>, and <code>sha256</code>, the sequence’s checksum</td></tr>
+<tr><td>for a place in a genome</td><td><code>assembly</code>, <code>contig</code>, <code>start</code> and <code>end</code> (counting from 0, the end not included), <code>strand</code>, <code>orientation</code>, <code>gene</code>, <code>transcript</code>, <code>protein</code>, <code>exons</code>, <code>cds</code>, <code>genetic_code</code>, <code>palette</code>, <code>description</code></td></tr>
+<tr><td>added by gpxil2pxil</td><td><code>sample</code> and <code>haplotype</code>, for a sequence made from a person; <code>notes</code>, such as <i>differs from the reference: P72R</i>; and a transcript’s <code>biotype</code> and <code>tags</code> (Ensembl canonical, MANE Select, MANE Plus Clinical)</td></tr>
+</table>
+<p>A gene’s picture is its genomic sequence, introns included, 5′ to 3′. A transcript’s is spliced, 5′ to 3′, and written with T, as in Ensembl’s cDNA files. A protein’s runs from its N terminus to its C terminus, with the stop codon as <code>*</code>.</p>
+
+<h2>Names</h2>
+<p>pxil files are named <code><i>label</i>.<i>kind</i>.pxil.png</code>, such as <code>TP53-201_ENSP00000269305.protein.pxil.png</code>, with the database’s ID in the label; gpxil2pxil adds the sample and haplotype, as in <code>TP53-201_ENSP00000269305_HG002-hap1.protein.pxil.png</code>. The name ends in <code>.png</code> so that computers treat the file as the picture it is. Readers go by the metadata, though, not the name.</p>
+
+<h2>Looking at one</h2>
+<p>Open a pxil file in the Files tab, and it is shown large, pixel by pixel, with its metadata – its kind, IDs and length, where it comes from, its notes – and its sequence, read from the pixels in the page, without Python. Point at a pixel, and the line under the picture names the residue and its number, such as <i>amino acid 72: R (arginine)</i>. <b>Copy the sequence</b> puts the sequence on the clipboard, and <b>As FASTA (pxil)</b> opens <a href="#h-tool-pxil-fasta">pxil pictures → FASTA</a>.</p>
+
+<h2>pxil and gpxil</h2>
+<table>
+<tr><th></th><th>gpxil</th><th>pxil</th></tr>
+<tr><td>holds</td><td>whole genomes, and one person’s variants</td><td>one sequence</td></tr>
+<tr><td>file</td><td>TIFF: <code>.gpxil.tif</code></td><td>PNG: <code>.pxil.png</code></td></tr>
+<tr><td>residues</td><td>DNA, as gpxil codes, in several planes</td><td>any alphabet: DNA, RNA, protein …</td></tr>
+<tr><td>coordinates</td><td>every pixel is a position in the genome</td><td>optional, in the metadata</td></tr>
+<tr><td>for</td><td>storing, exchanging and analysing genomes</td><td>looking at, sharing and analysing single sequences</td></tr>
+</table>
+<p>pxil is deliberately small and permissive. The Gpxil browser offers its transcripts and proteins as pxil files, and gpxil2pxil makes them from any gpxil file (<a href="#h-tool-gpxil2pxil">Genes, transcripts and proteins as pxil pictures</a>).</p>
+
+<h2>In Python</h2>
+<p>The <code>pxil</code> package reads and writes pxil files, but Pillow alone is enough to read one. This makes the reference’s TP53 protein with the example GTF, and reads it back both ways:</p>
+<pre class="code" data-run="py"><code>import json
+from PIL import Image
+import pxil
+from gpxiltools import GpxilFile
+from gpxil2pxil import GTF, make
+
+gene = GTF("/data/examples/TP53.gtf").find("TP53")
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    f = make(g, gene, kinds=["protein"], haplotypes=(None,), out_dir="/home/user/results/pxil/TP53-ref")[0]
+print(f.path)
+
+# with Pillow alone: the pixels' values, row by row, are places in the alphabet
+im = Image.open(f.path)
+meta = json.loads(im.info["pxil"])
+indices = im.tobytes()[: meta["length"]]
+sequence = "".join(meta["alphabet"][i] for i in indices)
+print(meta["kind"], meta["name"], meta["length"], im.size, sequence[:20])
+
+# with the pxil package
+seq, meta = pxil.read(f.path)
+print(seq == sequence, "amino acid 72:", seq[71])
+pxil.write("/home/user/results/my-rna.pxil.png", "AUGGCUUGA", alphabet="-ACGUN", id="my-rna")
+print(pxil.read("/home/user/results/my-rna.pxil.png"))</code></pre>
+<!--CITE: pxil gpxil2pxil pillow ensembl-->

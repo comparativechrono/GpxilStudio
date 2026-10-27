@@ -1,0 +1,38 @@
+<!-- id: h-tool-validate | title: Check a gpxil file | group: Tools | summary: gpxil validate: a file against the specification, its codes, its sidecar and its checksums | keys: validate check valid invalid conformance specification schema codes digest checksum md5 refget errors warnings -->
+<h1><!--ICON:badgeCheck-->Check a gpxil file</h1>
+<p class="lede"><code>gpxil validate</code> checks a file against the gpxil specification, so that you – and anyone you send it to – can trust what it says. It reads the whole file a piece at a time, so it needs little memory even for a whole genome.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="validate" data-input="/data/examples/worked-example.gpxil.tif">Check the worked example</button></div>
+
+<h2>What it checks</h2>
+<ul>
+  <li>The <b>metadata</b>, against the specification’s JSON schema: the keys a file must have, and the right kind of value in each.</li>
+  <li>The <b>pages</b>: that every contig has the pages its metadata names, in the right order, of the right size and type, with zero padding after the last base.</li>
+  <li>The <b>codes</b>: that every value of the <code>ref</code>, <code>gt</code> and <code>flags</code> planes is one the specification allows, that no haplotype claims as a variant the reference’s own base, and that phase sets are only on phased bases.</li>
+  <li>The <b>sidecar</b>: that it reads back, that each base flagged as followed by an insertion has exactly one inserted sequence and the other way round, and that every complex variant has its entry.</li>
+  <li>The <b>checksums</b>, if you ask: it spells out the reference plane’s bases and compares their MD5 and refget checksums with the metadata’s, which proves that the reference is the one the file names.</li>
+</ul>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>The file to check.</dd>
+  <dt>Recompute the sequences’ checksums</dt><dd>On by default. It reads every base of the reference plane: a few seconds for a chromosome kept here, and longer for one read from the web, which has to be downloaded (chromosome 1 is 67 MB). Untick it for a quick check.</dd>
+</dl>
+
+<h2>What it says</h2>
+<p><b>Valid</b>, with the number of contigs checked, or <b>Not valid</b> with a table of what is wrong. An <b>error</b> is something a reader can’t rely on: the file doesn’t follow the specification. A <b>warning</b> is worth knowing about but doesn’t make the file invalid. A file that isn’t gpxil, such as a TIFF picture, fails at once: its first page has no gpxil metadata. It writes no files.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil validate /data/examples/worked-example.gpxil.tif
+gpxil validate --no-digests /data/examples/HG002_chr17.gpxil.tif</code></pre>
+<p>It ends with exit status 0 for a valid file and 1 for one that isn’t, so a script can use it: <code>gpxil validate FILE &amp;&amp; echo fine</code>.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools.validate import validate
+
+report = validate("/data/examples/HG002_chr17.gpxil.tif", check_digests=False)
+print("valid" if report.ok else "not valid", report.checked)
+for e in report.errors:
+    print("error:", e)
+for w in report.warnings:
+    print("warning:", w)</code></pre>
+<!--CITE: gpxiltools gpxil refget-->

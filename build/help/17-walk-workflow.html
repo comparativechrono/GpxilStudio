@@ -1,0 +1,48 @@
+<!-- id: h-walk-workflow | title: Do the same steps again: workflows | group: Walkthroughs | summary: Run an example workflow, run it on another file, change it, and make one from the tools you’ve run | keys: workflow workflows galaxy pipeline chain steps run again batch repeat automate commands.sh notebook record -->
+<h1><!--ICON:workflow-->Do the same steps again: workflows</h1>
+<p class="lede">A workflow chains tools together: the files one step writes go straight into the next, so a job of several steps runs in one go, and can run again on another file. This walkthrough runs one of the example workflows, runs it again on a file of your own, changes it, and makes a workflow from tools you’ve already run.</p>
+
+<h2>1 · The workflows</h2>
+<p><b>Workflows</b>, at the top of the Tools tab, lists your workflows, the examples and the runs so far.</p>
+<div class="tryrow"><button class="do" type="button" data-workflows="list">Open Workflows</button></div>
+<table>
+<tr><th>Example</th><th>What it does</th></tr>
+<tr><td>From a VCF to a gpxil file, checked and drawn</td><td>encodes HG002’s variants around TP53 on chromosome 17 of GRCh38, checks the new file, draws TP53 and makes pictures of his TP53 proteins</td></tr>
+<tr><td>A person’s own TP53: pictures and sequences</td><td>TP53’s gene, transcript and protein from both of HG002’s haplotypes and the reference, as pxil pictures, and their sequences as FASTA</td></tr>
+<tr><td>Back to FASTA and VCF, and round again</td><td>TP53’s two haplotypes as FASTA, its variants as VCF, and that VCF encoded again and checked</td></tr>
+<tr><td>Pictures of a gene, and a proof to print</td><td>TP53 drawn three ways, and a proof of chromosome 17 as a book</td></tr>
+</table>
+
+<h2>2 · Run one</h2>
+<p>Open <b>A person’s own TP53</b>. The run page lists the workflow’s inputs, each with a file already chosen, and the folder for the results. Press <b>Run it</b>.</p>
+<div class="tryrow"><button class="do" type="button" data-workflow="/data/examples/workflows/gene-pictures.workflow.json">Run “A person’s own TP53”</button></div>
+<p>The steps run one after another, each with the files the steps before it wrote. As each finishes, it says what it did; open it to see its command and what it printed. A step whose files a failed step should have written doesn’t run, and says so.</p>
+
+<h2>3 · What a run leaves</h2>
+<p>Each run has a folder of its own, <code>~/results/<i>workflow</i>/<i>input</i></code>, here <code>~/results/a-person-s-own-tp53-pictures-and-sequences/hg002-chr17</code>. It holds the files the steps wrote, and two more:</p>
+<ul>
+  <li><code>workflow-run.json</code>, the record of the run: the files given, each step’s command, what it printed and what it wrote. Open it to see the run again, step by step.</li>
+  <li><code>commands.sh</code>, the steps as terminal commands. <code>bash commands.sh</code> in the terminal runs them again, and on your own computer they run as they are, once the packages are installed.</li>
+</ul>
+<p><b>Open the steps as a notebook</b>, under a finished run, turns its steps into a notebook of Python, a cell for each step, to change and run a piece at a time.</p>
+
+<h2>4 · Run it on another file</h2>
+<p>Run the same workflow on any gpxil file with a sample: choose it in the first input. If you made <code>~/genomes/HG002_TP53.gpxil.tif</code> in <a href="#h-walk-encode">Turn someone’s VCF into a gpxil file</a>, try it on that.</p>
+<div class="tryrow"><button class="do" type="button" data-workflow="/data/examples/workflows/gene-pictures.workflow.json" data-input="~/genomes/HG002_TP53.gpxil.tif">Run it on HG002_TP53.gpxil.tif</button></div>
+<p>The settings that come from a file – the region of a picture, say – are worked out for each file, as the Tools tab works them out, unless the workflow gives them.</p>
+
+<h2>5 · Change it</h2>
+<p>An example can’t be changed, but you can edit a copy, which is saved in <code>~/workflows</code>. The editor draws each step as a box: its input files on the left, the files it writes on the right.</p>
+<div class="tryrow"><button class="do" type="button" data-workflow="/data/examples/workflows/gene-pictures.workflow.json" data-view="edit">Edit a copy</button></div>
+<ul>
+  <li>Click a box to see its settings beside the boxes, and change them: to make pictures of BRCA1 as well, put <code>TP53 BRCA1</code> in the <b>Genes</b> of the gpxil2pxil step.</li>
+  <li>Drag from a file a step writes (the dot on the right of its box) to an input of another step to connect them. Only files of a kind the input takes will connect.</li>
+  <li>The <b>+</b> by a file offers the tools that read it, and adds the one you choose, connected.</li>
+  <li><b>+ Input file</b> adds an input to the workflow, and <b>+ Add a step</b> a tool. <b>Tidy</b> lays the boxes out in columns. The editor saves as you go; the download button saves the workflow file, to keep or to send to someone.</li>
+</ul>
+<p>A step with a problem – an input not connected, say, or an input of the workflow that nothing reads – is marked on its box. Click an empty part of the editor to see the workflow’s own settings, its name and what it does, with its problems listed under <b>Checks</b>. It won’t run until they’re fixed.</p>
+
+<h2>6 · A workflow from what you’ve done</h2>
+<p>If you’ve just run a few tools by hand, one after another, <b>Make one from the tools you’ve run</b> turns them into a workflow: the files you started from become its inputs, and a file that one tool wrote and the next read becomes a connection. The settings you changed are kept.</p>
+<div class="tryrow"><button class="do" type="button" data-workflows="extract">Make one from the tools you’ve run</button></div>
+<!--CITE: gpxiltools gpxil2pxil-->

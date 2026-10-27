@@ -1,0 +1,121 @@
+<!-- id: h-python | title: The packages in Python | group: Notebook and terminal | summary: The main functions of gpxiltools, gpxil2pxil and pxil, with examples | keys: python api import functions module gpxiltools gpxilfile gpxilwriter read sequence codes hap1 hap2 dosage encode validate render rendering picture book export haplotype_sequence write_vcf palettes gpxil2pxil gtf browserdata gene transcript source protein make pxil read write numpy reference no-ref url -->
+<h1><!--ICON:python-->The packages in Python</h1>
+<p class="lede">These are the main functions of each package, for notebooks and scripts. Every command of the terminal is a function you can call, and every tool in the Tools tab shows its Python under <b>The same in the terminal, and in Python</b>. Add any box below to the open notebook with its button. A package’s own help, such as <code>help(gpxiltools.render.render)</code>, tells you more.</p>
+<div class="tryrow"><button class="do" type="button" data-open-nb="~/notebooks/gpxil-in-python.ipynb">Open the starting notebook</button> <button class="do" type="button" data-new-nb>Start a new notebook</button></div>
+<p>Positions in Python count from 0, and the end of a region isn’t included, as in Python’s own slices. So TP53, <code>chr17:7,661,779-7,687,546</code> as a genome browser writes it, is <code>start=7_661_778, end=7_687_546</code>.</p>
+
+<h2>Where things are</h2>
+<table>
+<tr><th>Module</th><th>The main functions</th></tr>
+<tr><td><code>gpxiltools</code></td><td><code>GpxilFile(path or URL, reference=None)</code> opens a file; <code>g["chr17"]</code> is a contig, with <code>.length</code>, <code>.width</code>, <code>.planes</code>, <code>.read(plane, start, end)</code> (a NumPy array) and <code>.sequence(start, end)</code> (the reference’s letters). <code>GpxilWriter</code> writes files.</td></tr>
+<tr><td><code>gpxiltools.codes</code></td><td>The codes (<a href="#h-codes">The codes</a>): <code>hap1(gt)</code> and <code>hap2(gt)</code> split a genotype into its haplotypes; <code>haplotype_bases</code>, <code>genotype_iupac</code>, <code>dosage</code> (copies of A, C, G and T at each base, for sequence models), <code>ref_to_ascii</code>, <code>describe_gt_byte</code>; the constants <code>HAP_REF</code>, <code>HAP_DEL</code>, <code>HAP_UNKNOWN</code>, <code>FLAG_PHASED</code> and the rest.</td></tr>
+<tr><td><code>gpxiltools.encode</code></td><td><code>encode(reference, out, vcf=…, callable_bed=…, contigs=…, include_ref=…, planes=…, sex=…)</code>: what <code>gpxil encode</code> does</td></tr>
+<tr><td><code>gpxiltools.validate</code></td><td><code>validate(path)</code>: a report with <code>.ok</code>, <code>.errors</code> and <code>.warnings</code></td></tr>
+<tr><td><code>gpxiltools.render</code></td><td><code>render(contig, mode=…, palette=…, start=…, end=…, bases_per_row=…)</code>: a picture, with <code>.scaled(n)</code>, <code>.to_rgb()</code>, <code>.to_cmyk()</code>, <code>.save_png(…)</code> and <code>.save_tiff(…)</code>. <code>render_arrays</code> draws arrays you’ve made yourself.</td></tr>
+<tr><td><code>gpxiltools.layout</code></td><td><code>hilbert_image</code>, and <code>position_to_pixel</code> and <code>pixel_to_position</code> between a base and its pixel</td></tr>
+<tr><td><code>gpxiltools.book</code></td><td><code>make_book(g, out, contigs=…, mode=…, colorspace=…, layout=BookLayout(…), max_pages=…)</code>: what <code>gpxil book</code> does</td></tr>
+<tr><td><code>gpxiltools.export</code></td><td><code>haplotype_sequence</code>, <code>genotype_iupac_sequence</code> and their <code>iter_…</code> forms for long regions, <code>write_fasta_stream</code>, <code>write_vcf</code>, <code>iter_vcf_records</code></td></tr>
+<tr><td><code>gpxiltools.palettes</code></td><td><code>describe()</code>, <code>get_palette(name)</code>, <code>ref_colours(palette)</code></td></tr>
+<tr><td><code>gpxil2pxil</code></td><td><code>GTF(path)</code> or <code>BrowserData()</code> (the Gpxil browser’s genes); <code>.find("TP53")</code> gives a gene, with <code>.transcripts</code>, <code>.canonical()</code> and <code>.select(…)</code>. <code>Source(g, haplotype)</code> gives sequences: <code>.gene(gene)</code>, <code>.spliced(t)</code>, <code>.protein(t)</code>. <code>make(g, gene, …)</code> writes the pxil files.</td></tr>
+<tr><td><code>pxil</code></td><td><code>read(path)</code> gives the sequence and the metadata; <code>write(path, sequence, kind=…, …)</code> makes a pxil file</td></tr>
+</table>
+
+<h2>Opening a file, with or without its reference</h2>
+<p><code>GpxilFile</code> reads only the metadata when it opens a file, and a plane only where you ask for it. A file written without its reference plane (<code>--no-ref</code>) needs the reference to give its bases: a FASTA file, or a gpxil file of the reference such as those in <code>/data/grch38</code>. gpxiltools checks it against the checksums in the file, so the wrong reference can’t be used by mistake.</p>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.encode import encode
+
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    print(g.sample_id, g.metadata["reference"]["name"], g.contigs)
+    c = g["chr17"]
+    print(f"{c.length:,} bases, {c.width:,} a row; planes {c.planes}")
+    print(c.sequence(7_676_148, 7_676_160), c.entry["md5"])
+
+# the specification's worked example, written without its reference plane, then read with it
+encode("/data/examples/worked-example.fa", "/home/user/genomes/worked-example.noref.gpxil.tif",
+       vcf="/data/examples/worked-example.vcf", include_ref=False, width=4)
+with GpxilFile("/home/user/genomes/worked-example.noref.gpxil.tif", reference="/data/examples/worked-example.fa") as g:
+    c = g["chrT"]
+    print(c.planes, c.has("ref"), c.sequence())</code></pre>
+<p>A gpxil file on a web server opens just as a path does, and is read a piece at a time with range requests: on your own computer, <code>GpxilFile("https://comparativechrono.github.io/Gpxil-browser/data/grch38/gpxil/chr17.gpxil.tif")</code> reads chromosome 17 of GRCh38 from the Gpxil browser’s site. In the studio, use <code>/data/grch38/chr17.gpxil.tif</code>, which is the same file.</p>
+
+<h2>Arrays, and the codes</h2>
+<pre class="code" data-run="py"><code>import numpy as np
+from gpxiltools import GpxilFile
+from gpxiltools import codes as C
+
+c = GpxilFile("/data/examples/HG002_chr17.gpxil.tif")["chr17"]
+start, end = 7_661_778, 7_687_546                       # TP53
+ref, gt = c.read("ref", start, end), c.read("gt", start, end)
+h1, h2 = C.hap1(gt), C.hap2(gt)
+print("bases where haplotype 1 differs from the reference:", int((h1 != C.HAP_REF).sum()))
+iupac = C.genotype_iupac(ref, gt)                        # both haplotypes as one IUPAC code a base
+print(C.IUPAC[iupac[7_676_154 - 1 - start]], C.describe_gt_byte(int(gt[7_676_154 - 1 - start])))
+d = C.dosage(ref, gt)                                    # copies of A, C, G and T: an (n, 4) array
+print(d.shape, d[7_676_154 - 1 - start])</code></pre>
+<p><a href="#h-walk-python">Work with a gpxil file pixel by pixel, in Python</a> goes further: finding variants, counting a whole chromosome, comparing the haplotypes, and writing a file with a plane of your own.</p>
+
+<h2>Making, checking and drawing</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.encode import encode
+from gpxiltools.validate import validate
+from gpxiltools.render import render
+
+summary = encode("/data/examples/worked-example.fa", "/home/user/genomes/worked-example.gpxil.tif",
+                 vcf="/data/examples/worked-example.vcf", width=4)
+print(summary)
+report = validate("/home/user/genomes/worked-example.gpxil.tif")
+print("valid" if report.ok else report.errors)
+
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    picture = render(g["chr17"], mode="haplotypes", palette="okabe-ito", start=7_676_000, end=7_676_400, bases_per_row=40)
+picture.scaled(6).save_png("/home/user/results/TP53_exon4_haplotypes.png")
+print(picture.title, picture.shape, [label for label, _ in picture.legend])</code></pre>
+<p>For a whole genome, give <code>encode</code> a gpxil reference, such as <code>/data/grch38/chr17.gpxil.tif</code>, and a VCF and BED file on the same reference (<a href="#h-walk-encode">Turn someone’s VCF into a gpxil file</a>). <code>make_book</code>, in <code>gpxiltools.book</code>, prints a file as a PDF (<a href="#h-walk-book">Print a chromosome as a book</a>).</p>
+
+<h2>Sequences and VCF</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.export import haplotype_sequence, genotype_iupac_sequence, write_vcf
+
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    c = g["chr17"]
+    print(genotype_iupac_sequence(c, 7_676_140, 7_676_170).decode())   # both haplotypes, in IUPAC letters
+    print(haplotype_sequence(c, 1, 7_676_140, 7_676_170).decode())      # haplotype 1 alone
+    with open("/home/user/results/TP53_python.vcf", "w") as out:
+        n = write_vcf(g, out, regions=[("chr17", 7_661_778, 7_687_546)], nocall_blocks=False)
+print(n, "VCF records")</code></pre>
+
+<h2>gpxil2pxil: genes, transcripts and proteins</h2>
+<p>Genes come from a GTF file, or from the Gpxil browser’s gene files (<code>BrowserData()</code>, Ensembl’s genes on GRCh38), which the studio reads from the web. <code>Source</code> gives a sequence from the reference (<code>Source(g)</code>) or from one of the sample’s haplotypes (<code>Source(g, 1)</code>), with the person’s variants in it.</p>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxil2pxil import GTF, Source, make
+from gpxil2pxil.sequence import protein_differences
+
+g = GpxilFile("/data/examples/HG002_chr17.gpxil.tif")
+gene = GTF("/data/examples/TP53.gtf").find("TP53")
+t = gene.canonical()                                   # the Ensembl canonical transcript, TP53-201
+print(gene.id, len(gene.transcripts), "transcripts;", t.name, t.id, t.protein)
+reference, hap1 = Source(g).protein(t), Source(g, 1).protein(t)
+print(len(reference), "amino acids; haplotype 1:", protein_differences(reference, hap1))
+for f in make(g, gene, kinds=["protein"], haplotypes=(None, 1, 2), out_dir="/home/user/results/pxil-python"):
+    print(f.path, f.length, f.notes)</code></pre>
+
+<h2>pxil files</h2>
+<p>A pxil file is a PNG picture of one sequence, so <code>pxil.read</code> needs nothing but Pillow. <code>pxil.write</code> makes one from any sequence: <code>kind</code> is <code>gene</code>, <code>transcript</code>, <code>protein</code> or <code>sequence</code>, and other keywords go into its metadata.</p>
+<pre class="code" data-run="py"><code>import pxil
+
+# (a file that the box above wrote)
+sequence, meta = pxil.read("/home/user/results/pxil-python/TP53-201_ENSP00000269305_HG002-hap1.protein.pxil.png")
+print(meta["kind"], meta["length"], meta["notes"], sequence[60:80])
+pxil.write("/home/user/results/TP53_start.pxil.png", sequence[:40], kind="protein", name="TP53, amino acids 1-40", source="HG002, haplotype 1")
+print(pxil.read("/home/user/results/TP53_start.pxil.png"))</code></pre>
+
+<h2>Many files at once</h2>
+<pre class="code" data-run="py"><code>import glob, os
+from gpxiltools import GpxilFile
+
+for path in sorted(glob.glob("/data/examples/*.gpxil.tif") + glob.glob("/home/user/genomes/*.gpxil.tif")):
+    with GpxilFile(path) as g:
+        bases = sum(c.length for c in g)
+        print(f"{os.path.basename(path):36} {g.sample_id or '(the reference)':16} {len(g.contigs)} contig(s), {bases:>12,} bases")</code></pre>
+<!--CITE: gpxiltools gpxil2pxil pxil numpy-->

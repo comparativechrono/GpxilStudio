@@ -1,0 +1,31 @@
+<!-- id: h-privacy | title: Privacy | group: Reference | summary: What stays on this computer, what the page reads from the web, and genomes as personal data | keys: privacy data protection personal data genome genetic data patient confidential gdpr consent identifying relatives local browser storage indexeddb network jsdelivr github pages gpxil browser reference range requests cookies tracking analytics share picture book -->
+<h1><!--ICON:lock-->Privacy</h1>
+<p class="lede">GpxilStudio is a web page that does all its work in your browser. Your genomes, VCF files and everything you make aren’t uploaded anywhere, and there’s no server behind the page that could see them.</p>
+
+<h2>What stays on this computer</h2>
+<ul>
+  <li>Your files, notebooks and workflows, which are kept in this browser’s storage for the site (<a href="#h-files">Your files</a>). A file you add is read by the page and by Python in the page, and by nothing else.</li>
+  <li>Small settings: the tab you were on, the help page you were reading, where you were in the Viewer, the commands you typed in the terminal, and the name you gave the terminal.</li>
+</ul>
+<p>The page has no cookies, no accounts and no analytics.</p>
+
+<h2>What the page reads from the web</h2>
+<table>
+<tr><th>When</th><th>From</th><th>What the server learns</th></tr>
+<tr><td>Python first starts</td><td>cdn.jsdelivr.net (Pyodide, NumPy, Pillow, jsonschema and matplotlib)</td><td>nothing of yours: these are ordinary downloads, which your browser then keeps</td></tr>
+<tr><td>The studio’s examples are read</td><td>the studio’s own web site</td><td>which parts of the example files are read</td></tr>
+<tr><td>The GRCh38 reference (<code>/data/grch38</code>) is read, by the Viewer, a tool or Python</td><td>the Gpxil browser’s site, comparativechrono.github.io</td><td>which chromosome is read, and which part of it: the pieces are fetched as they are needed, so the server sees the regions you work on, but nothing from your own files</td></tr>
+<tr><td>gpxil2pxil looks up a gene without a GTF file of yours</td><td>the same site (the Gpxil browser’s gene files)</td><td>which genes you looked up</td></tr>
+<tr><td><code>curl</code>, <code>wget</code> or <code>pip install</code>, in the terminal or a notebook</td><td>wherever you point them</td><td>whatever you send</td></tr>
+</table>
+<p>Both sites are served by GitHub Pages and jsDelivr, which keep ordinary logs of the requests they answer. If even the regions you look at must stay private, run your own copy of the studio with your own copy of the reference (<a href="#h-own-computer">On your own computer</a>): then nothing is read from the web except Python, the first time.</p>
+
+<h2>Genomes are personal data</h2>
+<p>A gpxil file with a genotype plane is a person’s genome, and so is every faithful picture of it: a variants picture shows exactly where the person differs from the reference, and a book printed at one dot per base can be scanned and read back. A genome identifies the person, even without a name, and says things about their relatives, who haven’t agreed to anything (the gpxil specification, section 13). Use the studio as your institution’s rules on genetic data allow, and:</p>
+<ul>
+  <li>Treat gpxil files, their pictures and books, and pxil pictures of a person’s haplotypes with the same care as the VCF or CRAM file they came from. Leaving out the reference plane makes a file smaller, not less personal: it’s the genotype planes that identify the person.</li>
+  <li>Look at what a file says about the person before you share it. Its metadata keeps the sample’s ID and the names of the files it was made from (<code>gpxil info --json</code>), and a pxil file names the sample and the haplotype.</li>
+  <li>For pictures to show or publish, draw the reference only, or a region with nothing personal in it.</li>
+  <li>On a shared computer, download your work and use <b>My files → Start afresh</b> when you finish.</li>
+</ul>
+<p>The examples are public: HG002’s genome was sequenced and released, with consent, for anyone to use as a benchmark, which is why the studio can show it.</p>

@@ -1,0 +1,73 @@
+<!-- id: h-vcf | title: How a VCF becomes gpxil, and back | group: gpxil and pxil | summary: How each kind of call is written base by base, which call wins when they overlap, what is kept and what isn’t, and how a gpxil file becomes a VCF again | keys: vcf encode convert calls records alleles snv indel insertion deletion symbolic structural sv del non_ref gvcf reference block callable bed haploid phased unphased missing genotype spanning deletion star filter gq dp ps conflict precedence normalisation left-align round trip export -->
+<h1><!--ICON:convert-->How a VCF becomes gpxil, and back</h1>
+<p class="lede">A VCF lists a person’s variants as records; a gpxil file holds their genotype at every base. The specification fixes exactly how one becomes the other, so that any two encoders make the same planes from the same VCF. This page explains the rules, and why they are as they are. <a href="#h-codes">The codes</a> gives the values they write.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="encode" data-reference="/data/examples/worked-example.fa" data-vcf="/data/examples/worked-example.vcf">Encode the worked example</button> <button class="do" type="button" data-goto="h-walk-encode">The walkthrough</button></div>
+
+<h2>1 · Before any call: what is assumed</h2>
+<ol>
+  <li>Every base of both haplotypes starts as REF, the reference.</li>
+  <li>Given a BED file of <b>callable regions</b> – the regions called with confidence – both haplotypes are UNKNOWN outside them, and on a contig the BED file doesn’t mention, everywhere.</li>
+  <li>Given <b>haploid regions</b> (<code>--haploid</code>, <code>--haploid-contig</code>, or <code>--sex XY</code> for X and Y outside the pseudo-autosomal regions of GRCh38), haplotype 2 is ABSENT inside them.</li>
+</ol>
+<p>A VCF of variant sites says nothing about the bases it doesn’t list, so these are assumptions, and the metadata records which were made. They are also weak: any call overrides them. A contig on which the VCF has no records, and which no callable region touches, gets no <code>gt</code> plane at all, because saying that the person has the reference all along a chromosome nobody looked at would be wrong.</p>
+
+<h2>2 · A record becomes states, base by base</h2>
+<p>A record’s REF allele covers its <b>span</b>: from POS, for as many bases as REF has. Each haplotype takes the allele its genotype names, and that allele becomes a state at each base of the span:</p>
+<ul>
+  <li><code>0</code>, the REF allele: REF over the span. <code>.</code>, a missing allele: UNKNOWN.</li>
+  <li>A sequence allele: REF and ALT are trimmed of the bases they share, first at the end and then at the start, always keeping an indel’s anchor base. What is left lines up base by base. Where it differs, the haplotype has the ALT base: a substitution. Bases of REF left over are DEL. Bases of ALT left over are an <b>insertion</b> after the base before them: flagged (INS1, INS2) and kept in the sidecar.</li>
+  <li><code>*</code>, a base deleted by another record: nothing is written, because the record that starts the deletion writes it.</li>
+</ul>
+<p>Trimming the end first puts an indel as far left as the record allows, as VCF normalisation does, so calls inside repeats agree with their neighbours. In the worked example, <code>chrT 4 TAC T 1|0</code> is trimmed to the anchor T and the deleted <code>AC</code>, so offsets 4 and 5 are DEL on haplotype 1; and <code>chrT 8 T TGG 1|1</code> leaves <code>GG</code> inserted after offset 7 on both haplotypes.</p>
+
+<h2>3 · Symbolic alleles and blocks</h2>
+<ul>
+  <li><code>&lt;DEL&gt;</code> (and <code>&lt;DEL:ME&gt;</code> …): the bases after POS, up to END – from <code>INFO/END</code>, or else <code>INFO/SVLEN</code> – are DEL. POS is the padding base before them, so it stays REF.</li>
+  <li><code>&lt;NON_REF&gt;</code>, <code>&lt;*&gt;</code> and <code>&lt;X&gt;</code> mean “any other allele”. A record with only these, as in a gVCF, is a reference block: its <code>0</code> alleles say REF up to END. A haplotype whose allele <i>is</i> one of them is UNKNOWN.</li>
+  <li>Anything else symbolic – an inversion, a duplication, a breakend: the haplotype is COMPLEX at the record’s first base, and the sidecar keeps the allele (<code>REF=A;ALT=&lt;INV&gt;;END=…</code>). What the haplotype has over the rest of the span can’t be written base by base, so those bases keep what they had.</li>
+</ul>
+
+<h2>4 · When calls overlap: which wins</h2>
+<p>Calls are applied in the order of the file, and each base remembers whether a call has spoken for it. A, C, G, T, DEL and COMPLEX are <b>strong</b> states: they say what the haplotype has. REF, UNKNOWN and ABSENT are <b>weak</b>.</p>
+<ul>
+  <li>A strong state always replaces what is there. If an earlier call had put a different strong state there, that is a <b>conflict</b>: the later call wins, and the metadata counts it.</li>
+  <li>A weak state is written only where no call has spoken yet.</li>
+</ul>
+<p>So a record whose REF allele overlaps another record’s variant never undoes that variant, whatever the order of the records, and overlapping records that use <code>*</code> combine as they should. A multi-allelic site split into two records at one position (<code>0/1</code> and <code>0/1</code>) can’t be both, and shows up as conflicts.</p>
+
+<h2>5 · Genotypes, phase and the other fields</h2>
+<ul>
+  <li><b>Haploid</b> genotypes, such as <code>1</code>: haplotype 2 is ABSENT over the span. Genotypes of more than two alleles are skipped, and counted.</li>
+  <li><b>Phased</b> genotypes (<code>0|1</code>): PHASED is set, and haplotype 1 takes the first allele. In <b>unphased</b> ones (<code>0/1</code>), haplotype 1 also takes the first allele written, but the order means nothing – except that a <code>*</code> goes to the haplotype that has the deletion it stands for.</li>
+  <li>A <b>missing</b> genotype (<code>./.</code>, or no GT): both haplotypes UNKNOWN, but only where no call has spoken, so it never erases a variant.</li>
+  <li><b>Flags</b> add up over all the calls over a base: VARIANT_SITE over every call’s span, FILTERED where a call’s FILTER is neither PASS nor <code>.</code>.</li>
+  <li><b>GQ, DP and PS</b> are written over the call’s span, GQ and DP up to 254. Where calls overlap, one that changed the base wins over one that didn’t.</li>
+</ul>
+
+<h2>6 · Checks</h2>
+<p>Every REF allele is checked against the reference, and mismatches are counted (<code>ref_mismatches</code>), so a VCF called against another reference shows up at once. VCF contigs are matched to the reference’s with or without <code>chr</code>, and MT with chrM, and the VCF’s name is kept as an alias. Records past the end of a contig are skipped, and counted. The counts are in each contig’s <code>encoding</code> metadata, and the encoder reports anything worth knowing.</p>
+
+<h2>7 · What is kept, and what isn’t</h2>
+<p><b>Kept exactly:</b> the reference and its soft-masking; both haplotypes’ sequences – every substitution, deletion and insertion; phasing; haploid calls; no-calls; whether each call passed its filters; and the genotype quality, depth and phase set at each base.</p>
+<p><b>Not kept:</b> the records themselves – how the alleles were written, and where one record ended and the next began – IDs, QUAL, INFO, the other FORMAT fields, other samples, records on contigs the reference doesn’t have, and the bases of structural variants other than deletions, which are kept only as their COMPLEX entries.</p>
+
+<h2>8 · And back: gpxil to VCF</h2>
+<p><code>gpxil vcf</code> writes a record for each <b>event window</b>. A substitution is a window of one base; a run of deleted bases takes the base before it as its anchor; an insertion takes the base it follows; and windows that share a base are merged. REF is the reference over the window, and each haplotype’s sequence over it is an allele. The genotype is phased only if every called base of the window was. FILTER is PASS, or <code>gpxil_filtered</code> where the bases failed their filters, since the filter’s own name isn’t kept. Runs of UNKNOWN become no-call blocks (ALT <code>&lt;*&gt;</code>, with END, and genotype <code>./.</code>), so that encoding the VCF again restores them.</p>
+<p>The records are equivalent to the originals – they spell the same two haplotypes – not copies of them: two records next to each other may come back as one, and an indel in a repeat may come back at another, equally correct place. Encoding the exported VCF gives the same haplotypes again.</p>
+
+<h2>Try it: there and back</h2>
+<pre class="code" data-run="term"><code>gpxil encode /data/examples/worked-example.fa -v /data/examples/worked-example.vcf --width 4 -o ~/results/chrT.gpxil.tif
+gpxil vcf ~/results/chrT.gpxil.tif -o ~/results/chrT.vcf
+grep -v '^##' ~/results/chrT.vcf
+gpxil encode /data/examples/worked-example.fa -v ~/results/chrT.vcf --width 4 -o ~/results/chrT.again.gpxil.tif
+gpxil fasta ~/results/chrT.gpxil.tif --which 1
+gpxil fasta ~/results/chrT.again.gpxil.tif --which 1</code></pre>
+<p>And what encoding HG002’s chromosome 17 recorded:</p>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    print(g.metadata["sample"])
+    e = g["chr17"].entry
+    print(f"{e['callable_bases']:,} bases called with confidence; {e['sidecar_entries']:,} sidecar entries; ploidy {e['ploidy']}")
+    print({k: v for k, v in e["encoding"].items() if v})</code></pre>
+<!--CITE: gpxil gpxiltools vcf giab-->

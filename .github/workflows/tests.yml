@@ -1,0 +1,62 @@
+# The studio's tests: the page is up to date with its sources; the workflow engine, with the example workflows run
+# for real; each tool's command and its Python write the same files; every code box of the help and the starter
+# notebook runs; and the page itself, in Chromium, on a desktop and a phone.
+#
+# The parts that read the GRCh38 reference (the Gpxil browser's files) are skipped here: run them locally with
+# STUDIO_REFERENCE set to a copy of the Gpxil browser's site/data/grch38 (see README.md).
+
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Install
+        run: pip install numpy pillow jsonschema playwright
+
+      - name: The page is up to date with its sources
+        run: |
+          python3 build/make_starter.py
+          node build/make_example_workflows.js
+          python3 build/make_page.py
+          git diff --stat --exit-code -- index.html data/starter data/examples/workflows
+          # (the bundle of Python packages is what its record says)
+          python3 -c "import hashlib, json; m = json.load(open('assets/py/gpxil-tools.json')); assert hashlib.sha256(open('assets/py/' + m['archive'], 'rb').read()).hexdigest() == m['sha256'], 'run python3 python/build_bundle.py'"
+
+      - name: Syntax of every script
+        run: for f in assets/js/*.js; do node --check "$f" || exit 1; done
+
+      - name: The workflow engine, and the example workflows run for real
+        run: node tests/workflows/engine.js
+
+      - name: Each tool's command and its Python write the same files
+        run: |
+          node tests/equivalence/gen.js > "$RUNNER_TEMP/cases.jsonl"
+          python3 tests/equivalence/run_equiv.py "$RUNNER_TEMP/cases.jsonl"
+
+      - name: Every code box of the help, and the starter notebook
+        run: python3 tests/help_code.py
+
+      - name: The page in Chromium
+        run: |
+          python3 -m playwright install --with-deps chromium
+          python3 tests/browser_smoke.py

@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+# a page built from other help pages while developing (build/make_page.py --out dev.html)
+dev.html
+cases.jsonl

@@ -1,0 +1,56 @@
+<!-- id: h-files | title: Your files | group: Start here | summary: The Files tab, your folders, the examples, and where everything is kept | keys: files folders upload download zip storage browser kept indexeddb private window home genomes results notebooks workflows examples read-only big files quota delete start afresh -->
+<h1><!--ICON:folder-->Your files</h1>
+<p class="lede">Your files live in your home folder, <code>~</code> (<code>/home/user</code>). The Files tab shows them, with the examples and the GRCh38 reference beside them, and opens each kind of file in a view that suits it. Every tab sees the same files.</p>
+<div class="tryrow"><button class="do" type="button" data-bench="editor">Open the Files tab</button></div>
+
+<h2>The folders</h2>
+<table>
+<tr><th>Folder</th><th>What goes there</th></tr>
+<tr><td><code>~/genomes</code></td><td>gpxil files you make with <b>Make a gpxil file</b>, and files you add from your computer in the Viewer</td></tr>
+<tr><td><code>~/results</code></td><td>what the tools write: pictures, books, FASTA and VCF files, pxil pictures (in <code>~/results/pxil</code>), and the runs of workflows</td></tr>
+<tr><td><code>~/notebooks</code></td><td>notebooks, including <code>gpxil-in-python.ipynb</code>, which a new visitor is given</td></tr>
+<tr><td><code>~/workflows</code></td><td>your workflows, made the first time you save one</td></tr>
+<tr><td><code>~/examples</code></td><td>copies of examples you ask for, which are yours to change</td></tr>
+<tr><td><code>/data/examples</code></td><td>the examples (read-only): HG002’s chromosome 17, HG002’s variants around TP53 with the regions called with confidence, TP53’s transcripts, the specification’s worked example, and example workflows</td></tr>
+<tr><td><code>/data/grch38</code></td><td>the GRCh38 reference, a gpxil file for each chromosome (read-only), read from the Gpxil browser’s web site a piece at a time (<a href="#h-reference">The GRCh38 reference</a>)</td></tr>
+</table>
+<p>You can make any other folders you like. The tools save in <code>~/results</code> unless you choose otherwise, and they can only save in your home folder.</p>
+<div class="tryrow"><button class="do" type="button" data-example="HG002_TP53.vcf">Copy HG002_TP53.vcf into ~/examples</button></div>
+
+<h2>Looking at a file</h2>
+<p>Click a file in the Files tab to open it. A <b>gpxil file</b> shows what it holds: its reference, its sample, its layout and a table of its contigs and planes, read straight from the file without starting Python, so even a whole genome opens at once. A <b>pxil picture</b> is shown large, pixel by pixel, with what it says about itself – its kind, IDs and length, where it comes from, and notes such as <i>differs from the reference: P72R</i> – and its sequence, read from the pixels in the page; point at a pixel to see which residue it is, and its number. Other <b>pictures</b> and <b>PDFs</b> show as they are, and text files (FASTA, VCF, BED, GTF, scripts) open in an editor: change them and press <b>Save</b> (Ctrl+S). Above each file, buttons offer what you can do next:</p>
+<table>
+<tr><th>Kind of file</th><th>Buttons</th></tr>
+<tr><td>gpxil</td><td><b>View</b> (the Viewer), <b>What’s in it</b> (gpxil info), <b>Check</b> (gpxil validate), <b>Genes as pictures</b> (gpxil2pxil), <b>More…</b> (every tool that reads it)</td></tr>
+<tr><td>pxil</td><td><b>As FASTA</b> (pxil); under the picture, <b>Copy the sequence</b> too</td></tr>
+<tr><td>VCF</td><td><b>Encode as gpxil</b>, with this file as the person’s variants</td></tr>
+<tr><td>FASTA</td><td><b>Encode as gpxil</b>, with this file as the reference</td></tr>
+<tr><td>workflow</td><td><b>Run</b>, and <b>Edit</b> (or <b>Edit a copy</b> of an example)</td></tr>
+<tr><td>a workflow’s run (<code>workflow-run.json</code>)</td><td><b>View the run</b>: what each step did</td></tr>
+</table>
+<p>Right-click a file, or use its <b>⋯</b> button, to rename, duplicate, download or delete it, or to copy its path. On an example, <b>Copy to my files</b> makes a copy you can change.</p>
+
+<h2>Adding files from your computer</h2>
+<p>Drag files onto the Files tab, or use its <b>↑</b> button, or <b>My files → Add files from my computer…</b> at the top. In the Viewer, <b>Add a file…</b> puts a gpxil file into <code>~/genomes</code> and opens it. A file you add is kept in the browser as it is, and isn’t read until a tool needs it, so adding a big gpxil file is quick.</p>
+
+<h2 data-anchor="kept">Where your files are kept</h2>
+<p>Your files are kept in this browser’s storage for this web site (IndexedDB), on this computer. They’re still there when you come back, unless you clear the browser’s data for the site. They aren’t sent anywhere, and nobody else can see them. Some things to know:</p>
+<ul>
+  <li>In a <b>private or incognito window</b>, the browser forgets everything when the window closes. The indicator at the top says when files aren’t being kept.</li>
+  <li>Browsers limit how much a site may keep, usually to a share of the free disk space. The indicator warns you when your files take up more than 2 GB. <b>My files → Where are my files kept?</b> shows how much is used.</li>
+  <li>A single file larger than 1 GB is there while the page is open but isn’t kept, so download it before you leave.</li>
+  <li>Your files are kept in <i>this</i> browser on <i>this</i> computer. Another browser, or another computer, has its own empty home folder.</li>
+</ul>
+
+<h2>Taking files elsewhere</h2>
+<ul>
+  <li>A file’s <b>Download</b> button saves it to your computer.</li>
+  <li><b>My files → Download all my files (.zip)</b> saves your whole home folder in one .zip file.</li>
+  <li>In the terminal, <code>download FILE</code> or <code>download FOLDER</code> does the same (a folder as a .zip).</li>
+</ul>
+
+<h2>Big files and Python</h2>
+<p>gpxil files are big: a chromosome is tens of megabytes, a whole genome nearly a gigabyte. The studio never copies a file of 8 MB or more into Python’s memory. Python reads it where the browser keeps it, or from the web, a piece at a time, as it needs it. A big file that a tool writes goes the other way: it is handed to the browser to keep, and Python’s copy is freed. <a href="#h-memory">Big files and memory</a> explains how this works and how to make the most of it.</p>
+
+<h2>Starting afresh</h2>
+<p><b>My files → Start afresh</b> deletes every file in your home folder from this browser, after asking you to confirm. Download what you want to keep first. The examples and the reference aren’t affected, and you are given the starting notebook again.</p>

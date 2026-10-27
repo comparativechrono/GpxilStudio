@@ -1,0 +1,38 @@
+<!-- id: h-tool-vcf | title: Variants as VCF | group: Tools | summary: gpxil vcf: the person’s genotypes as a VCF again, for a region or every contig | keys: vcf export variants records genotype phased gq dp ps no-call blocks region contigs filter round trip -->
+<h1><!--ICON:table-->Variants as VCF</h1>
+<p class="lede"><code>gpxil vcf</code> writes the person in a gpxil file as a VCF again, so that any other genomics program can read their variants: a record for each place where either haplotype differs from the reference, and, if you like, a block for each stretch that wasn’t called.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="vcf" data-input="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,661,779-7,687,546">Try it with HG002’s TP53</button></div>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>A gpxil file with a sample; one written without its reference needs <b>Its reference</b> too, to spell out the alleles.</dd>
+  <dt>Regions</dt><dd>One or more regions, separated by spaces: a contig, or <code>CONTIG:START-END</code> counting from 1. Empty: every contig.</dd>
+  <dt>Write no-call blocks</dt><dd>On by default: each stretch of bases that weren’t called becomes a record with ALT <code>&lt;*&gt;</code>, an <code>END</code> and genotype <code>./.</code>, so that a program can tell “not called” from “the same as the reference”, and encoding the VCF again restores them.</dd>
+  <dt>Save as</dt><dd>The VCF file, in <code>~/results</code>.</dd>
+</dl>
+
+<h2>What it writes</h2>
+<p>A VCF (version 4.3) with one sample, named as in the gpxil file. Each record covers a stretch of the reference where either haplotype differs from it: REF is the reference over the stretch, and each haplotype’s sequence over it is an allele, so neighbouring changes may share a record. The genotype is phased (<code>0|1</code>) only where every called base of the record was phased. GQ, DP and PS are given where the file has those planes; a record over bases that failed their filters has FILTER <code>gpxil_filtered</code>; a complex variant keeps what the original VCF said of it in <code>GPXIL_COMPLEX</code>.</p>
+<p>The VCF of a region has exactly the records that the whole contig’s VCF has there, so a deletion that starts just before the region is written whole; no-call blocks are cut at the region’s ends. IDs, QUAL, INFO and the other FORMAT fields of the original VCF aren’t in a gpxil file, so they aren’t written: the records are equivalent to the originals, not copies of them.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil vcf /data/examples/worked-example.gpxil.tif
+gpxil vcf /data/examples/HG002_chr17.gpxil.tif --region chr17:7661779-7687546 --region chr17:43044292-43170245 -o ~/results/TP53_BRCA1.vcf
+gpxil vcf /data/examples/HG002_chr17.gpxil.tif --region chr17:7661779-7687546 --no-nocall-blocks -o ~/results/TP53_variants_only.vcf</code></pre>
+<table>
+<tr><th>Option</th><th></th></tr>
+<tr><td><code>--region REGION</code></td><td>a region; give it again for more</td></tr>
+<tr><td><code>--contigs A,B</code></td><td>whole contigs (not with <code>--region</code>)</td></tr>
+<tr><td><code>--no-nocall-blocks</code></td><td>leave out the no-call blocks</td></tr>
+<tr><td><code>-o FILE</code></td><td>the VCF; without it, the VCF is printed</td></tr>
+<tr><td><code>--reference FILE</code></td><td>the reference, for a file written without one</td></tr>
+</table>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.export import iter_vcf_records
+
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    for line in iter_vcf_records(g["chr17"], start=7_676_100, end=7_676_200, nocall_blocks=False):
+        print(line)</code></pre>
+<!--CITE: gpxiltools vcf-->

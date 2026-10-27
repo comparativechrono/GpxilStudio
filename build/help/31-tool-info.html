@@ -1,0 +1,36 @@
+<!-- id: h-tool-info | title: What’s in a gpxil file | group: Tools | summary: gpxil info: a file’s reference, sample, contigs and planes, or all its metadata as JSON | keys: info inspect metadata json contigs planes sample reference records sidecar summary gpxil info -->
+<h1><!--ICON:eye-->What’s in a gpxil file</h1>
+<p class="lede"><code>gpxil info</code> tells you what a gpxil file holds: what wrote it and when, the reference it was made on, the sample and where its calls came from, and for each contig its length, its planes, how many VCF records went into it and how many entries its sidecar has. It reads only the file’s first page, so it’s instant even for a whole genome on the web.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="info" data-input="/data/examples/HG002_chr17.gpxil.tif">Try it with HG002_chr17.gpxil.tif</button></div>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>Any gpxil file: yours, an example, or a chromosome of GRCh38.</dd>
+  <dt>All of its metadata, as JSON</dt><dd>Instead of the summary, the whole of the file’s metadata (<a href="#h-gpxil">The gpxil format</a>): every contig’s checksums and pages, the planes’ types, the sample, and the counts the encoder kept as it read the VCF.</dd>
+</dl>
+
+<h2>What it says</h2>
+<pre class="code"><code>/data/examples/HG002_chr17.gpxil.tif: gpxil 0.1, written by gpxiltools 0.3.0, 2026-10-27T19:57:19+00:00
+reference: GRCh38 (Homo_sapiens.GRCh38.dna_sm.primary_assembly.fa.gz)
+sample: HG002 from HG002_GRCh38_1_22_v4.2.1_benchmark.vcf.gz, callable regions HG002_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.bed
+layout: raster, width 8192; palette classic
+contig                  length  planes                     records  sidecar
+chr17               83,257,441  ref,gt,flags,gq,dp,ps      106,992   12,368</code></pre>
+<p><b>records</b> is the number of VCF records encoded on the contig; <b>sidecar</b> the number of inserted sequences and complex variants kept beside the pixels (<a href="#h-codes">The codes</a>). A contig of the reference alone has only the <code>ref</code> plane. It writes no files.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil info /data/examples/HG002_chr17.gpxil.tif
+gpxil info /data/grch38/chr17.gpxil.tif
+gpxil info --json /data/examples/worked-example.gpxil.tif</code></pre>
+<p><code>gpxil info</code> also takes the address of a file on a web server that answers range requests, and reads just its first page.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>import json
+from gpxiltools import GpxilFile
+
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    print(g.metadata["reference"]["name"], g.sample_id)
+    for c in g:   # each contig: its name, length and planes
+        print(c.name, c.length, c.planes, c.entry.get("encoding", {}).get("records"))
+    print(json.dumps(g.metadata["sample"], indent=2))</code></pre>
+<!--CITE: gpxiltools gpxil-->

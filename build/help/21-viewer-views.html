@@ -1,0 +1,52 @@
+<!-- id: h-viewer-views | title: The views and their colours | group: The viewer | summary: What each of the Viewer’s views shows, and what its colours mean | keys: views modes colours legend reference genotype haplotypes variants flags gq dp ps phase set quality depth heterozygous homozygous unknown deleted insertion complex soft-masked render same -->
+<h1><!--ICON:palette-->The views and their colours</h1>
+<p class="lede">Each view of the Viewer draws one or two planes of the file. The key under the picture names its colours; this page says what each one means. The first four views are exactly what <code>gpxil render</code> draws, pixel for pixel, in every palette, so a picture you like in the Viewer can be made as a file with the command under it.</p>
+
+<h2>Reference bases</h2>
+<p>The <code>ref</code> plane: each base in the palette’s colour (in the classic palette, A red, C blue, G green, T yellow). Bases in soft-masked repeats – lower case in the reference – are 45 % paler, except in the GPxI greys, which need all their levels. An ambiguous base is the mix of its bases’ colours, N is grey (light blue in the GPxI greys), and a gap, where there is no base, is the colour of paper.</p>
+<div class="tryrow"><button class="do" type="button" data-viewer="/data/grch38/chr17.gpxil.tif" data-region="chr17:7,661,779-7,687,546" data-mode="reference">TP53 in the reference</button></div>
+
+<h2>Genotype</h2>
+<p>Each base as the person has it, both haplotypes at once, as one IUPAC code (<a href="#h-codes">The codes</a>). Where the haplotypes agree, the base’s colour; where they differ, the mix of their two colours, so a heterozygous A/G base has the colour of R, half red and half green. A haplotype that wasn’t called, or that has a complex variant, counts as N, so its base is grey. A base deleted from one haplotype shows the other haplotype’s base – so look for deletions in the next two views – and a base deleted from both is paper. Soft-masked bases stay paler, as in the reference.</p>
+
+<h2>Haplotypes</h2>
+<p>The two haplotypes separately, as two rows of pixels for each row of bases: haplotype 1 above, haplotype 2 below. Each pixel is that haplotype’s own base: a substitution in its new base’s colour, a deleted base paper (as is haplotype 2 where the person has only one copy), and a base that wasn’t called, or a complex variant, grey. A heterozygous variant shows in one row and not the other; a homozygous one in both.</p>
+<div class="tryrow"><button class="do" type="button" data-viewer="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,676,101-7,676,300" data-mode="haplotypes">P72R in HG002’s two haplotypes</button></div>
+
+<h2>Variants</h2>
+<p>The quickest way to find variants: the reference is faded 80 % towards white, and the bases where the person differs from it are coloured by what kind of change it is.</p>
+<table>
+<tr><th>Colour</th><th>Meaning</th></tr>
+<tr><td>orange</td><td>heterozygous: a substitution on one haplotype and the reference on the other, or a different substitution on each</td></tr>
+<tr><td>red</td><td>homozygous: the same substitution on both haplotypes, or on the only copy where the person has one</td></tr>
+<tr><td>near black</td><td>deleted, on either haplotype</td></tr>
+<tr><td>green</td><td>an insertion follows this base, on either haplotype</td></tr>
+<tr><td>grey</td><td>not called, on either haplotype</td></tr>
+<tr><td>purple</td><td>a complex variant, which can’t be written base by base, such as an inversion</td></tr>
+<tr><td>faded</td><td>the same as the reference</td></tr>
+</table>
+<p>A base can be more than one of these: then purple wins, then green, then near black, and grey shows only where nothing else does.</p>
+
+<h2>Flags</h2>
+<p>The <code>flags</code> plane, one colour for the most telling flag of each base:</p>
+<table>
+<tr><th>Colour</th><th>Meaning</th></tr>
+<tr><td>red</td><td>FILTERED: a call over this base didn’t pass its filters</td></tr>
+<tr><td>green</td><td>INS1 or INS2: an insertion follows this base</td></tr>
+<tr><td>blue</td><td>VARIANT_SITE and PHASED: a phased call covers this base</td></tr>
+<tr><td>grey-blue</td><td>VARIANT_SITE: a call covers this base (any genotype, the reference’s too)</td></tr>
+<tr><td>pale blue</td><td>PHASED alone</td></tr>
+<tr><td>white</td><td>no flags: the base is as it is by default, not because a call said so</td></tr>
+</table>
+<p>These are the colours the file’s own colour map gives its flags pages, so an ordinary image viewer shows them the same way.</p>
+
+<h2>Genotype quality, read depth</h2>
+<p>The <code>gq</code> and <code>dp</code> planes, from white for 0 to deep blue for 99 or more (genotype quality) or 60 or more (read depth). Pink means the value isn’t known (255): a base that no call with that field covers.</p>
+<div class="tryrow"><button class="do" type="button" data-viewer="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,661,779-7,687,546" data-mode="dp">TP53’s read depth</button></div>
+
+<h2>Phase sets</h2>
+<p>The <code>ps</code> plane: each phase set in a colour of its own, and white where a base is in none. Within one phase set, haplotype 1 is the same parental copy throughout; between phase sets, it may not be.</p>
+
+<h2>The same in a file</h2>
+<p>For the reference, genotype, haplotypes and variants views, the command under the picture is the <code>gpxil render</code> that makes the same picture as a file, with the same bases per row, pixels per base and palette (<a href="#h-tool-render">Draw a region as a picture</a>). <code>gpxil render</code> can also mark the bases that insertions follow in the haplotypes view (<code>--mark-insertions</code>), lay a region out along a Hilbert curve, and write CMYK for print. The flags, quality, depth and phase-set views are the Viewer’s own: under them, a Python cell reads the plane’s values as a NumPy array, ready to add to the notebook. <a href="#h-codes">The codes</a> describes the values behind every colour.</p>
+<!--CITE: gpxiltools okabe-ito gpxi-->

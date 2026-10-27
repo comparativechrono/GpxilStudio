@@ -1,0 +1,107 @@
+{
+  "gpxilstudio_workflow": 1,
+  "name": "Back to FASTA and VCF, and round again",
+  "annotation": "TP53’s two haplotypes are written as FASTA, and its variants as VCF. The VCF is then encoded again, with the gpxil file itself as the reference, and the new file checked: the same variants make the same planes.",
+  "steps": [
+    {
+      "id": "s1",
+      "type": "input",
+      "label": "The gpxil file",
+      "kinds": [
+        "gpxil"
+      ],
+      "x": 16,
+      "y": 16,
+      "default": "/data/examples/HG002_chr17.gpxil.tif"
+    },
+    {
+      "id": "s2",
+      "type": "tool",
+      "tool": "fasta",
+      "params": {
+        "which": "1",
+        "region": "chr17:7661779-7687546"
+      },
+      "connections": {
+        "input": {
+          "step": "s1",
+          "output": "file"
+        }
+      },
+      "x": 286,
+      "y": 16
+    },
+    {
+      "id": "s3",
+      "type": "tool",
+      "tool": "fasta",
+      "params": {
+        "which": "2",
+        "region": "chr17:7661779-7687546"
+      },
+      "connections": {
+        "input": {
+          "step": "s1",
+          "output": "file"
+        }
+      },
+      "x": 286,
+      "y": 150
+    },
+    {
+      "id": "s4",
+      "type": "tool",
+      "tool": "vcf",
+      "params": {
+        "region": "chr17:7661779-7687546",
+        "nocall": false
+      },
+      "connections": {
+        "input": {
+          "step": "s1",
+          "output": "file"
+        }
+      },
+      "x": 286,
+      "y": 284
+    },
+    {
+      "id": "s5",
+      "type": "tool",
+      "tool": "encode",
+      "params": {
+        "contigs": "chr17"
+      },
+      "connections": {
+        "reference": {
+          "step": "s1",
+          "output": "file"
+        },
+        "vcf": {
+          "step": "s4",
+          "output": "vcf"
+        }
+      },
+      "x": 556,
+      "y": 16
+    },
+    {
+      "id": "s6",
+      "type": "tool",
+      "tool": "validate",
+      "params": {
+        "digests": false
+      },
+      "connections": {
+        "input": {
+          "step": "s5",
+          "output": "gpxil"
+        }
+      },
+      "x": 826,
+      "y": 16
+    }
+  ],
+  "created": "2026-10-20T12:00:00.000Z",
+  "updated": "2026-10-20T12:00:00.000Z"
+}

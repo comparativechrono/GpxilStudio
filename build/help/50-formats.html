@@ -1,0 +1,22 @@
+<!-- id: h-formats | title: The formats | group: gpxil and pxil | index: yes | summary: The kinds of file the studio reads and writes, and the tools between them | keys: formats files kinds fasta vcf bed gtf gff gpxil pxil png tiff pdf extensions names -->
+<h1><!--ICON:layers-->The formats</h1>
+<p class="lede">The studio works with a handful of kinds of file. It tells them apart by their names, so keep the usual endings. gpxil is in the middle: a reference and a person’s variants go in, and pictures, books, gene and protein pictures, and FASTA and VCF again come out.</p>
+<div class="pw-map"></div>
+
+<table>
+<tr><th>Kind</th><th>Names</th><th>What it holds</th><th>Read by</th><th>Written by</th></tr>
+<tr><td><b>gpxil</b></td><td><code>.gpxil.tif</code></td><td>a genome as pictures: the reference and one person’s genotype, base by base (<a href="#h-gpxil">The gpxil format</a>)</td><td>every gpxil tool, the Viewer</td><td>encode</td></tr>
+<tr><td><b>FASTA</b></td><td><code>.fa</code>, <code>.fasta</code>, <code>.fna</code>, <code>.fas</code> (also <code>.gz</code>)</td><td>sequences: a reference genome, a haplotype, a protein</td><td>encode (as the reference)</td><td>gpxil fasta, pxil</td></tr>
+<tr><td><b>VCF</b></td><td><code>.vcf</code>, <code>.vcf.gz</code></td><td>a person’s variants, as differences from the reference (<a href="#h-vcf">How a VCF becomes gpxil</a>)</td><td>encode</td><td>gpxil vcf</td></tr>
+<tr><td><b>BED</b></td><td><code>.bed</code></td><td>regions of the genome: here, those called with confidence</td><td>encode</td><td>–</td></tr>
+<tr><td><b>GTF</b></td><td><code>.gtf</code> (also <code>.gtf.gz</code>), from Ensembl or GENCODE</td><td>genes, transcripts, exons and coding regions</td><td>gpxil2pxil</td><td>–</td></tr>
+<tr><td><b>pxil</b></td><td><code>.pxil.png</code>, such as <code>.protein.pxil.png</code></td><td>one sequence as a picture, one pixel a residue (<a href="#h-pxil">pxil pictures of sequences</a>)</td><td>pxil</td><td>gpxil2pxil</td></tr>
+<tr><td><b>picture</b></td><td><code>.png</code>, <code>.tif</code></td><td>a region drawn in colour, for the screen or for print</td><td>(any image software)</td><td>gpxil render, the Viewer</td></tr>
+<tr><td><b>PDF</b></td><td><code>.pdf</code></td><td>a book to print, one dot a base</td><td>(any PDF reader)</td><td>gpxil book</td></tr>
+</table>
+<p>Besides these, the studio has notebooks (<code>.ipynb</code>), workflows (<code>.workflow.json</code>) and the records of their runs (<code>workflow-run.json</code>), and opens other text files, such as scripts, in the Files tab’s editor.</p>
+
+<h2>Why gpxil is a picture</h2>
+<p>A genome is a sequence of letters, and a sequence of letters can be laid out in rows, like text, with one pixel for each letter. Guenter Albrecht-Buehler drew genomes this way, in shades of grey, and found that repeats line up into patterns you can see. gpxil keeps the one-pixel-per-base picture but stores codes rather than colours, so that it holds the sequence exactly and a person’s genotype beside it, in ordinary TIFF files that any image software can open. pxil does the same for a single sequence, in a PNG.</p>
+<!--GROUP-->
+<!--CITE: gpxil gpxi pxil vcf-->

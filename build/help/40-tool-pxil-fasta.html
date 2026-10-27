@@ -1,0 +1,39 @@
+<!-- id: h-tool-pxil-fasta | title: pxil pictures → FASTA | group: Tools | summary: pxil: the sequences of pxil pictures as FASTA, or their metadata as JSON | keys: pxil fasta sequence picture png read metadata json info protein transcript gene -->
+<h1><!--ICON:text-->pxil pictures → FASTA</h1>
+<p class="lede"><code>pxil</code> reads the sequences back out of pxil pictures and writes them as FASTA, or writes what each picture says about itself as JSON. Because a pixel’s value is a residue’s place in the picture’s alphabet, the sequence comes back exactly, whatever the colours.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="pxil-fasta">Open pxil → FASTA</button> <button class="do" type="button" data-goto="h-pxil">pxil pictures of sequences</button></div>
+
+<h2>The form</h2>
+<dl>
+  <dt>The pxil files</dt><dd>One or more pxil pictures: choose them one at a time from the list and press <b>Add</b>. The pictures that <b>Genes, transcripts and proteins as pxil pictures</b> just wrote can go straight in, from the button under its result.</dd>
+  <dt>Their metadata (JSON) instead of their sequences</dt><dd>Each picture’s metadata: what kind of sequence it is, its IDs and name, its alphabet and length, and for a gene’s pictures its contig, coordinates, exons, coding region, genetic code, source, and the sample, haplotype and notes of one made from a person.</dd>
+  <dt>Save as</dt><dd>The FASTA (or JSON) file, in <code>~/results</code>.</dd>
+</dl>
+
+<h2>What it writes</h2>
+<p>A FASTA record for each picture, named with its ID, name and kind, such as <code>&gt;ENSP00000269305 TP53-201 protein</code>, 60 residues a line. A picture of a person’s own version of a sequence has the person and the haplotype joined to its ID – <code>&gt;ENSP00000269305_HG002-hap1 TP53-201 protein</code> – so the reference’s protein and each haplotype’s keep names of their own in one file, as an alignment program needs.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil2pxil /data/examples/HG002_chr17.gpxil.tif TP53 --annotation /data/examples/TP53.gtf --kinds protein --haplotypes all -o ~/results/pxil/TP53
+pxil ~/results/pxil/TP53/*.protein.pxil.png -o ~/results/TP53_proteins.fa
+pxil --info ~/results/pxil/TP53/TP53-201_ENSP00000269305_HG002-hap2.protein.pxil.png</code></pre>
+<table>
+<tr><th>Option</th><th></th></tr>
+<tr><td><code>FILE …</code></td><td>one or more pxil files</td></tr>
+<tr><td><code>--info</code></td><td>the metadata, as JSON, instead of the sequences</td></tr>
+<tr><td><code>--line N</code></td><td>residues per FASTA line (60)</td></tr>
+<tr><td><code>-o FILE</code></td><td>write to a file; without it, print</td></tr>
+</table>
+<p>On your own computer, <code>python -m pxil</code> does the same.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>import pxil
+
+sequence, meta = pxil.read("/home/user/results/pxil/TP53/TP53-201_ENSP00000269305_HG002-hap2.protein.pxil.png")
+print(meta["name"], meta["kind"], meta["length"], meta.get("notes"))
+print(sequence[60:80])
+
+pxil.write("/home/user/results/my.transcript.pxil.png", "ATGGAGGAGCCGCAGTCAGATCC", kind="transcript", id="my-1")
+print(pxil.read("/home/user/results/my.transcript.pxil.png")[0])</code></pre>
+<p>This Python box reads the pictures the terminal box above wrote: run that first.</p>
+<!--CITE: pxil gpxil2pxil-->

@@ -1,0 +1,134 @@
+{
+  "gpxilstudio_workflow": 1,
+  "name": "From a VCF to a gpxil file, checked and drawn",
+  "annotation": "A person’s variants around TP53 (Genome in a Bottle’s HG002) are encoded on chromosome 17 of GRCh38, read from the Gpxil browser, with the regions called with confidence. The new file is checked against the specification, TP53 is drawn by zygosity, and pictures are made of the person’s two versions of TP53’s protein.",
+  "steps": [
+    {
+      "id": "s1",
+      "type": "input",
+      "label": "The person’s variants (VCF)",
+      "kinds": [
+        "vcf"
+      ],
+      "x": 16,
+      "y": 16,
+      "default": "/data/examples/HG002_TP53.vcf"
+    },
+    {
+      "id": "s2",
+      "type": "input",
+      "label": "Regions called with confidence (BED)",
+      "kinds": [
+        "bed"
+      ],
+      "x": 16,
+      "y": 145,
+      "default": "/data/examples/HG002_TP53.bed",
+      "optional": true
+    },
+    {
+      "id": "s3",
+      "type": "input",
+      "label": "The reference",
+      "kinds": [
+        "fasta",
+        "gpxil"
+      ],
+      "x": 16,
+      "y": 274,
+      "default": "/data/grch38/chr17.gpxil.tif"
+    },
+    {
+      "id": "s4",
+      "type": "input",
+      "label": "Genes (GTF)",
+      "kinds": [
+        "gtf"
+      ],
+      "x": 16,
+      "y": 385,
+      "default": "/data/examples/TP53.gtf",
+      "optional": true
+    },
+    {
+      "id": "s5",
+      "type": "tool",
+      "tool": "encode",
+      "params": {},
+      "connections": {
+        "reference": {
+          "step": "s3",
+          "output": "file"
+        },
+        "vcf": {
+          "step": "s1",
+          "output": "file"
+        },
+        "callable": {
+          "step": "s2",
+          "output": "file"
+        }
+      },
+      "x": 286,
+      "y": 16
+    },
+    {
+      "id": "s6",
+      "type": "tool",
+      "tool": "validate",
+      "params": {
+        "digests": false
+      },
+      "connections": {
+        "input": {
+          "step": "s5",
+          "output": "gpxil"
+        }
+      },
+      "x": 556,
+      "y": 16
+    },
+    {
+      "id": "s7",
+      "type": "tool",
+      "tool": "render",
+      "params": {
+        "region": "chr17:7661779-7687546",
+        "mode": "variants",
+        "width": "256",
+        "scale": "2"
+      },
+      "connections": {
+        "input": {
+          "step": "s5",
+          "output": "gpxil"
+        }
+      },
+      "x": 556,
+      "y": 127
+    },
+    {
+      "id": "s8",
+      "type": "tool",
+      "tool": "gpxil2pxil",
+      "params": {
+        "genes": "TP53",
+        "kinds": "protein"
+      },
+      "connections": {
+        "input": {
+          "step": "s5",
+          "output": "gpxil"
+        },
+        "annotation": {
+          "step": "s4",
+          "output": "file"
+        }
+      },
+      "x": 556,
+      "y": 279
+    }
+  ],
+  "created": "2026-10-20T12:00:00.000Z",
+  "updated": "2026-10-20T12:00:00.000Z"
+}

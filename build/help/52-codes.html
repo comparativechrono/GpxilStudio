@@ -1,0 +1,97 @@
+<!-- id: h-codes | title: The codes | group: gpxil and pxil | summary: Every value of the ref, gt and flags planes, and the specification’s worked example, pixel by pixel | keys: codes values ref gt flags iupac nibble state absent complex del deleted unknown phased ins1 ins2 filtered variant_site soft-masked byte bits hexadecimal gq dp ps worked example table -->
+<h1><!--ICON:table-->The codes</h1>
+<p class="lede">A gpxil file holds numbers, not colours. This page gives the meaning of every number in the three main planes – the reference (<code>ref</code>), the genotype (<code>gt</code>) and the <code>flags</code> – and then works through the specification’s example, pixel by pixel.</p>
+<div class="tryrow"><button class="do" type="button" data-viewer="/data/examples/worked-example.gpxil.tif" data-region="chrT" data-mode="haplotypes">The worked example in the Viewer</button></div>
+
+<h2>ref: the reference base</h2>
+<p>One byte a base. Its low four bits are the base as a set of A, C, G and T, one bit each: A 1, C 2, G 4, T 8. So an ambiguity code is the sum of its bases – R, A or G, is 1 + 4 = 5 – and N, any base, is 15. These are the codes BAM files use for bases. 0 means no base (a gap). The next bit, 16, marks a soft-masked base: one written in lower case in the reference’s FASTA file, because it lies in a repeat.</p>
+<table>
+<tr><th>Code</th><th>Base</th><th>Stands for</th><th></th><th>Code</th><th>Base</th><th>Stands for</th></tr>
+<tr><td>0</td><td><code>-</code></td><td>no base</td><td></td><td>8</td><td>T</td><td>T</td></tr>
+<tr><td>1</td><td>A</td><td>A</td><td></td><td>9</td><td>W</td><td>A or T</td></tr>
+<tr><td>2</td><td>C</td><td>C</td><td></td><td>10</td><td>Y</td><td>C or T</td></tr>
+<tr><td>3</td><td>M</td><td>A or C</td><td></td><td>11</td><td>H</td><td>A, C or T</td></tr>
+<tr><td>4</td><td>G</td><td>G</td><td></td><td>12</td><td>K</td><td>G or T</td></tr>
+<tr><td>5</td><td>R</td><td>A or G</td><td></td><td>13</td><td>D</td><td>A, G or T</td></tr>
+<tr><td>6</td><td>S</td><td>C or G</td><td></td><td>14</td><td>B</td><td>C, G or T</td></tr>
+<tr><td>7</td><td>V</td><td>A, C or G</td><td></td><td>15</td><td>N</td><td>any base</td></tr>
+</table>
+<p>Add 16 for a soft-masked base: <code>a</code> is 17, <code>c</code> 18, <code>n</code> 31. So a <code>ref</code> byte is 0 to 15, or 17 to 31.</p>
+
+<h2>gt: the genotype</h2>
+<p>One byte a base. Its high four bits are what haplotype 1 has there, its low four bits what haplotype 2 has: the byte is <i>haplotype 1</i> × 16 + <i>haplotype 2</i>. In hexadecimal, that makes the first digit haplotype 1 and the second haplotype 2. Each haplotype’s state is relative to the reference base:</p>
+<table>
+<tr><th>State</th><th>Name</th><th>The haplotype…</th></tr>
+<tr><td>0</td><td>REF</td><td>has the reference base</td></tr>
+<tr><td>1, 2, 4, 8</td><td>A, C, G, T</td><td>has this base instead (the same bits as in <code>ref</code>)</td></tr>
+<tr><td>10 (hex A)</td><td>ABSENT</td><td>doesn’t exist here: the person has one copy, as a man has of most of X and Y</td></tr>
+<tr><td>12 (hex C)</td><td>COMPLEX</td><td>has something that can’t be written base by base, described in the sidecar</td></tr>
+<tr><td>13 (hex D)</td><td>DEL</td><td>has lost this base: it is deleted</td></tr>
+<tr><td>15 (hex F)</td><td>UNKNOWN</td><td>wasn’t called, so isn’t known</td></tr>
+</table>
+<p>The other values are reserved, and readers treat them as UNKNOWN. The special states’ letters are reminders: <b>A</b>bsent, <b>C</b>omplex, <b>D</b>eleted, and F – all four bits – for unknown, as N is all four bits in <code>ref</code>. A haplotype that has the reference base is always REF, never the base itself, so a base state always means a change.</p>
+<table>
+<tr><th>gt</th><th>Hex</th><th>Haplotype 1 | 2</th><th>Meaning</th></tr>
+<tr><td>0</td><td>00</td><td>REF | REF</td><td>both copies as the reference</td></tr>
+<tr><td>4</td><td>04</td><td>REF | G</td><td>heterozygous: G on haplotype 2</td></tr>
+<tr><td>68</td><td>44</td><td>G | G</td><td>homozygous G</td></tr>
+<tr><td>72</td><td>48</td><td>G | T</td><td>heterozygous, with a different change on each</td></tr>
+<tr><td>13</td><td>0D</td><td>REF | DEL</td><td>deleted on haplotype 2</td></tr>
+<tr><td>221</td><td>DD</td><td>DEL | DEL</td><td>deleted on both</td></tr>
+<tr><td>26</td><td>1A</td><td>A | ABSENT</td><td>one copy, which has A</td></tr>
+<tr><td>255</td><td>FF</td><td>UNKNOWN | UNKNOWN</td><td>not called</td></tr>
+</table>
+<p>Insertions aren’t states: they happen between bases. The base an insertion follows is flagged (below), and the inserted bases are in the sidecar (<a href="#h-gpxil">The gpxil format</a>).</p>
+
+<h2>flags</h2>
+<p>One byte a base. Each bit is a flag, and a base can have several:</p>
+<table>
+<tr><th>Bit</th><th>Name</th><th>Meaning</th></tr>
+<tr><td>1</td><td>PHASED</td><td>the call over this base was phased (<code>0|1</code>), so haplotypes 1 and 2 are the two parental copies, not just two alleles</td></tr>
+<tr><td>2</td><td>INS1</td><td>an insertion follows this base on haplotype 1</td></tr>
+<tr><td>4</td><td>INS2</td><td>an insertion follows this base on haplotype 2</td></tr>
+<tr><td>8</td><td>FILTERED</td><td>a call over this base didn’t pass its filters: its FILTER was neither PASS nor <code>.</code></td></tr>
+<tr><td>16</td><td>VARIANT_SITE</td><td>a call covers this base, whatever its genotype</td></tr>
+</table>
+<p>VARIANT_SITE tells “the VCF said this base is the reference” (REF, with the flag) from “the reference, because the VCF said nothing” (REF, without it). Bits 32, 64 and 128 are reserved, and always 0.</p>
+
+<h2>The other planes</h2>
+<p><code>gq</code> and <code>dp</code> hold the genotype quality and read depth of the call over each base, from 0 to 254 (bigger values are stored as 254), and 255 where no call with that field covers the base. <code>ps</code> holds the phase set of the phased call over each base, as a 32-bit number, and 0 where the base isn’t phased.</p>
+
+<h2>The worked example, pixel by pixel</h2>
+<p>The specification’s example has a reference of ten bases, <code>ACGTACGTac</code> – the last two soft-masked – and four calls:</p>
+<pre class="code"><code>#CHROM POS REF ALT FILTER GT
+chrT   2   C   T   PASS   0|1
+chrT   4   TAC T   PASS   1|0
+chrT   8   T   TGG PASS   1|1
+chrT   9   A   G   LowQ   ./1</code></pre>
+<table>
+<tr><th>Offset</th><th>Base</th><th>ref</th><th>gt</th><th>Haplotype 1 | 2</th><th>flags</th></tr>
+<tr><td>0</td><td>A</td><td>1</td><td>0</td><td>REF | REF</td><td>0</td></tr>
+<tr><td>1</td><td>C</td><td>2</td><td>8</td><td>REF | T</td><td>17: PHASED, VARIANT_SITE</td></tr>
+<tr><td>2</td><td>G</td><td>4</td><td>0</td><td>REF | REF</td><td>0</td></tr>
+<tr><td>3</td><td>T</td><td>8</td><td>0</td><td>REF | REF: the deletion’s anchor</td><td>17</td></tr>
+<tr><td>4</td><td>A</td><td>1</td><td>208</td><td>DEL | REF</td><td>17</td></tr>
+<tr><td>5</td><td>C</td><td>2</td><td>208</td><td>DEL | REF</td><td>17</td></tr>
+<tr><td>6</td><td>G</td><td>4</td><td>0</td><td>REF | REF</td><td>0</td></tr>
+<tr><td>7</td><td>T</td><td>8</td><td>0</td><td>REF | REF, with GG inserted after it on both</td><td>23: PHASED, INS1, INS2, VARIANT_SITE</td></tr>
+<tr><td>8</td><td>a</td><td>17</td><td>244</td><td>UNKNOWN | G</td><td>24: FILTERED, VARIANT_SITE</td></tr>
+<tr><td>9</td><td>c</td><td>18</td><td>0</td><td>REF | REF</td><td>0</td></tr>
+</table>
+<p>Spell each haplotype out base by base – REF gives the reference’s base, a change its own base, DEL nothing and UNKNOWN N, with each insertion after its base – and haplotype 1 is <code>ACGTGTGGnc</code>, haplotype 2 <code>ATGTACGTGGgc</code>, keeping the reference’s lower case. The genotype as one sequence of IUPAC codes, the bases of both haplotypes together, is <code>AYGTACGTNc</code>: Y, C or T, at offset 1, and N at offset 8, where haplotype 1 isn’t known. With 4 bases a row, each plane is a picture of 3 rows of 4 pixels, the last two of them padding.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools import codes as C
+
+with GpxilFile("/data/examples/worked-example.gpxil.tif") as g:
+    c = g["chrT"]
+    ref, gt, flags = c.read("ref"), c.read("gt"), c.read("flags")
+    print(c.sequence(), ref.tolist(), gt.tolist(), flags.tolist())
+    for i in range(c.length):
+        names = [name for bit, name in C.FLAG_NAMES.items() if flags[i] &amp; bit]
+        print(i, c.sequence(i, i + 1), C.describe_gt_byte(int(gt[i])), names)
+    print(C.IUPAC[C.genotype_iupac(ref, gt)[1]])   # C on haplotype 1, T on haplotype 2: Y
+    print(c.image("ref"))                          # as stored: 3 rows of 4, with the padding
+    print(c.sidecar())</code></pre>
+<!--CITE: gpxil gpxiltools iupac vcf-->

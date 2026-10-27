@@ -1,0 +1,17 @@
+{
+ "archive": "gpxil-tools.zip",
+ "sha256": "468b096fa15508e42ea4c5a92b885dce71ab20465615b852f23e56ed67694f96",
+ "bytes": 355221,
+ "packages": {
+  "gpxiltools": "0.3.0",
+  "gpxil2pxil": "0.1.0",
+  "pxil": "0.1.0",
+  "tifffile": "2026.10.15",
+  "gpxilwb": "1.0.0"
+ },
+ "pyodide_packages": [
+  "numpy",
+  "pillow",
+  "jsonschema"
+ ]
+}

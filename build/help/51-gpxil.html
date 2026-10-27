@@ -1,0 +1,78 @@
+<!-- id: h-gpxil | title: The gpxil format | group: gpxil and pxil | summary: How a gpxil file holds a genome: contigs and planes, layout, pages, strips, the sidecar, the metadata and the checksums | keys: gpxil format specification spec tiff pages planes layout width rows strips compression deflate metadata json sidecar md5 refget checksum digest bigtiff colour map extension plane version tifffile pillow -->
+<h1><!--ICON:pixels-->The gpxil format</h1>
+<p class="lede">A gpxil file stores a genome as pictures: one pixel a base, one picture for each chromosome and each kind of information, in an ordinary multi-page TIFF file. Any image software opens it as a picture of the genome; image libraries read its pictures as arrays of numbers; and it holds the reference and one person’s genotypes exactly, so they can be got back base for base. This page describes the format; the specification, version 0.1 (a draft), gives every rule.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="info" data-input="/data/examples/HG002_chr17.gpxil.tif">What’s in HG002’s file</button> <button class="do" type="button" data-goto="h-codes">The codes</button></div>
+
+<h2>Contigs and planes</h2>
+<p>A gpxil file has a list of <b>contigs</b> – chromosomes, the mitochondrion, unplaced scaffolds – and each contig has one or more <b>planes</b>: arrays with one value for each of its bases. Every plane is lined up with the reference, so the same pixel is the same position in every plane, and in every person’s file.</p>
+<table>
+<tr><th>Plane</th><th>Type</th><th>What it holds</th></tr>
+<tr><td><code>ref</code></td><td>8-bit</td><td>the reference base, as an IUPAC code, and whether it is soft-masked (lower case: in a repeat)</td></tr>
+<tr><td><code>gt</code></td><td>8-bit</td><td>the person’s genotype: what each of their two haplotypes has at this base, four bits each</td></tr>
+<tr><td><code>flags</code></td><td>8-bit</td><td>whether the call here was phased, an insertion follows, the call was filtered, a call covers the base</td></tr>
+<tr><td><code>gq</code>, <code>dp</code></td><td>8-bit</td><td>the genotype quality and read depth of the call over the base, up to 254; 255 where there is none</td></tr>
+<tr><td><code>ps</code></td><td>32-bit</td><td>the phase set of a phased call; 0 where there is none</td></tr>
+<tr><td><code>x-…</code></td><td>8, 16 or 32 bits, or floating point</td><td>planes of your own, such as <code>x-methylation</code>; readers ignore those they don’t know</td></tr>
+</table>
+<p>A file holds at most one person. One without a person is a reference – <code>ref</code> planes only, like the chromosomes of GRCh38 in <code>/data/grch38</code>. A file can also leave the <code>ref</code> plane out and name its reference by checksums instead (below). A contig with a <code>gt</code> plane always has a <code>flags</code> plane too. <a href="#h-codes">The codes</a> gives every value.</p>
+
+<h2>Layout: bases in rows</h2>
+<p>Each plane is a picture <i>W</i> pixels wide, filled like a page of text: base <i>i</i>, counting from 0, is in row <i>i</i> ÷ <i>W</i> and column <i>i</i> mod <i>W</i>, and the end of the last row is padded with zeros. The writer chooses the width and records it for each contig. gpxiltools uses 8,192, so chromosome 17’s 83,257,441 bases make pictures of 10,164 rows.</p>
+<p>A plane is really a line of values, so any program can re-wrap it to another width without losing anything. A width equal to a repeat’s period lines the repeat up in columns. Other views, such as a book’s pages or a Hilbert curve, are made from the rows when they are drawn.</p>
+
+<h2>Pages: one picture for each plane</h2>
+<p>Every plane of every contig is one page of the TIFF file. The pages go contig by contig, in the order <code>ref</code>, <code>gt</code>, <code>flags</code>, <code>gq</code>, <code>dp</code>, <code>ps</code>, then planes of your own. Each page describes itself in JSON, such as <code>{"gpxil": "0.1", "contig": "chr17", "plane": "gt", "length": 83257441}</code>, and has a name for image viewers, such as <code>chr17 gt</code>. The first page also carries the metadata of the whole file.</p>
+<p>The <code>ref</code>, <code>gt</code> and <code>flags</code> pages are palette pictures with a colour map, so that an ordinary image viewer shows them in colour. The colours are only for looking: no reader takes values from them. The other pages are greyscale.</p>
+
+<h2>Strips: reading a region</h2>
+<p>Each page is cut into strips of whole rows, and each strip is compressed on its own with Deflate (zlib), which every TIFF reader understands. gpxiltools makes strips of 256 KB before compression: 32 rows of 8,192 bases – 262,144 bases – for an 8-bit plane, and 8 rows for the 32-bit <code>ps</code>. To read a region, a reader works out the rows it covers and decompresses only their strips. So a gene costs the same to read from a file of one chromosome as from a file of the whole genome, and over the web only those strips need fetching (<a href="#h-memory">Big files and memory</a>).</p>
+
+<h2>The sidecar: what doesn’t fit in a pixel</h2>
+<p>An insertion happens between two bases, so it has no pixel of its own. The <code>flags</code> plane marks the base it follows (INS1 or INS2, by haplotype), and the inserted bases go in the contig’s <b>sidecar</b>: a small table, compressed, in a private tag of the <code>gt</code> page (tag 65400). The sidecar also describes complex variants, such as inversions, which can’t be written base by base. This is the sidecar of the specification’s worked example – two Gs inserted after offset 7, on both haplotypes:</p>
+<pre class="code"><code>#gpxil-sidecar	0.1
+offset	hap	kind	data
+7	1	INS	GG
+7	2	INS	GG</code></pre>
+<p>Programs built on libtiff, such as ImageMagick, warn about the unknown tag and otherwise ignore it.</p>
+
+<h2>The metadata</h2>
+<p>The first page’s description is a JSON object that says what the file holds. It must have <code>gpxil</code> (the version, <code>"0.1"</code>), <code>layout</code> (the default width), <code>contigs</code> and, in a file with a person, <code>sample</code>. Usually there too are <code>reference</code> (its name and source file), <code>planes</code> (their types and missing values), <code>palette</code>, <code>generator</code>, <code>created</code> and <code>summary</code>, the encoder’s totals. Each contig’s entry gives:</p>
+<table>
+<tr><th>Key</th><th>What it holds</th></tr>
+<tr><td><code>name</code>, <code>length</code>, <code>width</code></td><td>the contig’s name, its number of bases, and its layout width</td></tr>
+<tr><td><code>pages</code></td><td>which page holds each plane: <code>{"ref": 0, "gt": 1, "flags": 2, …}</code></td></tr>
+<tr><td><code>md5</code>, <code>refget</code></td><td>the checksums of its reference sequence (below)</td></tr>
+<tr><td><code>aliases</code></td><td>other names for it, such as <code>17</code> for <code>chr17</code></td></tr>
+<tr><td><code>ploidy</code></td><td>1 if haplotype 2 is ABSENT everywhere, 2 if nowhere, otherwise <code>"mixed"</code></td></tr>
+<tr><td><code>encoding</code>, <code>callable_bases</code>, <code>sidecar_entries</code>, <code>phase_sets</code></td><td>what the encoder did (records applied, conflicts, mismatches with the reference …), the bases in the callable regions, the sidecar’s entries, and the phase sets</td></tr>
+</table>
+<p>The <code>sample</code> object names the person (<code>id</code>, as in the VCF) and records what was applied: the VCF, the callable regions, the haploid regions and the sex. Readers ignore keys they don’t know, so writers can add their own.</p>
+
+<h2>Checksums: naming the reference</h2>
+<p>Each contig’s reference sequence has two checksums: its MD5, as in a SAM or CRAM header (<code>@SQ M5</code>), and its GA4GH refget identifier (<code>SQ.</code> and 32 characters). Both are worked out from the sequence in capital letters. They let a file written without its <code>ref</code> plane say exactly which reference it needs, and they let a reader check that a reference it is given is that one: gpxiltools refuses a reference whose checksums don’t match. For a FASTA file of plain IUPAC letters, they are the checksums other tools work out.</p>
+
+<h2>Why TIFF</h2>
+<ul>
+  <li>Every image program opens it, so a gpxil file is a picture of the genome before it is anything else, and can be printed as one.</li>
+  <li>Image libraries – tifffile, Pillow, and those of image analysis – read its pages as arrays, so image operations become genome operations: the difference of two people’s <code>gt</code> planes, say, or a box filter over the G and C bits of <code>ref</code> for the GC content.</li>
+  <li>Strips give random access, and standard compression keeps files small: HG002’s chromosome 17, with all six planes, is 24.6 MB, and the whole of GRCh38 is 848.5 MB.</li>
+  <li>A file over 4 GB has to be a BigTIFF, which gpxiltools switches to by itself. A whole human genome with one person is under 1 GB.</li>
+</ul>
+
+<h2>Look for yourself</h2>
+<pre class="code" data-run="term"><code>gpxil info /data/examples/HG002_chr17.gpxil.tif
+gpxil info --json /data/examples/worked-example.gpxil.tif</code></pre>
+<p>In Python, tifffile reads a gpxil file as the ordinary TIFF it is, and Pillow sees a palette picture of six frames:</p>
+<pre class="code" data-run="py"><code>import json
+import tifffile
+from PIL import Image
+
+with tifffile.TiffFile("/data/examples/HG002_chr17.gpxil.tif") as tif:
+    meta = json.loads(tif.pages[0].description)
+    print(sorted(meta))
+    for page in tif.pages:
+        print(page.index, page.tags["PageName"].value, page.shape, page.dtype,
+              f"{len(page.dataoffsets)} strips of {page.rowsperstrip} rows", "sidecar" if 65400 in page.tags else "")
+with Image.open("/data/examples/HG002_chr17.gpxil.tif") as im:
+    print(im.mode, im.size, im.n_frames)</code></pre>
+<!--CITE: gpxil gpxiltools gpxi tifffile pillow refget-->

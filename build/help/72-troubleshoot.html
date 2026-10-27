@@ -1,0 +1,78 @@
+<!-- id: h-troubleshoot | title: When something goes wrong | group: Reference | summary: The common problems, and what to do | keys: troubleshoot problem error fails wrong help python start couldn't stopped unexpectedly memory memoryerror crash slow reference no-ref without reference does not match md5 refget mismatch grch37 hg19 contigs skipped unknown grey too big region limit gene not found alias haplotypes no sample picture won't open redirect command not found workflow step failed stopped files gone storage full private window two tabs report bug issue -->
+<h1><!--ICON:warning-->When something goes wrong</h1>
+<p class="lede">These are the common problems, and what to do about each one.</p>
+
+<h2>Python and memory</h2>
+<dl>
+  <dt>“Python couldn’t start”</dt>
+  <dd>The first time you use it, the studio downloads Python (about 15 MB) from cdn.jsdelivr.net. If your network blocks that site, or you’re offline, the tools, the notebook and the programs can’t run, although the Viewer and the Files tab still work, because they read gpxil files in the page itself. Try again on another network. After the first time, the browser usually keeps a copy.</dd>
+
+  <dt>“Python stopped unexpectedly”, a <code>MemoryError</code>, or the page reloads by itself</dt>
+  <dd>Python ran out of memory. A browser tab has a few gigabytes at most, and some jobs need more: encoding holds about 6 bytes for each base of a chromosome, so chromosome 17 needs half a gigabyte and chromosome 1 about 1.5 GB, which may be too much; reading a whole chromosome’s planes at once in a notebook needs a byte a base for each plane. Reload the page: your files are kept. Then encode one chromosome at a time, read big regions in pieces, and do the biggest jobs on your own computer (<a href="#h-walk-big">A whole genome without running out of memory</a>, <a href="#h-memory">Big files and memory</a>, <a href="#h-own-computer">On your own computer</a>).</dd>
+
+  <dt>A tool waits for a long time</dt>
+  <dd>A notebook cell may be running: the tools share the notebook’s Python, so they wait for it to finish. Stop the cell in the Notebook tab. The first tool of a visit also waits for Python to start, and a tool that reads the GRCh38 reference waits for its pieces to come from the web: encoding on chromosome 17 takes about a minute.</dd>
+</dl>
+
+<h2>The reference</h2>
+<dl>
+  <dt>A file in <code>/data/grch38</code> couldn’t be read</dt>
+  <dd>The studio reads the GRCh38 reference from the Gpxil browser’s site, comparativechrono.github.io, a piece at a time. Check that you’re online and that your network doesn’t block the site. Your own files and the examples still work without it, and on your own computer you can run the studio with a copy of the reference (<a href="#h-own-computer">On your own computer</a>).</dd>
+
+  <dt>“contig chr17 is stored without its reference sequence”</dt>
+  <dd>The file was written without its reference plane (<code>--no-ref</code>), so anything that needs its bases needs the reference as well. In the Tools tab, fill in <b>Its reference</b>, which is filled in for you for a file made on GRCh38; in the terminal, add <code>--reference /data/grch38/chr17.gpxil.tif</code>; in Python, <code>GpxilFile(path, reference=…)</code>. For a file made on another reference, give the FASTA file it was made from. The Viewer finds GRCh38 by itself.</dd>
+
+  <dt>“… does not match the md5 of chr17”, or “… has length …, not …”</dt>
+  <dd>The reference you gave isn’t the one the file was made on: another assembly, or another version of the chromosome. gpxil checks every reference against the checksums in the file, so that bases are never taken from the wrong one. <code>gpxil info</code> names the reference the file was made on.</dd>
+
+  <dt><code>gpxil encode</code> notes that REF alleles don’t match the reference</dt>
+  <dd>The VCF was called against another reference, such as GRCh37 (hg19), so its variants are in the wrong places on this one. Encode it with the reference it was called against. A few mismatches can be harmless, such as variants in a VCF made from a different patch of the same assembly; <code>gpxil info --json</code> lists the first of them for each contig.</dd>
+
+  <dt>“VCF contigs not in the reference (skipped)”</dt>
+  <dd>The reference has no sequence of that name. Each file in <code>/data/grch38</code> holds one chromosome, so a VCF of a whole genome encoded on <code>chr17.gpxil.tif</code> gives chromosome 17 only, and notes the others. Encode each chromosome with its own reference file, or use the whole-genome file on your own computer. Names with and without <code>chr</code> (<code>17</code>, <code>chr17</code>) are matched either way.</dd>
+
+  <dt>Most of a chromosome is grey (not called)</dt>
+  <dd>That is what the file knows. With a BED file of the regions called with confidence, the bases outside them are UNKNOWN, because the VCF says nothing about them; Genome in a Bottle’s benchmark covers TP53 but not the whole of chromosome 17 (<a href="#h-walk-encode">Turn someone’s VCF into a gpxil file</a>).</dd>
+</dl>
+
+<h2>Tools, pictures and genes</h2>
+<dl>
+  <dt>A tool says the region is too big for the browser</dt>
+  <dd>In the browser, a picture can show at most 25 million bases, and 64 million pixels; FASTA and VCF are written at most 50 million bases at a time; and the Viewer draws at most 4 million bases. Choose a smaller region, or fewer pixels per base. On your own computer, the same commands have no such limits.</dd>
+
+  <dt>gpxil2pxil can’t find a gene</dt>
+  <dd>“no gene … in the Gpxil browser’s genes”: check the gene’s symbol, or give its Ensembl ID (<code>ENSG…</code>). “… is an alias of …”: give one of the genes it names. The Gpxil browser’s genes are Ensembl’s on GRCh38, so for a file made on another reference, give a GTF file of that reference’s genes (<b>Genes from</b>, or <code>-a</code>). A gene on a chromosome the file doesn’t have needs a file that has it, such as the chromosome’s file in <code>/data/grch38</code>.</dd>
+
+  <dt>“… has no sample, so it has no haplotypes”</dt>
+  <dd>The file holds only a reference, such as the files in <code>/data/grch38</code>, so its pictures can only be of the reference: under <b>From</b>, choose <b>the reference</b> (<code>--haplotypes ref</code>).</dd>
+
+  <dt>A picture, PDF or gpxil file made in the terminal won’t open</dt>
+  <dd>It was written with <code>&gt;</code>, which is for text. Make it again with <code>-o FILE</code> (<a href="#h-terminal">The Terminal</a>).</dd>
+
+  <dt>“… isn’t installed in this terminal”</dt>
+  <dd>The terminal has the gpxil programs, Python, and the common text and file programs (<code>help</code> lists them), but not bcftools, samtools, awk or gzip. The message says what to use instead. gpxil reads <code>.vcf.gz</code> and <code>.fa.gz</code> files as they are.</dd>
+
+  <dt>A workflow can’t run, or one of its steps failed</dt>
+  <dd>If the workflow can’t run, its Run page lists why, such as an input that isn’t connected. Open it in the editor, where <b>Checks</b> lists the same things and takes you to each step. If a step failed, open <i>What went wrong</i> under it: it shows the tool’s own error, the one you’d see if you ran the tool yourself, and the steps that read its files didn’t run. Put the step’s settings right in the editor, or choose another input file, and run it again (<a href="#h-workflows">Workflows</a>).</dd>
+
+  <dt>A workflow’s run says <i>stopped</i></dt>
+  <dd>A workflow runs in this page, so closing or reloading the page stops it, and the steps that hadn’t run are marked <i>stopped</i>. The files of the steps that had finished are in the run’s folder. Run the workflow again.</dd>
+</dl>
+
+<h2>Your files</h2>
+<dl>
+  <dt>My files have gone</dt>
+  <dd>Are you using the same browser, on the same computer, and not a private window? The browser keeps the files for this site only. If your browser clears site data when it closes, it deletes them too, so download anything you want to keep.</dd>
+
+  <dt>“… is larger than 1 GB … it isn’t kept in the browser”</dt>
+  <dd>A file that big is there while the page is open, but the browser won’t keep it. Download it before you leave. A gpxil file without its reference plane is a hundred times smaller.</dd>
+
+  <dt>“The browser has no more room for the studio’s files”</dt>
+  <dd>gpxil files are big. Download the files you want to keep, then delete those you no longer need from the Files tab. <b>My files → Where are my files kept?</b> shows how much room they take.</dd>
+
+  <dt>“The studio is open in another tab or window too”</dt>
+  <dd>Both tabs keep files in the same place, so one can overwrite what the other has saved. Close one of them.</dd>
+</dl>
+
+<h2>Reporting a fault</h2>
+<p>If a tool fails and shows <i>Python’s traceback (for reporting a fault)</i> under the result, or a file the studio made doesn’t pass its own check, that’s a fault. Report it on the studio’s <a href="https://github.com/comparativechrono/GpxilStudio/issues" target="_blank" rel="noopener">issues page</a>, or on <a href="https://github.com/comparativechrono/Gpxil-tools/issues" target="_blank" rel="noopener">gpxiltools’</a> if it happens on your own computer too. Include the traceback and, if you can, a file that shows the problem: one of the examples, or a small made-up file such as the worked example. Never attach a person’s genome, or a picture of one.</p>

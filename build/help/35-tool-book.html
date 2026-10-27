@@ -1,0 +1,48 @@
+<!-- id: h-tool-book | title: Print it as a book (PDF) | group: Tools | summary: gpxil book: a PDF to print with one dot per base, in CMYK or RGB | keys: book print pdf pages paper a4 a3 a5 letter dpi dots per inch scale margin title proof max pages cmyk rgb ink -->
+<h1><!--ICON:print-->Print it as a book (PDF)</h1>
+<p class="lede"><code>gpxil book</code> lays a gpxil file out as a PDF to print, one dot a base, page after page: a cover with a key to the colours, a page on how to read it, then each contig with a title page of its own and pages of bases, each headed with its first and last position.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="book" data-input="/data/grch38/chrM.gpxil.tif" data-mode="reference">Try it with the mitochondrion</button> <button class="do" type="button" data-goto="h-walk-book">The walkthrough</button></div>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>Any gpxil file; one written without its reference needs <b>Its reference</b> too, as for a picture.</dd>
+  <dt>Only these contigs</dt><dd>Contigs separated by commas, such as <code>chr17</code>; by default, all of them.</dd>
+  <dt>Show</dt><dd>The four views of <a href="#h-tool-render">Draw a region as a picture</a>: <b>genotype</b> by default for a file with a sample, else the <b>reference</b>.</dd>
+  <dt>Colours</dt><dd>A palette. <b>process</b> prints each base in one pure ink.</dd>
+  <dt>For</dt><dd><b>print</b>: colours given in CMYK, in the palette’s ink values; <b>the screen</b>: RGB.</dd>
+  <dt>Paper</dt><dd>A4 (the default), A3, A5 or US letter.</dd>
+  <dt>Dots per inch</dt><dd>The printer’s resolution: 300 by default, one base a dot. A page of A4 at 300 dots per inch holds 2,126 bases a row and 2,970 rows: 6,314,220 bases.</dd>
+  <dt>Dots per base</dt><dd>Each base as a square of this many dots a side, to make them bigger.</dd>
+  <dt>Margin</dt><dd>In millimetres, 15 by default.</dd>
+  <dt>Title</dt><dd>For the cover; by default “The genome of HG002”, with the sample’s name, or “The GRCh38 genome”, with the reference’s.</dd>
+  <dt>At most this many pages</dt><dd>A proof of the first pages, counting the cover, the page on how to read the book and each contig’s title page: 5 pages give two pages of bases. Clear it for the whole book.</dd>
+  <dt>Save as</dt><dd>The PDF, in <code>~/results</code>.</dd>
+</dl>
+
+<h2>What it writes</h2>
+<p>A PDF, and how many pages it has. Each page of bases is one image with its colour table in CMYK (or RGB), with smoothing turned off, so each base stays a crisp square dot. HG002’s chromosome 17 makes 17 pages and about 22 MB; the 25 chromosomes of GRCh38 at 300 dots per inch, about 530 pages, a title page for each chromosome included.</p>
+<div class="callout warn"><div class="co-t"><!--ICON:warning-->A book of a person</div><p>Printed at one dot a base, a person’s genome can be scanned and read back. Treat a book of a person’s genotype or variants as you would their VCF.</p></div>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil book /data/grch38/chrM.gpxil.tif -o ~/results/chrM_book.pdf --mode reference
+gpxil book /data/examples/HG002_chr17.gpxil.tif -o ~/results/HG002_chr17_proof.pdf --max-pages 5 --page A3 --dpi 600</code></pre>
+<table>
+<tr><th>Option</th><th></th></tr>
+<tr><td><code>FILE -o BOOK.pdf</code></td><td>the file, and the PDF to write</td></tr>
+<tr><td><code>--contigs A,B</code>, <code>--mode NAME</code>, <code>--palette NAME</code></td><td>which contigs, which view (genotype if you don’t say), which colours</td></tr>
+<tr><td><code>--rgb</code></td><td>RGB for the screen, instead of CMYK</td></tr>
+<tr><td><code>--page A4|A3|A5|letter</code>, <code>--dpi N</code>, <code>--scale N</code>, <code>--margin MM</code></td><td>the paper, the resolution, dots per base, the margin</td></tr>
+<tr><td><code>--title TEXT</code>, <code>--max-pages N</code></td><td>the title; a proof of the first pages</td></tr>
+<tr><td><code>--reference FILE</code></td><td>the reference, for a file written without one</td></tr>
+</table>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.book import BookLayout, estimate_pages, make_book
+
+layout = BookLayout(page="A4", dpi=300)
+print(layout.grid(), f"{layout.bases_per_page():,} bases a page")
+print(estimate_pages(3_088_286_401, 25, layout), "pages for GRCh38’s 25 chromosomes")
+with GpxilFile("/data/grch38/chrM.gpxil.tif") as g:
+    print(make_book(g, "/home/user/results/chrM.pdf", mode="reference", layout=layout))</code></pre>
+<!--CITE: gpxiltools gpxil-->

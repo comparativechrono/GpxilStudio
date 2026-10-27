@@ -1,0 +1,207 @@
+{
+ "refs": {
+  "gpxilspec": {
+   "corporate": "Chronomic Medicine Group, University of Cambridge",
+   "year": 2026,
+   "title": "gpxil: Genome Pixel Image format, version 0.1 (draft specification)",
+   "url": "https://github.com/comparativechrono/Gpxil"
+  },
+  "gpxiltools": {
+   "corporate": "Chronomic Medicine Group, University of Cambridge",
+   "year": 2026,
+   "title": "gpxiltools: read, write, render and check gpxil files (Python)",
+   "url": "https://github.com/comparativechrono/Gpxil-tools"
+  },
+  "gpxil2pxil": {
+   "corporate": "Chronomic Medicine Group, University of Cambridge",
+   "year": 2026,
+   "title": "gpxil2pxil: pictures of genes, transcripts and proteins from a gpxil genome (Python)",
+   "url": "https://github.com/comparativechrono/Gpxil-scratchpad/tree/main/packages/gpxil2pxil"
+  },
+  "pxilspec": {
+   "corporate": "Chronomic Medicine Group, University of Cambridge",
+   "year": 2026,
+   "title": "pxil: sequence pixel files, version 0.1 (draft specification), and the pxil Python module",
+   "url": "https://github.com/comparativechrono/pxil"
+  },
+  "gpxilbrowser": {
+   "corporate": "Chronomic Medicine Group, University of Cambridge",
+   "year": 2026,
+   "title": "The Gpxil browser: the GRCh38 genome as gpxil pictures, in a web browser",
+   "url": "https://comparativechrono.github.io/Gpxil-browser/"
+  },
+  "albrechtbuehler2009": {
+   "authors": ["Albrecht-Buehler G"],
+   "short": "Albrecht-Buehler",
+   "year": 2009,
+   "title": "Outline of a genome navigation system based on the properties of GA-sequences and their flanks",
+   "container": "PLoS ONE",
+   "volume": "4",
+   "issue": "3",
+   "pages": "e4701",
+   "doi": "10.1371/journal.pone.0004701"
+  },
+  "zook2016": {
+   "authors": ["Zook JM", "Catoe D", "McDaniel J", "Vang L", "Spies N", "Sidow A", "Weng Z", "Liu Y", "Mason CE", "Alexander N"],
+   "short": "Zook et al.",
+   "year": 2016,
+   "title": "Extensive sequencing of seven human genomes to characterize benchmark reference materials",
+   "container": "Scientific Data",
+   "volume": "3",
+   "pages": "160025",
+   "doi": "10.1038/sdata.2016.25"
+  },
+  "wagner2022": {
+   "authors": ["Wagner J", "Olson ND", "Harris L", "Khan Z", "Farek J", "Mahmoud M", "Stankovic A", "Kovacevic V", "Yoo B", "Miller N"],
+   "short": "Wagner et al.",
+   "year": 2022,
+   "title": "Benchmarking challenging small variants with linked and long reads",
+   "container": "Cell Genomics",
+   "volume": "2",
+   "issue": "5",
+   "pages": "100128",
+   "doi": "10.1016/j.xgen.2022.100128"
+  },
+  "giabdata": {
+   "corporate": "Genome in a Bottle Consortium, NIST",
+   "title": "HG002 (NA24385) small-variant benchmark v4.2.1, GRCh38",
+   "url": "https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38/"
+  },
+  "ensembl2026": {
+   "authors": ["Yates AD", "Austine-Orimoloye O", "Azov AG", "Barba M", "Barnes I", "Barrera-Enriquez VP", "Becker A", "Bennett R"],
+   "short": "Yates et al.",
+   "year": 2026,
+   "title": "Ensembl 2026",
+   "container": "Nucleic Acids Research",
+   "volume": "54",
+   "issue": "D1",
+   "pages": "D1053-D1060",
+   "doi": "10.1093/nar/gkaf1239"
+  },
+  "schneider2017": {
+   "authors": ["Schneider VA", "Graves-Lindsay T", "Howe K", "Bouk N", "Chen HC", "Kitts PA", "Murphy TD", "Pruitt KD", "Thibaud-Nissen F", "Albracht D"],
+   "short": "Schneider et al.",
+   "year": 2017,
+   "title": "Evaluation of GRCh38 and de novo haploid genome assemblies demonstrates the enduring quality of the reference assembly",
+   "container": "Genome Research",
+   "volume": "27",
+   "issue": "5",
+   "pages": "849-864",
+   "doi": "10.1101/gr.213611.116"
+  },
+  "morales2022": {
+   "authors": ["Morales J", "Pujar S", "Loveland JE", "Astashyn A", "Bennett R", "Berry A", "Cox E", "Davidson C", "Ermolaeva O", "Farrell CM"],
+   "short": "Morales et al.",
+   "year": 2022,
+   "title": "A joint NCBI and EMBL-EBI transcript set for clinical genomics and research",
+   "container": "Nature",
+   "volume": "604",
+   "issue": "7905",
+   "pages": "310-315",
+   "doi": "10.1038/s41586-022-04558-8"
+  },
+  "danecek2011": {
+   "authors": ["Danecek P", "Auton A", "Abecasis G", "Albers CA", "Banks E", "DePristo MA", "Handsaker RE", "Lunter G", "Marth GT", "Sherry ST"],
+   "short": "Danecek et al.",
+   "year": 2011,
+   "title": "The variant call format and VCFtools",
+   "container": "Bioinformatics",
+   "volume": "27",
+   "issue": "15",
+   "pages": "2156-2158",
+   "doi": "10.1093/bioinformatics/btr330"
+  },
+  "vcfspec": {
+   "corporate": "GA4GH and the SAMtools team (hts-specs)",
+   "title": "The Variant Call Format specification, VCFv4.4",
+   "url": "https://samtools.github.io/hts-specs/VCFv4.4.pdf"
+  },
+  "yates2021refget": {
+   "authors": ["Yates AD", "Adams J", "Chaturvedi S", "Davies RM", "Laird M", "Leinonen R", "Nag R", "Sheffield NC", "Hofmann O", "Keane T"],
+   "short": "Yates et al.",
+   "year": 2021,
+   "title": "Refget: standardized access to reference sequences",
+   "container": "Bioinformatics",
+   "volume": "38",
+   "issue": "1",
+   "pages": "299-300",
+   "doi": "10.1093/bioinformatics/btab524"
+  },
+  "cornishbowden1985": {
+   "authors": ["Cornish-Bowden A"],
+   "short": "Cornish-Bowden",
+   "year": 1985,
+   "title": "Nomenclature for incompletely specified bases in nucleic acid sequences: recommendations 1984",
+   "container": "Nucleic Acids Research",
+   "volume": "13",
+   "issue": "9",
+   "pages": "3021-3030",
+   "doi": "10.1093/nar/13.9.3021"
+  },
+  "harris2020": {
+   "authors": ["Harris CR", "Millman KJ", "van der Walt SJ", "Gommers R", "Virtanen P", "Cournapeau D", "Wieser E", "Taylor J", "Berg S", "Smith NJ"],
+   "short": "Harris et al.",
+   "year": 2020,
+   "title": "Array programming with NumPy",
+   "container": "Nature",
+   "volume": "585",
+   "issue": "7825",
+   "pages": "357-362",
+   "doi": "10.1038/s41586-020-2649-2"
+  },
+  "anders2009": {
+   "authors": ["Anders S"],
+   "short": "Anders",
+   "year": 2009,
+   "title": "Visualization of genomic data with the Hilbert curve",
+   "container": "Bioinformatics",
+   "volume": "25",
+   "issue": "10",
+   "pages": "1231-1235",
+   "doi": "10.1093/bioinformatics/btp152"
+  },
+  "okabeito2002": {
+   "authors": ["Okabe M", "Ito K"],
+   "short": "Okabe and Ito",
+   "year": 2002,
+   "title": "Color Universal Design (CUD): how to make figures and presentations that are friendly to colorblind people",
+   "url": "https://jfly.uni-koeln.de/color/"
+  },
+  "pyodide": {
+   "corporate": "The Pyodide development team",
+   "title": "Pyodide: Python with the scientific stack, compiled to WebAssembly",
+   "url": "https://pyodide.org"
+  },
+  "tifffile": {
+   "authors": ["Gohlke C"],
+   "title": "tifffile: read and write TIFF files",
+   "url": "https://github.com/cgohlke/tifffile"
+  },
+  "pillow": {
+   "corporate": "Jeffrey A. Clark and contributors",
+   "title": "Pillow, the friendly PIL fork",
+   "url": "https://python-pillow.github.io/"
+  }
+ },
+ "programs": {
+  "gpxil": {"name": "gpxil, the format", "refs": ["gpxilspec", "albrechtbuehler2009"], "note": "gpxil continues Albrecht-Buehler’s genome pixel images (GPxI) as a file format."},
+  "gpxiltools": {"name": "gpxiltools (the gpxil command, and the Python package)", "refs": ["gpxiltools"]},
+  "gpxil2pxil": {"name": "gpxil2pxil", "refs": ["gpxil2pxil"]},
+  "pxil": {"name": "pxil, the format and its Python module", "refs": ["pxilspec"]},
+  "gpxil-browser": {"name": "The Gpxil browser, and its GRCh38 files and gene files", "refs": ["gpxilbrowser"]},
+  "gpxi": {"name": "Genome pixel images (GPxI)", "refs": ["albrechtbuehler2009"]},
+  "pyodide": {"name": "Pyodide (Python in the browser)", "refs": ["pyodide"]},
+  "numpy": {"name": "NumPy", "refs": ["harris2020"]},
+  "tifffile": {"name": "tifffile, which gpxiltools reads and writes TIFF with", "refs": ["tifffile"]},
+  "pillow": {"name": "Pillow, which writes the PNG pictures", "refs": ["pillow"]},
+  "giab": {"name": "Genome in a Bottle: HG002 and its benchmark", "refs": ["zook2016", "wagner2022", "giabdata"], "note": "The example HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from the v4.2.1 benchmark."},
+  "ensembl": {"name": "Ensembl (GRCh38 sequence, and genes from release 116)", "refs": ["ensembl2026"]},
+  "grch38": {"name": "The GRCh38 reference genome", "refs": ["schneider2017"]},
+  "mane": {"name": "MANE transcripts", "refs": ["morales2022"]},
+  "vcf": {"name": "VCF, the variant call format", "refs": ["danecek2011", "vcfspec"]},
+  "refget": {"name": "refget sequence identifiers", "refs": ["yates2021refget"]},
+  "iupac": {"name": "IUPAC nucleotide codes", "refs": ["cornishbowden1985"]},
+  "hilbert": {"name": "The Hilbert-curve layout", "refs": ["anders2009"]},
+  "okabe-ito": {"name": "The Okabe–Ito colours", "refs": ["okabeito2002"]}
+ }
+}
