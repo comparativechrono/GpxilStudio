@@ -31,7 +31,7 @@
   <dt>“VCF contigs not in the reference (skipped)”</dt>
   <dd>The reference has no sequence of that name. Each file in <code>/data/grch38</code> holds one chromosome, so a VCF of a whole genome encoded on <code>chr17.gpxil.tif</code> gives chromosome 17 only, and notes the others. Encode each chromosome with its own reference file, or use the whole-genome file on your own computer. Names with and without <code>chr</code> (<code>17</code>, <code>chr17</code>) are matched either way.</dd>
 
-  <dt>Most of a chromosome is grey (not called)</dt>
+  <dt>Most of a chromosome isn’t called (grey in the Variants view, near-black in the Genotype view)</dt>
   <dd>That is what the file knows. With a BED file of the regions called with confidence, the bases outside them are UNKNOWN, because the VCF says nothing about them; Genome in a Bottle’s benchmark covers TP53 but not the whole of chromosome 17 (<a href="#h-walk-encode">Turn someone’s VCF into a gpxil file</a>).</dd>
 </dl>
 

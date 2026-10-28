@@ -460,7 +460,7 @@
       group: 'picture',
       title: 'The palettes',
       pkg: 'gpxiltools',
-      what: 'The colours of A, C, G and T in each of gpxil’s palettes, for the screen (sRGB) and for print (CMYK): gpxil palettes.',
+      what: 'The colours of A, C, G, T and N in each of gpxil’s palettes, for the screen (sRGB) and for print (CMYK): gpxil palettes.',
       about: 'Every tool that draws takes a palette. <b>classic</b> is the usual red, blue, green and yellow; <b>okabe-ito</b> uses colours that people with colour-blindness can tell apart; <b>gpxi</b> is the four greys of Albrecht-Buehler’s genomic pixel images, the idea gpxil is named after; <b>process</b> uses the pure process inks, which print most faithfully.',
       help: 'h-tool-palettes',
       fields: [],
@@ -1479,14 +1479,14 @@
 
   /** gpxil's palettes, as swatches */
   function renderPalettes(list, out) {
-    const t = h('table.tl-condtable.tl-palettes', h('tr', h('th', 'Palette'), ...['A', 'C', 'G', 'T'].map((b) => h('th', b)), h('th', '')));
+    const t = h('table.tl-condtable.tl-palettes', h('tr', h('th', 'Palette'), ...['A', 'C', 'G', 'T', 'N'].map((b) => h('th', b)), h('th', '')));
     (list || []).forEach((p) => {
       const sw = (b) => {
         const rgb = p.srgb[b] || [0, 0, 0];
         const cmyk = (p.cmyk_percent && p.cmyk_percent[b]) || [];
         return h('td', h('span.vw-sw', h('i', { style: { background: `rgb(${rgb.join(',')})` } }), h('small', `rgb ${rgb.join(' ')}${cmyk.length ? ' · cmyk ' + cmyk.join(' ') : ''}`)));
       };
-      t.appendChild(h('tr', h('td', h('code', p.name)), ...['A', 'C', 'G', 'T'].map(sw), h('td', h('small', p.description || ''))));
+      t.appendChild(h('tr', h('td', h('code', p.name)), ...['A', 'C', 'G', 'T', 'N'].map(sw), h('td', h('small', p.description || ''))));
     });
     out.appendChild(h('div.table-scroll', t));
   }

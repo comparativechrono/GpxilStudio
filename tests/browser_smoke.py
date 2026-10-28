@@ -61,6 +61,9 @@ async (opts) => {
     await wait(() => V.data && V.data.mode === 'genotype' && V.data.start === 7600000, 20000);
     const key2 = document.querySelector('.vw-legend').innerText;
     check(/A and G: heterozygous[^\n]*\(3 bases\)/.test(key1) && !/C and T/.test(key1) && /C and T: heterozygous[^\n]*\(59 bases\)/.test(key2) && /A and C: heterozygous/.test(key2), 'Viewer: the key lists the heterozygous pairs in view, with how many');
+    // (N has a colour of its own: in the classic colours, C and T mix to mid-grey, and N is near-black)
+    const swatch = (label) => { const s = [...document.querySelectorAll('.vw-legend .vw-sw')].find((e) => e.innerText.startsWith(label)); return s ? getComputedStyle(s.querySelector('i')).backgroundColor : null; };
+    check(swatch('C and T') === 'rgb(128, 128, 128)' && swatch('N, or not known') === 'rgb(32, 32, 32)', 'Viewer: N is near-black, unlike the grey of C and T mixed');
     V.regionIn.value = 'chr17:7,676,101-7,676,300';
     V.regionIn.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
     await wait(() => V.data && V.data.start === 7676100 && V.data.end === 7676300, 20000);

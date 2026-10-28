@@ -198,6 +198,8 @@ textarea.tl-input { font: 13px var(--mono); resize: vertical; }
   .help-page table td:first-child { min-width: 5.5em; }
 }
 .help-xscroll { overflow-x: auto; }
+/* the palettes page: each palette's colours as swatches, which wrap on a phone */
+.help-page dd.help-chips { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 0.4em; }
 
 /* ---------------- workflows (workflows.js): the Galaxy editor's boxes and wires (genomics.css, pipe.css) ---------------- */
 .tl-wfbtn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-2); }

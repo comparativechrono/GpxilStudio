@@ -210,12 +210,12 @@ def region(path: str, contig: str, start: int, end: int, planes: Optional[List[s
 
 
 def palettes() -> List[Dict[str, Any]]:
-    """gpxil's palettes: their names, descriptions, and the sRGB and CMYK colours of A, C, G and T."""
+    """gpxil's palettes: their names, descriptions, and the sRGB and CMYK colours of A, C, G, T and N."""
     from gpxiltools.palettes import describe
 
     return [{"name": p["name"], "description": p.get("description", ""),
-             "srgb": {b: [int(x) for x in p["srgb"][b]] for b in "ACGT"},
-             "cmyk_percent": {b: [int(round(float(x))) for x in p["cmyk_percent"][b]] for b in "ACGT"}}
+             "srgb": {b: [int(x) for x in p["srgb"][b]] for b in "ACGTN"},
+             "cmyk_percent": {b: [int(round(float(x))) for x in p["cmyk_percent"][b]] for b in "ACGTN"}}
             for p in describe()]  # fmt: skip
 
 

@@ -19,10 +19,11 @@
   const MAX_BASES = 4000000; // the most bases drawn at once (4 Mb: about 2,000 × 2,000 pixels)
   /* gpxiltools' palettes (gpxiltools/palettes.py), so that the viewer shows what gpxil render draws: the four bases'
      sRGB colours, N and the gap (no base); how two bases mix ('mean', or 'overprint': inks laid one on another); and
-     how far a soft-masked base is faded towards white */
+     how far a soft-masked base is faded towards white. N is a colour unlike any base or mixture: near-black in the
+     classic and Okabe–Ito colours, since their mixtures include greys (the mean of classic C and T is mid-grey) */
   const PALETTES = {
-    classic: { label: 'classic: A red, C blue, G green, T yellow', A: [255, 0, 0], C: [0, 0, 255], G: [0, 255, 0], T: [255, 255, 0], N: [128, 128, 128], gap: [255, 255, 255], mix: 'mean', fade: 0.45 },
-    'okabe-ito': { label: 'Okabe–Ito: safe for colour-blind readers', A: [0, 158, 115], C: [0, 114, 178], G: [230, 159, 0], T: [213, 94, 0], N: [153, 153, 153], gap: [255, 255, 255], mix: 'mean', fade: 0.45 },
+    classic: { label: 'classic: A red, C blue, G green, T yellow', A: [255, 0, 0], C: [0, 0, 255], G: [0, 255, 0], T: [255, 255, 0], N: [32, 32, 32], gap: [255, 255, 255], mix: 'mean', fade: 0.45 },
+    'okabe-ito': { label: 'Okabe–Ito: safe for colour-blind readers', A: [0, 158, 115], C: [0, 114, 178], G: [230, 159, 0], T: [213, 94, 0], N: [32, 32, 32], gap: [255, 255, 255], mix: 'mean', fade: 0.45 },
     gpxi: { label: 'GPxI greys (Albrecht-Buehler’s original)', A: [0, 0, 0], C: [85, 85, 85], G: [255, 255, 255], T: [170, 170, 170], N: [170, 200, 235], gap: [255, 250, 230], mix: 'mean', fade: 0 },
     process: { label: 'process inks: cyan, magenta, yellow, black', A: [0, 174, 239], C: [236, 0, 140], G: [255, 242, 0], T: [35, 31, 32], N: [160, 160, 160], gap: [255, 255, 255], mix: 'overprint', fade: 0.45 }
   };
@@ -50,7 +51,7 @@
 
   /* the colour of each ref code (0–31) for a palette, as gpxiltools.palettes.ref_colours works it out: one base its
      colour; two or three (an IUPAC code such as R, A or G) the mix of theirs; N and the gap their own; a soft-masked
-     base faded towards white */
+     base faded towards white, but not N or the gap */
   /** Python's round(): halves to the even number (158.5 → 158), so that the colours are gpxiltools' to the unit */
   const pyRound = (x) => {
     const r = Math.round(x);
@@ -67,7 +68,7 @@
         c = [0, 1, 2].map((i) => pyRound(pal.mix === 'overprint' ? parts.reduce((t, p) => t * (p[i] / 255), 1) * 255 : parts.reduce((t, p) => t + p[i], 0) / parts.length));
       }
       out[code] = c;
-      out[code | 16] = code && pal.fade ? c.map((v) => pyRound(v + (255 - v) * pal.fade)) : c;
+      out[code | 16] = code && code !== 15 && pal.fade ? c.map((v) => pyRound(v + (255 - v) * pal.fade)) : c;
     }
     return out;
   }
@@ -521,7 +522,7 @@
         for (let k = 0; k < 32; k++) {
           if (!seen || !seen[k]) continue;
           count[k & 15] += seen[k];
-          if (k & 16) soft += seen[k];
+          if (k & 16 && (k & 15) !== 0 && (k & 15) !== 15) soft += seen[k]; // (N and no base are never paler)
         }
         const NAME = { 1: 'A', 2: 'C', 4: 'G', 8: 'T' };
         const basesOf = (code) => [1, 2, 4, 8].filter((b) => code & b).map((b) => NAME[b]);
