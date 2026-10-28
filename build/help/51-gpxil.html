@@ -1,6 +1,6 @@
-<!-- id: h-gpxil | title: The gpxil format | group: gpxil and pxil | summary: How a gpxil file holds a genome: contigs and planes, layout, pages, strips, the sidecar, the metadata and the checksums | keys: gpxil format specification spec tiff pages planes layout width rows strips compression deflate metadata json sidecar md5 refget checksum digest bigtiff colour map extension plane version tifffile pillow -->
+<!-- id: h-gpxil | title: The gpxil format | group: gpxil and pxil | summary: How a gpxil file holds a genome: contigs and planes, windows, layout, pages, strips, the sidecar, the metadata and the checksums | keys: gpxil format specification spec tiff pages planes layout width rows strips compression deflate metadata json sidecar md5 refget checksum digest bigtiff colour map extension plane version tifffile pillow window windows region part stretch positions -->
 <h1><!--ICON:pixels-->The gpxil format</h1>
-<p class="lede">A gpxil file stores a genome as pictures: one pixel a base, one picture for each chromosome and each kind of information, in an ordinary multi-page TIFF file. Any image software opens it as a picture of the genome; image libraries read its pictures as arrays of numbers; and it holds the reference and one person’s genotypes exactly, so they can be got back base for base. This page describes the format; the specification, version 0.1 (a draft), gives every rule.</p>
+<p class="lede">A gpxil file stores a genome as pictures: one pixel a base, one picture for each chromosome and each kind of information, in an ordinary multi-page TIFF file. Any image software opens it as a picture of the genome; image libraries read its pictures as arrays of numbers; and it holds the reference and one person’s genotypes exactly, so they can be got back base for base. This page describes the format; the specification, version 0.3 (a draft), gives every rule.</p>
 <div class="tryrow"><button class="do" type="button" data-tool="info" data-input="/data/examples/HG002_chr17.gpxil.tif">What’s in HG002’s file</button> <button class="do" type="button" data-goto="h-codes">The codes</button></div>
 
 <h2>Contigs and planes</h2>
@@ -16,12 +16,19 @@
 </table>
 <p>A file holds at most one person. One without a person is a reference – <code>ref</code> planes only, like the chromosomes of GRCh38 in <code>/data/grch38</code>. A file can also leave the <code>ref</code> plane out and name its reference by checksums instead (below). A contig with a <code>gt</code> plane always has a <code>flags</code> plane too. <a href="#h-codes">The codes</a> gives every value.</p>
 
+<h2>Windows: part of a chromosome</h2>
+<p>A contig can also be a <b>window</b> (new in version 0.3): it holds a stretch of a longer sequence, such as TP53 and 100,000 bases either side out of chromosome 17, and its entry says where the stretch lies:</p>
+<pre class="code"><code>{"name": "chr17:7561779-7787546", "length": 225768, "pages": {"ref": 0, "gt": 1, …},
+ "md5": "…", "refget": "…",
+ "window": {"of": "chr17", "start": 7561778, "length": 83257441, "md5": "…", "refget": "…", "aliases": ["17"]}}</code></pre>
+<p><code>of</code> names the chromosome, <code>start</code> is the position of the window’s first base on it (counting from 0), and the chromosome’s length and checksums say which sequence it is. The window’s own <code>md5</code> and <code>refget</code> are those of its own bases. Its planes hold exactly what a contig of the whole chromosome would hold over those bases, so cutting a window out of a file, or encoding just its region from a VCF, gives the same window. Readers give positions as the chromosome’s: base <i>i</i> of the window is position <code>start</code> + <i>i</i> on it, and a region of the chromosome is found in the window that holds it. A file can hold several windows of a chromosome, even overlapping ones, and the whole chromosome too. A window is named for the stretch it holds, from 1 and including both ends, so a window’s name is also the region it holds.</p>
+
 <h2>Layout: bases in rows</h2>
 <p>Each plane is a picture <i>W</i> pixels wide, filled like a page of text: base <i>i</i>, counting from 0, is in row <i>i</i> ÷ <i>W</i> and column <i>i</i> mod <i>W</i>, and the end of the last row is padded with zeros. The writer chooses the width and records it for each contig. gpxiltools uses 8,192, so chromosome 17’s 83,257,441 bases make pictures of 10,164 rows.</p>
 <p>A plane is really a line of values, so any program can re-wrap it to another width without losing anything. A width equal to a repeat’s period lines the repeat up in columns. Other views, such as a book’s pages or a Hilbert curve, are made from the rows when they are drawn.</p>
 
 <h2>Pages: one picture for each plane</h2>
-<p>Every plane of every contig is one page of the TIFF file. The pages go contig by contig, in the order <code>ref</code>, <code>gt</code>, <code>flags</code>, <code>gq</code>, <code>dp</code>, <code>ps</code>, then planes of your own. Each page describes itself in JSON, such as <code>{"gpxil": "0.2", "contig": "chr17", "plane": "gt", "length": 83257441}</code>, and has a name for image viewers, such as <code>chr17 gt</code>. The first page also carries the metadata of the whole file.</p>
+<p>Every plane of every contig is one page of the TIFF file. The pages go contig by contig, in the order <code>ref</code>, <code>gt</code>, <code>flags</code>, <code>gq</code>, <code>dp</code>, <code>ps</code>, then planes of your own. Each page describes itself in JSON, such as <code>{"gpxil": "0.3", "contig": "chr17", "plane": "gt", "length": 83257441}</code>, and has a name for image viewers, such as <code>chr17 gt</code>. The first page also carries the metadata of the whole file.</p>
 <p>The <code>ref</code>, <code>gt</code> and <code>flags</code> pages are palette pictures with a colour map, so that an ordinary image viewer shows them in colour. The colours are only for looking: no reader takes values from them. The other pages are greyscale.</p>
 
 <h2>Strips: reading a region</h2>
@@ -36,13 +43,14 @@ offset	hap	kind	data
 <p>Programs built on libtiff, such as ImageMagick, warn about the unknown tag and otherwise ignore it.</p>
 
 <h2>The metadata</h2>
-<p>The first page’s description is a JSON object that says what the file holds. It must have <code>gpxil</code> (the version of the specification whose rules made it, <code>"0.2"</code>; files made by gpxiltools 0.5 or earlier say <code>"0.1"</code>, and read the same), <code>layout</code> (the default width), <code>contigs</code> and, in a file with a person, <code>sample</code>. Usually there too are <code>reference</code> (its name and source file), <code>planes</code> (their types and missing values), <code>palette</code>, <code>generator</code>, <code>created</code> and <code>summary</code>, the encoder’s totals. Each contig’s entry gives:</p>
+<p>The first page’s description is a JSON object that says what the file holds. It must have <code>gpxil</code> (the version of the specification whose rules made it, <code>"0.3"</code>; files made by gpxiltools 0.6 say <code>"0.2"</code>, and by gpxiltools 0.5 or earlier <code>"0.1"</code>, and read the same; a file with windows says <code>"0.3"</code> or later), <code>layout</code> (the default width), <code>contigs</code> and, in a file with a person, <code>sample</code>. Usually there too are <code>reference</code> (its name and source file), <code>planes</code> (their types and missing values), <code>palette</code>, <code>generator</code>, <code>created</code> and <code>summary</code>, the encoder’s totals. Each contig’s entry gives:</p>
 <table>
 <tr><th>Key</th><th>What it holds</th></tr>
 <tr><td><code>name</code>, <code>length</code>, <code>width</code></td><td>the contig’s name, its number of bases, and its layout width</td></tr>
 <tr><td><code>pages</code></td><td>which page holds each plane: <code>{"ref": 0, "gt": 1, "flags": 2, …}</code></td></tr>
 <tr><td><code>md5</code>, <code>refget</code></td><td>the checksums of its reference sequence (below)</td></tr>
 <tr><td><code>aliases</code></td><td>other names for it, such as <code>17</code> for <code>chr17</code></td></tr>
+<tr><td><code>window</code></td><td>for a window, where it lies (above)</td></tr>
 <tr><td><code>ploidy</code></td><td>1 if haplotype 2 is ABSENT everywhere, 2 if nowhere, otherwise <code>"mixed"</code></td></tr>
 <tr><td><code>encoding</code>, <code>callable_bases</code>, <code>sidecar_entries</code>, <code>phase_sets</code></td><td>what the encoder did (records applied, conflicts, mismatches with the reference …), the bases in the callable regions, the sidecar’s entries, and the phase sets</td></tr>
 </table>

@@ -216,9 +216,8 @@ def stats(path: str, regions: Optional[List[str]] = None, reference: Optional[st
     from gpxiltools.container import GpxilFile
     from gpxiltools.stats import stats as count
 
-    parsed = [cli_region(r) for r in (regions or []) if str(r).strip()]
     with GpxilFile(path, reference=reference or None) as g:
-        return count(g, parsed or None)
+        return count(g, regions_in(g, regions) or None)
 
 
 def compare(
@@ -247,16 +246,16 @@ def compare(
     trio = bool(father or mother)
     if trio and not (father and mother):
         raise ValueError("a trio needs both the father's and the mother's file")
-    parsed = [cli_region(r) for r in (regions or []) if str(r).strip()]
     kw = {"gap": int(gap), "all_calls": bool(all_calls)}
     files = []
     try:
         for path in [a, father, mother] if trio else [a, b]:
             files.append(GpxilFile(path, reference=reference or None))
+        parsed = regions_in(files[0], regions)
         res = compare_trio(*files, parsed or None, **kw) if trio else compare_pair(*files, parsed or None, **kw)
         if out:
             first = res["regions"][0]
-            name, start, end = cli_region(draw) if draw and str(draw).strip() else (first["contig"], first["start"] - 1, first["end"])
+            name, start, end = files[0].region_of(str(draw)) if draw and str(draw).strip() else (first["contig"], first["start"] - 1, first["end"])
             pic = picture(files, name, start, end, bases_per_row=int(width) if width else None, **kw).scaled(int(scale or 1))
             if out.lower().endswith((".tif", ".tiff")):
                 pic.save_tiff(out)
@@ -283,11 +282,11 @@ def compare(
             g.close()
 
 
-def cli_region(text: str):
-    """A region as ``gpxil`` reads it: (contig, start (0-based), end or None)."""
-    from gpxiltools.cli import _region
-
-    return _region(str(text))
+def regions_in(g, texts: Optional[List[str]]) -> list:
+    """Regions given as text, as ``gpxil`` reads them with the file ``g``: (contig, start (0-based), end), the start
+    and end None for a whole contig; a contig's name, such as a window's (chr17:7561779-7787546) or HLA-A*01:14, is
+    always that contig."""
+    return [g.region_of(str(r)) for r in (texts or []) if str(r).strip()]
 
 
 def palettes() -> List[Dict[str, Any]]:

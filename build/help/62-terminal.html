@@ -10,7 +10,7 @@
 <tr><td><code>gpxil info</code></td><td>what a gpxil file holds; <code>--json</code> prints all its metadata</td></tr>
 <tr><td><code>gpxil validate</code></td><td>checks a file against the specification; it ends with status 1 if the file isn’t valid</td></tr>
 <tr><td><code>gpxil stats</code></td><td>counts what a file holds – bases called, substitutions and Ti/Tv, insertions, deletions, phasing, quality – for every contig or for regions; <code>--json</code> for programs</td></tr>
-<tr><td><code>gpxil subset</code></td><td>copies some contigs, and planes, into a new gpxil file: a working copy, made without decoding (<code>--no-ref</code> leaves out the reference plane)</td></tr>
+<tr><td><code>gpxil subset</code></td><td>copies some contigs, and planes, into a new gpxil file: a working copy, made without decoding (<code>--no-ref</code> leaves out the reference plane); a region, such as <code>chr17:7,661,779-7,687,546</code>, is cut out as a window</td></tr>
 <tr><td><code>gpxil compare</code></td><td>two genomes base by base, the second as the truth: what is the same, written differently or different, with precision and recall; or a child with <code>--father</code> and <code>--mother</code>: Mendelian errors, new mutations, where each variant came from, crossovers. <code>-o</code> draws a region of it</td></tr>
 <tr><td><code>gpxil render</code></td><td>a contig or a region as a picture: PNG for the screen, TIFF in RGB or CMYK for print</td></tr>
 <tr><td><code>gpxil book</code></td><td>a PDF to print, one dot per base</td></tr>

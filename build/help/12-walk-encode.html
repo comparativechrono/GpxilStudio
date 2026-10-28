@@ -1,6 +1,6 @@
-<!-- id: h-walk-encode | title: Turn someone’s VCF into a gpxil file | group: Walkthroughs | summary: A person’s variants and a reference become a gpxil file: with GRCh38 from the web, without the reference plane, and from a FASTA file | keys: encode make create vcf gpxil convert reference fasta grch38 callable bed regions benchmark giab hg002 tp53 no-ref noref small file sample sex worked example -->
+<!-- id: h-walk-encode | title: Turn someone’s VCF into a gpxil file | group: Walkthroughs | summary: A person’s variants and a reference become a gpxil file: with GRCh38 from the web, without the reference plane, as a window of just the region the VCF covers, and from a FASTA file | keys: encode make create vcf gpxil convert reference fasta grch38 callable bed regions benchmark giab hg002 tp53 no-ref noref small file sample sex worked example window windows region quick -->
 <h1><!--ICON:genome-->Turn someone’s VCF into a gpxil file</h1>
-<p class="lede">A VCF file lists where a person differs from the reference. A gpxil file holds the whole of each chromosome, base by base, with the person’s genotype at every base. This walkthrough makes one from HG002’s variants around TP53, with chromosome 17 of GRCh38 as the reference, read from the web. Then it makes the same file without the reference’s bases, which is a hundred times smaller, and finally the specification’s worked example from a FASTA file.</p>
+<p class="lede">A VCF file lists where a person differs from the reference. A gpxil file holds the whole of each chromosome, base by base, with the person’s genotype at every base. This walkthrough makes one from HG002’s variants around TP53, with chromosome 17 of GRCh38 as the reference, read from the web. Then it makes the same file without the reference’s bases, which is a hundred times smaller, then a window of just the stretch the VCF covers, in a second, and finally the specification’s worked example from a FASTA file.</p>
 
 <h2>What you need</h2>
 <ul>
@@ -40,7 +40,13 @@
 <p>The button ticks <b>Leave out the reference plane</b> for you, and the name under <b>Save as</b> changes to match; press <b>Run</b>. Anything that needs the bases themselves then needs the reference too. The tools that read bases show a field for it, <b>Its reference</b>, and fill in the GRCh38 chromosome from <code>/data/grch38</code>; gpxil checks it against the file’s checksums. The Viewer does the same by itself for a file made on GRCh38. Use files without the reference to keep many people’s genomes small, or to send one; keep the reference with the file when it has to stand on its own.</p>
 <div class="tryrow"><button class="do" type="button" data-viewer="~/genomes/HG002_TP53.noref.gpxil.tif" data-region="chr17:7,661,779-7,687,546" data-mode="haplotypes">View its haplotypes</button></div>
 
-<h2>6 · From a FASTA file: the worked example</h2>
+<h2>6 · Just the stretch the VCF covers: a window</h2>
+<p>The VCF covers 150,000 of chromosome 17’s 83 million bases, so nearly all of the file you made says UNKNOWN. Give the region instead, in <b>Only these regions, as windows</b>: the file then holds just those bases, as a window – a contig that keeps the chromosome’s positions, so <code>chr17:7,676,154</code> is still <code>chr17:7,676,154</code> in the Viewer and every tool.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="encode" data-reference="/data/grch38/chr17.gpxil.tif" data-vcf="/data/examples/HG002_TP53.vcf" data-callable="/data/examples/HG002_TP53.bed" data-contigs="" data-regions="chr17:7,600,001-7,750,000" data-no-ref="false">Open it as a window</button></div>
+<p>Press <b>Run</b>. Only the records that reach into the region are applied, and only the reference’s bases there are read, so it takes a second or two and little memory, and writes <code>~/genomes/HG002_TP53_chr17_7600001-7750000.gpxil.tif</code>: 50 kB, with the reference’s bases (7 kB without them). It holds just what the same stretch of the whole chromosome’s file holds, base for base. A window is also the way to keep a gene from a big file: <a href="#h-tool-subset">Make a working copy (subset)</a> cuts one out of a file you have, and the Viewer’s <b>Save this region as a gpxil file</b> keeps what it shows.</p>
+<div class="tryrow"><button class="do" type="button" data-viewer="~/genomes/HG002_TP53_chr17_7600001-7750000.gpxil.tif" data-region="chr17:7,661,779-7,687,546" data-mode="variants">View TP53 in it</button></div>
+
+<h2>7 · From a FASTA file: the worked example</h2>
 <p>The specification’s worked example is a reference of ten bases (<code>worked-example.fa</code>) and four variants (<code>worked-example.vcf</code>). Encode it with 4 bases per row, as in the specification, and each plane is a picture of 3 rows of 4 pixels, which you can read pixel by pixel in <a href="#h-codes">The codes</a>.</p>
 <div class="tryrow"><button class="do" type="button" data-tool="encode" data-reference="/data/examples/worked-example.fa" data-vcf="/data/examples/worked-example.vcf" data-width="4">Encode the worked example</button></div>
 <p>The button sets <b>Bases per row of each page</b> to 4. A FASTA file is read whole, one record at a time, so for a whole human genome use a gpxil reference, or work on your own computer.</p>
@@ -48,7 +54,7 @@
 <h2>Your own data</h2>
 <ul>
   <li>Add your VCF, and its BED file, with the Files tab’s <b>↑</b> button, or by dragging them onto it. They go into the folder you choose, such as <code>~/genomes</code>.</li>
-  <li>For a VCF on GRCh38, give the chromosome you want from <code>/data/grch38</code> as the reference, and encode one chromosome at a time. Each takes about 6 bytes of memory a base: half a gigabyte for chromosome 17, about 1.5 GB for chromosome 1, which is more than a browser tab may have.</li>
+  <li>For a VCF on GRCh38, give the chromosome you want from <code>/data/grch38</code> as the reference, and encode one chromosome at a time. Each takes about 6 bytes of memory a base: half a gigabyte for chromosome 17, about 1.5 GB for chromosome 1, which is more than a browser tab may have. For the genes you care about, windows are quicker and smaller.</li>
   <li>For the biggest chromosomes, or a whole genome in one file, work on your own computer, where gpxil can use the whole-genome reference file from the Gpxil browser’s downloads (<a href="#h-reference">The GRCh38 reference</a>, <a href="#h-own-computer">On your own computer</a>).</li>
 </ul>
 
@@ -56,6 +62,7 @@
 <pre class="code" data-run="term"><code>gpxil encode /data/grch38/chr17.gpxil.tif -v /data/examples/HG002_TP53.vcf --callable /data/examples/HG002_TP53.bed --planes gt,flags -o ~/genomes/HG002_TP53.gpxil.tif
 gpxil validate ~/genomes/HG002_TP53.gpxil.tif
 gpxil encode /data/grch38/chr17.gpxil.tif -v /data/examples/HG002_TP53.vcf --callable /data/examples/HG002_TP53.bed --planes gt,flags --no-ref -o ~/genomes/HG002_TP53.noref.gpxil.tif
+gpxil encode /data/grch38/chr17.gpxil.tif -v /data/examples/HG002_TP53.vcf --callable /data/examples/HG002_TP53.bed --planes gt,flags --region chr17:7,600,001-7,750,000 -o ~/genomes/HG002_TP53_chr17_7600001-7750000.gpxil.tif
 ls -l ~/genomes
 gpxil fasta ~/genomes/HG002_TP53.noref.gpxil.tif --which 1 --region chr17:7676101-7676200 --reference /data/grch38/chr17.gpxil.tif</code></pre>
 <p>The last command needs the reference to spell out HG002’s first haplotype from the file without one.</p>

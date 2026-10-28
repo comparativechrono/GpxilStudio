@@ -19,7 +19,7 @@
 <h2>The form</h2>
 <dl>
   <dt>The gpxil file</dt><dd>Any gpxil file. One without a sample has only its reference counted.</dd>
-  <dt>Regions</dt><dd>One or more regions, separated by spaces: a contig, or CONTIG:START-END counting from 1. Leave it empty for every contig. With several, a table compares them, and the counts of all of them together follow.</dd>
+  <dt>Regions</dt><dd>One or more regions, separated by spaces: a contig, CONTIG:START-END counting from 1, or CONTIG:POS for one base. Leave it empty for every contig. With several, a table compares them, and the counts of all of them together follow, each base counted once where regions overlap. In a file of windows, positions are the chromosome’s, and a chromosome’s name counts each of its windows.</dd>
   <dt>Its reference</dt><dd>Only for a file written without its reference plane: the reference to count its bases and work out Ti/Tv with. Without it, the rest is counted.</dd>
 </dl>
 <p>The Viewer counts the same for the region in view, under its key (<a href="#h-viewer">The Viewer</a>).</p>

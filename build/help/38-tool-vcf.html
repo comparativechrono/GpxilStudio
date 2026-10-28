@@ -6,7 +6,7 @@
 <h2>The form</h2>
 <dl>
   <dt>The gpxil file</dt><dd>A gpxil file with a sample; one written without its reference needs <b>Its reference</b> too, to spell out the alleles.</dd>
-  <dt>Regions</dt><dd>One or more regions, separated by spaces: a contig, or <code>CONTIG:START-END</code> counting from 1. Empty: every contig.</dd>
+  <dt>Regions</dt><dd>One or more regions, separated by spaces: a contig, or <code>CONTIG:START-END</code> counting from 1. Empty: every contig. A window’s records are its chromosome’s, at the chromosome’s positions; windows that overlap or touch are read as one stretch, so each record comes once, whole. At a window’s ends a record says only what the window holds.</dd>
   <dt>Write no-call blocks</dt><dd>On by default: each stretch of bases that weren’t called becomes a record with ALT <code>&lt;*&gt;</code>, an <code>END</code> and genotype <code>./.</code>, so that a program can tell “not called” from “the same as the reference”, and encoding the VCF again restores them.</dd>
   <dt>Save as</dt><dd>The VCF file, in <code>~/results</code>.</dd>
 </dl>

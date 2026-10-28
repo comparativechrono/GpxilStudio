@@ -71,6 +71,43 @@ async (opts) => {
     check(V.data.scale > 4 && fits(), `Viewer: a region typed in, 200 bases, drawn large (${V.data.scale} pixels a base)`);
     await MG.app.viewerOpen('/data/examples/worked-example.gpxil.tif');
     check(V.data && V.data.contig.name === 'chrT' && V.data.end === 10, 'Viewer: the worked example opens, all of it');
+    // a window (gpxil 0.3): TP53 and 100 kb either side, shown at chromosome 17's positions
+    await MG.app.viewerOpen('/data/examples/HG002_TP53.gpxil.tif', { mode: 'variants' });
+    await wait(() => V.data && V.data.contig.window, 20000);
+    const wc = V.data.contig;
+    check(wc.name === 'chr17:7561779-7787546' && wc.start + V.data.start === 7661778 && wc.start + V.data.end === 7687546 && /^chr17:7,661,779-7,687,546 · from the window chr17:7561779-7787546/.test(document.querySelector('.vw-info').innerText) && /chr17 7,561,779–7,787,546 \(a window/.test(V.contigSel.selectedOptions[0].textContent), 'Viewer: a window opens at TP53, at the chromosome’s positions');
+    V.regionIn.value = 'chr17:7,676,101-7,676,300';
+    V.regionIn.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    await wait(() => V.data && V.data.start === 7676100 - 7561778 && V.data.end === 7676300 - 7561778, 20000).catch(() => null);
+    const wr = c.getBoundingClientRect();
+    c.dispatchEvent(new MouseEvent('mousemove', { clientX: wr.left + 2, clientY: wr.top + 2, bubbles: true }));
+    check(V.data.start === 114322 && /^chr17:7,676,10\d · reference/.test(document.querySelector('.vw-hover').innerText) && V.regionIn.value === 'chr17:7,676,101-7,676,300', 'Viewer: a region typed in is found in the window, and a base is named by its position on the chromosome');
+    V.regionIn.value = 'chr17:8,000,001-8,000,100';
+    V.regionIn.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    await sleep(500);
+    check(V.data.start === 114322 && /isn['’]t all in a window[^]*chr17:7,561,779-7,787,546/.test(document.body.innerText), 'Viewer: a region outside the window says what the file holds');
+    // the counts of a window are the whole chromosome's over the same stretch
+    const wDiffs = [];
+    for (const region of ['chr17:7661779-7687546', 'chr17:7561779-7787546']) {
+      await MG.app.viewerOpen('/data/examples/HG002_TP53.gpxil.tif', { region, mode: 'genotype' });
+      await wait(() => V.data && V.data.contig.start + V.data.start + 1 === Number(region.split(':')[1].split('-')[0]) && V.counts && V._countKey.endsWith(`|${V.data.start}|${V.data.end}`) && !/Counting/.test(V.countsEl.textContent), 120000);
+      const py = await MG.app.pyCall('gpxilwb.gui.stats', { path: '/data/examples/HG002_chr17.gpxil.tif', regions: [region] });
+      const { contig, start, end, ...want } = py.result.regions[0];
+      const differ = (a, b, path = '') => (a === b ? [] : a && b && typeof a === 'object' && typeof b === 'object' ? [...new Set([...Object.keys(a), ...Object.keys(b)])].flatMap((k) => differ(a[k], b[k], path + '.' + k)) : [`${path}: ${JSON.stringify(a)} vs ${JSON.stringify(b)}`]);
+      wDiffs.push(...differ(V.counts, want).map((x) => region + ' ' + x));
+    }
+    check(!wDiffs.length, `Viewer: a window’s counts are the whole chromosome’s${wDiffs.length ? ': ' + wDiffs.slice(0, 3).join('; ') : ''}`);
+    // what is in view, saved as a window of its own, and opened
+    await MG.app.viewerOpen('/data/examples/HG002_chr17.gpxil.tif', { region: 'chr17:7,661,779-7,687,546', mode: 'variants' });
+    await wait(() => V.data && V.data.start === 7661778 && document.querySelector('.vw-keep'), 20000);
+    document.querySelector('.vw-keep').click();
+    await wait(() => /Saved/.test(document.querySelector('.vw-kept').textContent), 120000).catch(() => null);
+    const kept = MG.app.fs.get('/home/user/genomes/HG002_chr17_7661779-7687546.gpxil.tif');
+    check(kept && kept.size < 30000 && /a window of chr17, at its positions/.test(document.querySelector('.vw-kept').textContent), `Viewer: Save this region as a gpxil file makes a window (${kept ? (kept.size / 1e3).toFixed(1) : '?'} kB)`);
+    const viewIt = [...document.querySelectorAll('.vw-kept button')].find((b) => /View it/.test(b.textContent));
+    if (viewIt) viewIt.click();
+    await wait(() => V.data && V.data.contig.window && V.data.contig.name === 'chr17:7661779-7687546', 20000).catch(() => null);
+    check(V.data.contig.name === 'chr17:7661779-7687546' && V.data.start === 0 && V.data.end === 25768, 'Viewer: … and View it opens it, all of it');
     if (opts.reference) {
       await MG.app.viewerOpen('/data/grch38/chr1.gpxil.tif', { region: 'chr1:100,000,001-100,050,000' });
       check(V.data && V.data.contig.name === 'chr1' && V.data.planes.ref && V.data.planes.ref.length === 50000, 'Viewer: a region of GRCh38 chromosome 1, read from the web');
@@ -115,6 +152,22 @@ async (opts) => {
     await MG.app.useTool('validate', { input: '/data/examples/HG002_chr17.gpxil.tif' });
     await runTool();
     check(document.querySelector('.tl-verdict.ok'), 'Tools: HG002’s file is valid, checksums and all');
+    MG.app.showHelp('h-tool-subset');
+    document.querySelector('#h-tool-subset [data-regions]:not([data-regions=""])').click();
+    await wait(() => MG.app.currentBench === 'tools' && val('regions'), 20000).catch(() => null);
+    check(val('regions') === 'chr17:7,661,779-7,687,546' && val('out') === '~/genomes/HG002_chr17_7661779-7687546.gpxil.tif', 'Help: the subset page’s button fills in a region to cut out');
+    await MG.app.useTool('subset', { input: '/data/examples/HG002_chr17.gpxil.tif', contigs: '', regions: 'chr17:7,600,001-7,750,000 chr17:43,044,295-43,125,483', noRef: false });
+    await sleep(300);
+    check(val('out') === '~/genomes/HG002_chr17_7600001-7750000_chr17_43044295-43125483.gpxil.tif', `Tools: Make a working copy names a copy of two windows by them (${val('out')})`);
+    res = await runTool();
+    const two = MG.app.fs.get('/home/user/genomes/HG002_chr17_7600001-7750000_chr17_43044295-43125483.gpxil.tif');
+    check(document.querySelector('.tl-done.ok') && two && two.size < 200000 && /2 of them windows/.test(res), `Tools: TP53 and BRCA1 cut out as windows (${two ? (two.size / 1e3).toFixed(0) : '?'} kB)`);
+    await MG.app.useTool('stats', { input: '/home/user/genomes/HG002_chr17_7600001-7750000_chr17_43044295-43125483.gpxil.tif', regions: 'chr17:7,661,779-7,687,546' });
+    res = await runTool();
+    check(/3 heterozygous, 11 homozygous; Ti\/Tv 6\.00/.test(res), 'Tools: … TP53 counted in the window, as in the whole chromosome');
+    await MG.app.useTool('validate', { input: '/home/user/genomes/HG002_chr17_7600001-7750000_chr17_43044295-43125483.gpxil.tif' });
+    await runTool();
+    check(document.querySelector('.tl-verdict.ok'), 'Tools: … and the windows are valid');
     // Compare genomes: HG002's two benchmarks in TP53, drawn; then HG002 and his parents, from the walkthrough's button,
     // over the whole chromosome, and the first Mendelian error in the Viewer
     await MG.app.useTool('compare', { a: '/data/examples/HG002_chr17.gpxil.tif', b: '/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif', regions: 'chr17:7,661,779-7,687,546' });
@@ -161,6 +214,11 @@ async (opts) => {
     await MG.app.useTool('gpxil2pxil', { input: '/data/examples/HG002_chr17.gpxil.tif', annotation: '/data/examples/TP53.gtf', kinds: 'protein', haplotypes: 'all' });
     res = await runTool();
     check(/P72R/.test(res) && /3 pxil files/.test(res), 'Tools: TP53’s protein from the reference and both haplotypes, P72R and all');
+    await MG.app.useTool('gpxil2pxil', { input: '/data/examples/HG002_TP53.gpxil.tif', annotation: '/data/examples/TP53.gtf', kinds: 'protein', haplotypes: 'all', outdir: '~/results/pxil/TP53-window' });
+    res = await runTool();
+    check(/P72R/.test(res) && /3 pxil files/.test(res) && MG.app.fs.exists('/home/user/results/pxil/TP53-window/TP53-201_ENSP00000269305_HG002-hap1.protein.pxil.png'), 'Tools: … and the same from the TP53 window');
+    await MG.app.useTool('gpxil2pxil', { input: '/data/examples/HG002_chr17.gpxil.tif', annotation: '/data/examples/TP53.gtf', kinds: 'protein', haplotypes: 'all', outdir: '~/results/pxil/TP53' });
+    await runTool(); // (the whole chromosome's again: the next step reads its pictures)
     document.querySelectorAll('.tl-next button')[1].click();
     await wait(() => document.querySelector('.tl-toolhead') && /FASTA/.test(document.querySelector('.tl-toolhead').innerText), 20000);
     res = await runTool();
@@ -190,6 +248,11 @@ async (opts) => {
     check(/^>chr17:7676101-7676160_hap1\n/m.test(await run('gpxil fasta /data/examples/HG002_chr17.gpxil.tif --which 1 --region chr17:7676101-7676160')), 'Terminal: gpxil fasta, a haplotype');
     check(/7676154\t\.\tG\tC/.test(await run('gpxil vcf /data/examples/HG002_chr17.gpxil.tif --region chr17:7676101-7676200 --no-nocall-blocks | grep -v "^#"')), 'Terminal: gpxil vcf, piped to grep: P72R');
     check(/\* TP53-201 +ENST00000269305/.test(await run("gpxil2pxil /data/examples/HG002_chr17.gpxil.tif TP53 -a /data/examples/TP53.gtf --list | grep -F '*'")), 'Terminal: gpxil2pxil --list, the canonical transcript marked');
+    const seqOf = (s) => (String(s).match(/^>chr17:7676101-7676160_hap1\n([ACGTNacgtn\n]+)/m) || [])[1];
+    const wInfo = await run('gpxil info /data/examples/HG002_TP53.gpxil.tif');
+    const wFa = seqOf(await run('gpxil fasta /data/examples/HG002_TP53.gpxil.tif --which 1 --region chr17:7676101-7676160'));
+    const hFa = seqOf(await run('gpxil fasta /data/examples/HG002_chr17.gpxil.tif --which 1 --region chr17:7676101-7676160'));
+    check(/a window of chr17 \(83,257,441 bp\), its bases 7,561,779 to 7,787,546/.test(wInfo) && wFa && wFa === hFa, 'Terminal: gpxil info and fasta on a window, at the chromosome’s positions');
     await run('viewer /data/examples/HG002_chr17.gpxil.tif chr17:7,676,101-7,676,200 --mode=haplotypes');
     await wait(() => MG.app.viewer.data && MG.app.viewer.data.mode === 'haplotypes' && MG.app.viewer.data.start === 7676100, 20000).catch(() => null);
     check(MG.app.currentBench === 'viewer' && MG.app.viewer.data.mode === 'haplotypes' && MG.app.viewer.data.start === 7676100, 'Terminal: viewer FILE REGION --mode=haplotypes');
@@ -235,6 +298,23 @@ async (opts) => {
       const ok = val('callable') === '/data/examples/HG002_TP53.bed';
       await runTool(900000);
       check(ok && document.querySelector('.tl-done.ok') && MG.app.fs.exists('/home/user/genomes/HG002_TP53.gpxil.tif'), 'Tools: HG002’s TP53 variants encoded on GRCh38 chromosome 17 from the web, with their callable regions');
+      // the same VCF as a window of just the stretch it covers: quick, small, and the same as the whole chromosome there
+      MG.app.showHelp('h-walk-encode');
+      document.querySelector('#h-walk-encode [data-regions]').click();
+      await wait(() => MG.app.currentBench === 'tools' && val('regions') && val('callable'), 20000).catch(() => null);
+      const outW = val('out');
+      const tw = Date.now();
+      await runTool(900000);
+      const sw = (Date.now() - tw) / 1000;
+      const statsOf = async (path) => {
+        const r = await MG.app.pyCall('gpxilwb.gui.stats', { path, regions: ['chr17:7600001-7750000'] });
+        const { contig, start, end, window, ...rest } = r.result.regions[0]; // (the counts, not where they were read)
+        return JSON.stringify(rest);
+      };
+      const sWhole = await statsOf('/home/user/genomes/HG002_TP53.gpxil.tif');
+      const sWin = await statsOf('/home/user/genomes/HG002_TP53_chr17_7600001-7750000.gpxil.tif');
+      const fw = MG.app.fs.get('/home/user/genomes/HG002_TP53_chr17_7600001-7750000.gpxil.tif');
+      check(outW === '~/genomes/HG002_TP53_chr17_7600001-7750000.gpxil.tif' && document.querySelector('.tl-done.ok') && fw && fw.size < 100000 && sWin === sWhole && sWin.length > 100, `Help: the walkthrough’s window, encoded in ${sw.toFixed(1)} s (${fw ? (fw.size / 1e3).toFixed(0) : '?'} kB), counts the same as the whole chromosome there`);
     }
     check(fits(), 'the page fits the width of the screen');
   } catch (e) {

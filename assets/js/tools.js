@@ -67,8 +67,9 @@
   MG.app.pyCall = pyCall;
 
   /* ------------------------------------------------------------------ what a gpxil file holds (read in the page) */
-  /* path → {meta, contigs: [{name, length, planes}], sample, hasRef, noRef, reference} once read; a form asks for it
-     when a file is chosen (wantInfo), and is refreshed when it comes */
+  /* path → {meta, contigs: [{name, length, planes, aliases, window, parent, start, end}], sample, hasRef, noRef,
+     reference, locate} once read; a form asks for it when a file is chosen (wantInfo), and is refreshed when it comes.
+     A window (gpxil 0.3) holds parent's bases start..end-1; locate(name, start, end) finds a region as gpxil does */
   const INFO = new Map();
   const infoKey = (p) => {
     const e = MG.app.fs && MG.app.fs.get(p);
@@ -90,7 +91,16 @@
     const pr = MG.gpxilRead
       .open(MG.gpxilRead.sourceOf(MG.app.fs, p))
       .then((g) => {
-        const contigs = g.contigs.map((c) => ({ name: c.name, length: c.length, planes: Object.keys(c.pages), aliases: c.aliases }));
+        const contigs = g.contigs.map((c) => ({
+          name: c.name,
+          length: c.length,
+          planes: Object.keys(c.pages),
+          aliases: c.aliases,
+          window: !!c.window,
+          parent: c.parent,
+          start: c.start,
+          end: c.end
+        }));
         const meta = g.meta;
         const s = meta.sample && typeof meta.sample === 'object' ? meta.sample : null;
         return {
@@ -101,7 +111,13 @@
           noRef: contigs.length > 0 && contigs.every((c) => !c.planes.includes('ref')),
           hasGt: contigs.some((c) => c.planes.includes('gt')),
           reference: (meta.reference && meta.reference.name) || '',
-          width: (meta.layout && meta.layout.width) || 8192
+          width: (meta.layout && meta.layout.width) || 8192,
+          windows: contigs.filter((c) => c.window),
+          /** where a region is, as gpxil finds it: {contig (as above), start, end} at the contig's own offsets */
+          locate: (name, s, e) => {
+            const at = g.locate(name, s, e);
+            return { contig: contigs[g.contigs.indexOf(at.contig)], start: at.start, end: at.end };
+          }
         };
       })
       .catch((e) => ({ error: e.message || String(e) }))
@@ -116,41 +132,85 @@
 
   /* ------------------------------------------------------------------ regions */
   const TP53 = { contig: 'chr17', start: 7661778, end: 7687546 }; // the TP53 gene on GRCh38 (Ensembl 116), 0-based
-  /** CONTIG or CONTIG:START-END (1-based, both ends included; commas allowed), as gpxil reads it → {contig, start
-      (0-based), end} (end null: the whole contig), or null */
+  /** CONTIG, CONTIG:POS or CONTIG:START-END (1-based, both ends included; commas allowed), as gpxil reads it →
+      {contig, start (0-based), end} (end null: the whole contig), or null. The name ends at the last colon, as gpxil
+      reads it, so a window's name (chr17:7561779-7787546) is a name too */
   function parseRegion(text) {
-    const m = String(text || '').trim().match(/^([^:\s]+)(?::([\d,]+)-([\d,]+))?$/);
-    if (!m) return null;
-    if (m[2] == null) return { contig: m[1], start: 0, end: null };
-    const s = Number(m[2].replace(/,/g, '')), e = Number(m[3].replace(/,/g, ''));
+    const t = String(text || '').trim();
+    if (!t || /\s/.test(t)) return null; // (spaces separate regions here)
+    // (as gpxil reads a region, and gpxil-read.js's parseRegion: CONTIG:POS is one base; numbers don't begin with 0,
+    // so a name with colons in it, HLA-A*01:01:01:01, is a name; a region from position 0 isn't one)
+    const m = t.match(/^(.+):([1-9][\d,]*)(?:-([1-9][\d,]*))?$/);
+    if (!m) return /^.+:0(?:-[\d,]+)?$/.test(t) ? null : { contig: t, start: 0, end: null };
+    const s = Number(m[2].replace(/,/g, ''));
+    const e = m[3] === undefined ? s : Number(m[3].replace(/,/g, ''));
     if (!(s >= 1) || !(e >= s)) return null;
     return { contig: m[1], start: s - 1, end: e };
   }
+  /** where a region is in a file, as gpxil finds it: {contig, start, end} (the contig's own offsets; on a window,
+      start and end of the region are the chromosome's), or {error} */
+  function locateIn(info, r) {
+    if (!info || !info.locate) return { error: '' };
+    // (a contig by its name, whole: as gpxil reads a name that is a contig's)
+    const named = contigOf(info, r.end == null ? r.contig : '');
+    if (named) return { contig: named, start: 0, end: named.length };
+    const c = contigOf(info, r.contig);
+    if (c && !c.window && r.end != null && r.end > c.length) return { error: `${c.name} is ${fmt(c.length)} bases long, so the region must end by ${fmt(c.length)}.` };
+    try {
+      return r.end == null ? info.locate(r.contig) : info.locate(r.contig, r.start, r.end);
+    } catch (e) {
+      if (e.code === 'contig') return { error: `${'%FILE%'} has no contig called ${r.contig}: it has ${info.contigs.slice(0, 6).map((x) => x.name).join(', ')}${info.contigs.length > 6 ? ' …' : ''}.` };
+      // (a region the file's windows don't hold, or a chromosome with several windows asked for whole)
+      const n = r.contig.toLowerCase();
+      const same = (x) => [n, 'chr' + n, n.replace(/^chr/, '')].includes(String(x).toLowerCase());
+      const wins = (info.windows || []).filter((w) => same(w.parent) || w.name === r.contig);
+      const held = wins.slice(0, 4).map((w) => `${w.parent}:${fmt(w.start + 1)}-${fmt(w.end)}`).join(', ') + (wins.length > 4 ? ' …' : '');
+      if (r.end == null) return { error: `${'%FILE%'} holds ${wins.length} windows of ${r.contig} (${held}): give one of them, or a region.` };
+      const asked = `${r.contig}:${fmt(r.start + 1)}-${fmt(r.end)}`;
+      return { error: wins.length ? `${'%FILE%'} doesn’t hold all of ${asked}: it holds ${held}${wins.length > 1 ? ', each a window' : ', a window'} (positions are the chromosome’s).` : `${'%FILE%'} doesn’t hold ${asked}.` };
+    }
+  }
   const regionText = (c, s, e) => `${c}:${s + 1}-${e}`;
+  /** the windows of a chromosome named alone (not a contig's name) in a file, as gpxil finds them; [] otherwise */
+  function windowsNamed(info, text) {
+    const r = parseRegion(text);
+    if (!info || !r || r.end != null || contigOf(info, r.contig)) return [];
+    const n = r.contig.toLowerCase();
+    const same = (x) => [n, 'chr' + n, n.replace(/^chr/, '')].includes(String(x).toLowerCase());
+    return (info.windows || []).filter((w) => same(w.parent) || (w.parentAliases || []).some(same));
+  }
   /** a contig of a gpxil file by name (or alias, or with or without chr) */
   function contigOf(info, name) {
     if (!info || !info.contigs) return null;
     const n = String(name || '').toLowerCase();
     return info.contigs.find((c) => c.name.toLowerCase() === n || (c.aliases || []).some((a) => a.toLowerCase() === n) || c.name.toLowerCase() === 'chr' + n || 'chr' + c.name.toLowerCase() === n) || null;
   }
-  /** a region to start from: TP53 if the file has chromosome 17, else a contig (all of a small one, or its first Mb) */
+  /** a region to start from: TP53 if the file holds it (all of chromosome 17, or a window of it), else a contig (all
+      of a small one, or its first Mb; of a window, in the chromosome's positions) */
   function defaultRegion(p, max = 1e6) {
     const info = infoOf(p);
     if (!info || !info.contigs || !info.contigs.length) return '';
-    const c17 = contigOf(info, 'chr17');
-    if (c17 && c17.length >= TP53.end) return regionText(c17.name, TP53.start, TP53.end);
+    const tp53 = locateIn(info, TP53);
+    if (tp53.contig) return regionText(tp53.contig.parent, TP53.start, TP53.end);
     const c = info.contigs[0];
+    if (c.window) return regionText(c.parent, c.start, c.start + Math.min(c.length, max));
     return c.length <= max ? c.name : regionText(c.name, 0, max);
   }
   /** a region given as text, as part of a file name: chr17:7661779-7687546 → chr17_7661779-7687546 */
   const regionSlug = (r) => String(r || '').trim().replace(/,/g, '').replace(/[:\s]+/g, '_').replace(/[^\w.-]+/g, '-') || 'all';
+  /** a file's stem and a region's slug, without the chromosome twice: HG002_chr17 and chr17_7661779-7687546 →
+      HG002_chr17_7661779-7687546 */
+  const withSlug = (stem, slug) => {
+    const m = String(slug).match(/^([^_]+)_(.+)$/);
+    return m && stem.endsWith('_' + m[1]) ? `${stem}_${m[2]}` : `${stem}_${slug}`;
+  };
   /** the number of bases of a region of a file, if it can be told (null if not) */
   function regionBases(p, text) {
     const r = parseRegion(text);
     if (!r) return null;
     if (r.end != null) return r.end - r.start;
-    const c = contigOf(infoOf(p), r.contig);
-    return c ? c.length : null;
+    const at = locateIn(infoOf(p), r);
+    return at.contig ? at.end - at.start : null;
   }
   /** what is wrong with a region of a file ('' if nothing, or if the file isn't read yet) */
   function checkRegion(p, text, what, max) {
@@ -160,9 +220,8 @@
     if (!r) return `“${t}” isn’t a region: give a contig, or CONTIG:START-END counting from 1, such as chr17:7,661,779-7,687,546.`;
     const info = infoOf(p);
     if (info && info.contigs) {
-      const c = contigOf(info, r.contig);
-      if (!c) return `${base(p)} has no contig called ${r.contig}: it has ${info.contigs.slice(0, 6).map((x) => x.name).join(', ')}${info.contigs.length > 6 ? ' …' : ''}.`;
-      if (r.end != null && r.end > c.length) return `${c.name} is ${fmt(c.length)} bases long, so the region must end by ${fmt(c.length)}.`;
+      const at = locateIn(info, r);
+      if (at.error) return at.error.replace('%FILE%', base(p));
     }
     const n = regionBases(p, t);
     if (max && n != null && n > max) return `That is ${fmt(n)} bases. In the browser, ${what === 'region' ? 'draw' : 'take'} at most ${fmt(max)} at a time (on your own computer, gpxil has no such limit).`;
@@ -179,7 +238,10 @@
   function subsetPlanes(v) {
     const info = infoOf(v.input);
     const chosen = contigsOf(v.contigs);
-    const contigs = info && info.contigs ? info.contigs.filter((c) => !chosen.length || chosen.some((n) => contigOf(info, n) === c)) : null;
+    // (the contigs asked for, and those that hold the regions asked for)
+    const held = info ? regionsOf(v.regions).map((x) => parseRegion(x) && locateIn(info, parseRegion(x)).contig).filter(Boolean) : [];
+    const any = chosen.length || held.length;
+    const contigs = info && info.contigs ? info.contigs.filter((c) => !any || held.includes(c) || chosen.some((n) => contigOf(info, n) === c)) : null;
     const have = contigs ? new Set(contigs.flatMap((c) => c.planes)) : null;
     const reference = needsRef(v.input) && v.reference ? v.reference : '';
     const dropRef = !needsRef(v.input) && !!v.noRef && v.planes !== 'ref';
@@ -213,7 +275,7 @@
   function grch38For(p) {
     const info = infoOf(p);
     if (!info || !info.noRef || !/grch38|hg38/i.test(info.reference || '')) return '';
-    const names = info.contigs.map((c) => c.name);
+    const names = [...new Set(info.contigs.map((c) => c.parent || c.name))]; // (a window's chromosome)
     const f = (MG.app.referenceFiles || []).find((x) => names.every((n) => (x.contigs || []).includes(n) || (x.contigs || []).includes('chr' + n)));
     return f ? f.path : '';
   }
@@ -290,11 +352,12 @@
       help: 'h-tool-stats',
       fields: [
         { key: 'input', type: 'file', label: 'The gpxil file', kinds: ['gpxil'] },
-        { key: 'regions', type: 'text', label: 'Regions (optional)', def: (v) => defaultRegion(v.input), placeholder: 'every contig, whole', help: 'One or more regions, separated by spaces: a contig, or CONTIG:START-END counting from 1. Leave it empty for every contig: a whole chromosome takes seconds.' },
+        { key: 'regions', type: 'text', label: 'Regions (optional)', def: (v) => defaultRegion(v.input), placeholder: 'every contig, whole', help: 'One or more regions, separated by spaces: a contig, CONTIG:START-END counting from 1, or CONTIG:POS for one base; in a file of windows, a chromosome’s name counts each of its windows (and in all, each base once). Leave it empty for every contig: a whole chromosome takes seconds.' },
         REF_FIELD
       ],
       check: (v) => {
         for (const r of regionsOf(v.regions)) {
+          if (windowsNamed(infoOf(v.input), r).length > 1) continue; // (a chromosome that windows hold: each is counted)
           const bad = checkRegion(v.input, r, 'region', 0);
           if (bad) return bad;
         }
@@ -339,7 +402,8 @@
         { key: 'vcf', type: 'file', label: 'The person’s variants (VCF)', kinds: ['vcf'], optional: true, none: 'none: the reference only', def: (v) => (/(^|\/)worked-example\.fa$/.test(v.reference || '') ? '/data/examples/worked-example.vcf' : '') },
         { key: 'sample', type: 'text', label: 'Sample (optional)', def: '', placeholder: 'the VCF’s first sample', show: (v) => !!v.vcf, help: 'For a VCF of several people, the name of the column to encode.' },
         { key: 'callable', type: 'file', label: 'Regions called with confidence (BED, optional)', kinds: ['bed'], optional: true, none: 'none: a base not in the VCF is the reference', pair: 'vcf', show: (v) => !!v.vcf, help: 'Bases outside these regions become UNKNOWN: not called, rather than the same as the reference. Benchmark VCFs such as Genome in a Bottle’s come with one.' },
-        { key: 'contigs', type: 'text', label: 'Only these contigs (optional)', def: '', placeholder: 'all of the reference’s; or e.g. chr17, or chr1,chr2', help: 'Contigs of the reference, separated by commas. A VCF of one chromosome needs only that chromosome.' },
+        { key: 'contigs', type: 'text', label: 'Only these contigs (optional)', def: '', placeholder: 'all of the reference’s; or e.g. chr17, or chr1,chr2', show: (v) => !String(v.regions || '').trim(), help: 'Contigs of the reference, separated by commas. A VCF of one chromosome needs only that chromosome.' },
+        { key: 'regions', type: 'text', label: 'Only these regions, as windows (optional)', def: () => '', placeholder: 'e.g. chr17:7,561,779-7,787,546', show: (v) => !String(v.contigs || '').trim(), help: 'Each region becomes a window (gpxil 0.3): a contig that holds just those bases and keeps the chromosome’s positions, made from the calls around it only, so it is quick and small, and the same as the region cut out of the whole chromosome. Separate several with spaces.' },
         { key: 'planes', type: 'select', label: 'Planes from the VCF', def: 'gt,flags', options: [['gt,flags', 'genotype and flags (gt, flags): enough for sequences, pictures and VCF'], ['', 'all the VCF has: also quality, depth and phase sets (gq, dp, ps)']], show: (v) => !!v.vcf, help: 'gq, dp and ps take as much memory again as gt and flags, which matters for a whole chromosome in the browser.' },
         { key: 'noRef', type: 'check', label: 'Leave out the reference plane (a much smaller file)', def: false, help: 'The file then names its reference by its checksums, and anything that reads its bases needs the reference too (each tool has a field for it).' },
         { key: 'sex', type: 'select', label: 'Sex chromosomes', def: '', options: [['', 'two copies of each contig'], ['XY', 'XY: one copy of chrX and chrY outside the pseudo-autosomal regions'], ['XX', 'XX']], show: (v) => !!v.vcf },
@@ -347,12 +411,29 @@
         { key: 'width', type: 'number', label: 'Bases per row of each page', def: '8192', min: 16, max: 65536, step: 1, help: 'Only the layout of the pages: 8,192 (the default) keeps strips small, so a region reads quickly.' },
         { key: 'compression', type: 'select', label: 'Compression', def: 'deflate', options: [['deflate', 'deflate (the default; everything reads it)'], ['none', 'none (large files)']], help: 'On your own computer gpxil can also use Zstandard, LZW, LZMA or PackBits, with the imagecodecs package; the browser has deflate only.' },
         { key: 'palette', type: 'select', label: 'Colours stored for image viewers', def: 'classic', options: PALETTES },
-        { key: 'out', type: 'path', label: 'Save as', def: (v) => `~/genomes/${stemOf(v.vcf || v.reference)}${v.noRef ? '.noref' : ''}.gpxil.tif` }
+        {
+          key: 'out',
+          type: 'path',
+          label: 'Save as',
+          // (one window: named by its region, HG002_TP53_chr17_7600001-7750000; several: …_windows)
+          def: (v) => {
+            const rs = regionsOf(v.regions);
+            const stem = stemOf(v.vcf || v.reference);
+            return `~/genomes/${rs.length === 1 ? withSlug(stem, regionSlug(rs[0])) : rs.length ? stem + '_windows' : stem}${v.noRef ? '.noref' : ''}.gpxil.tif`;
+          }
+        }
       ],
       check: (v) => {
         const info = infoOf(v.reference);
         if (info && info.error) return `${base(v.reference)} couldn’t be read: ${info.error}`;
         if (info && !info.hasRef) return `${base(v.reference)} has no reference plane, so it can’t be the reference. Choose a FASTA file, or a gpxil file written with its reference.`;
+        if (String(v.contigs || '').trim() && String(v.regions || '').trim()) return 'Give contigs or regions, not both.';
+        for (const x of regionsOf(v.regions)) {
+          const r = parseRegion(x);
+          if (!r || r.end == null) return `“${x}” isn’t a region: give CONTIG:START-END counting from 1, such as chr17:7,561,779-7,787,546.`;
+          const bad = info ? checkRegion(v.reference, x, 'region') : '';
+          if (bad) return bad;
+        }
         if (info && v.contigs) {
           const missingC = v.contigs.split(',').map((x) => x.trim()).filter((x) => x && !contigOf(info, x));
           if (missingC.length) return `${base(v.reference)} has no contig ${missingC.join(', ')}.`;
@@ -367,6 +448,7 @@
         ...optArgs(v.vcf && v.sample, '-s', v.sample),
         ...optArgs(v.vcf && v.callable, '--callable', v.callable),
         ...optArgs(v.contigs, '--contigs', String(v.contigs).replace(/\s+/g, '')),
+        ...regionsOf(v.regions).flatMap((x) => ['--region', x]),
         ...optArgs(v.vcf && v.planes, '--planes', v.planes),
         ...optArgs(v.noRef, '--no-ref'),
         ...optArgs(v.vcf && v.sex, '--sex', v.sex),
@@ -384,10 +466,15 @@
           '',
           `summary = encode(${pyq(v.reference)}, ${pyq(v.out)},`,
           `                 vcf=${v.vcf ? pyq(v.vcf) : 'None'},${v.vcf && v.sample ? ` sample=${pyq(v.sample)},` : ''}${v.vcf && v.callable ? ` callable_bed=${pyq(v.callable)},` : ''}`,
+          regionsOf(v.regions).length
+            ? `                 regions=[${regionsOf(v.regions).map((x) => parseRegion(x)).filter(Boolean).map((r) => `(${pyq(r.contig)}, ${r.start}, ${r.end})`).join(', ')}],   # (0-based, the end not included: windows)`
+            : null,
           `                 contigs=${v.contigs ? JSON.stringify(String(v.contigs).split(',').map((x) => x.trim()).filter(Boolean)) : 'None'}, include_ref=${v.noRef ? 'False' : 'True'},${v.vcf && v.planes ? ` planes=${JSON.stringify(v.planes.split(','))},` : ''}${v.vcf && v.sex ? ` sex=${pyq(v.sex)},` : ''}`,
           `                 width=${int(v.width) || 8192}, compression=${pyq(v.compression || 'deflate')}, palette=${pyq(v.palette || 'classic')}${v.refName && kindOf(v.reference) !== 'gpxil' ? `, reference_name=${pyq(v.refName)}` : ''})`,
           'print(summary)'
-        ].join('\n'),
+        ]
+          .filter((x) => x !== null)
+          .join('\n'),
       next: (res, v) => [
         ['grid', 'Look at it in the Viewer', () => MG.app.viewerOpen(v.out)],
         ['badgeCheck', 'Check it', () => MG.app.useTool('validate', { input: v.out })],
@@ -399,24 +486,29 @@
       group: 'make',
       title: 'Make a working copy (subset)',
       pkg: 'gpxiltools',
-      what: 'Copy some contigs of a gpxil file, and if you like only some of its planes, into a new and smaller file, without encoding it again: gpxil subset.',
+      what: 'Copy some contigs of a gpxil file, or regions of them as windows, and if you like only some of its planes, into a new and smaller file, without encoding it again: gpxil subset.',
       about:
-        'A whole genome is about 850 MB as gpxil; one of its chromosomes is a few per cent of that, and a file without its reference plane is about a hundred times smaller again. Each contig of a gpxil file stands on its own – its pages and its entry in the metadata – so gpxil subset copies the pages of the contigs you choose as they are stored, strip by strip, without decoding them: it is quick, needs little memory, and works as well on a file you added to this browser or one on the web. Without its reference plane, a contig keeps the checksums of its reference, so a tool can be given the reference again (or this tool can put it back). The copy records the file it came from.',
+        'A whole genome is about 850 MB as gpxil; one of its chromosomes is a few per cent of that, and a file without its reference plane is about a hundred times smaller again. Each contig of a gpxil file stands on its own – its pages and its entry in the metadata – so gpxil subset copies the pages of the contigs you choose as they are stored, strip by strip, without decoding them: it is quick, needs little memory, and works as well on a file you added to this browser or one on the web. A region instead of a contig is cut out as a <b>window</b> (gpxil 0.3): a contig that holds just those bases and says where they are on the chromosome, so every tool still gives their positions as the chromosome’s – TP53 and 100 kb either side is 76 kB. Without its reference plane, a contig keeps the checksums of its reference, so a tool can be given the reference again (or this tool can put it back). The copy records the file it came from.',
       help: 'h-tool-subset',
       fields: [
         { key: 'input', type: 'file', label: 'The gpxil file', kinds: ['gpxil'] },
-        { key: 'contigs', type: 'text', label: 'Contigs (optional)', def: '', placeholder: 'all of them; or e.g. chr17, or chr17 chr21', help: 'The contigs to copy, by name, separated by spaces or commas. Leave it empty for all of them.' },
+        { key: 'contigs', type: 'text', label: 'Contigs (optional)', def: '', placeholder: 'all of them; or e.g. chr17, or chr17 chr21', help: 'The contigs to copy, by name, separated by spaces or commas. Leave it empty for all of them (unless you give regions).' },
+        { key: 'regions', type: 'text', label: 'Regions, cut out as windows (optional)', def: () => '', placeholder: 'e.g. chr17:7,561,779-7,787,546', help: 'Regions to cut out, each as a window: a contig that holds just those bases and keeps the chromosome’s positions (gpxil 0.3). Separate several with spaces. The positions are the chromosome’s, also in a file of windows.' },
         { key: 'planes', type: 'select', label: 'Planes', def: '', options: [['', 'all the planes it has'], ['ref,gt,flags,ps', 'leave out genotype quality and read depth (gq, dp)'], ['ref,gt,flags', 'the reference, the genotype and the flags only'], ['ref', 'the reference only, without the sample']] },
         { key: 'noRef', type: 'check', label: 'Leave out the reference plane (a much smaller file)', def: false, show: (v) => !needsRef(v.input) && v.planes !== 'ref', help: 'Like gpxil encode --no-ref: the contigs keep the checksums of their reference, and anything that reads their bases is given the reference too (each tool has a field for it).' },
         Object.assign({}, REF_FIELD, { def: '', label: 'Put its reference plane back, from (optional)', none: 'nothing: copy it without one', help: 'This file was written without its reference plane. Choose the reference – a FASTA file, or a gpxil file with its reference plane, such as a chromosome of GRCh38 from /data/grch38 – to write it into the copy; gpxil checks that it is the same.' }),
         { key: 'compression', type: 'select', label: 'Compression', def: '', options: [['', 'as it is: its strips are copied without decoding'], ['deflate', 'deflate'], ['none', 'none (a large file)']], help: 'Choosing one encodes the strips again, which takes longer. In the browser gpxil writes deflate or nothing; on your own computer also Zstandard, LZW, LZMA and PackBits.' },
-        { key: 'out', type: 'path', label: 'Save as', def: (v) => `~/genomes/${stemOf(v.input).replace(/\.noref$/, '')}${contigsOf(v.contigs).length ? '_' + contigsOf(v.contigs).slice(0, 3).join('-') : ''}${subsetPlanes(v).noRef ? '.noref' : ''}.gpxil.tif` }
+        { key: 'out', type: 'path', label: 'Save as', def: (v) => `~/genomes/${[...contigsOf(v.contigs).slice(0, 3), ...regionsOf(v.regions).slice(0, 2).map(regionSlug)].reduce(withSlug, stemOf(v.input).replace(/\.noref$/, ''))}${subsetPlanes(v).noRef ? '.noref' : ''}.gpxil.tif` }
       ],
       check: (v) => {
         const info = infoOf(v.input);
         if (info && info.error) return `${base(v.input)} couldn’t be read: ${info.error}`;
+        for (const x of regionsOf(v.regions)) {
+          const bad = checkRegion(v.input, x, 'region');
+          if (bad) return bad;
+        }
         if (info) {
-          const missingC = contigsOf(v.contigs).filter((x) => !contigOf(info, x));
+          const missingC = contigsOf(v.contigs).filter((x) => !contigOf(info, x) && !(info.windows || []).some((w) => w.parent.toLowerCase() === x.toLowerCase()));
           if (missingC.length) return `${base(v.input)} has no contig ${missingC.join(', ')}: it has ${info.contigs.slice(0, 6).map((c) => c.name).join(', ')}${info.contigs.length > 6 ? ' …' : ''}.`;
           if (/^ref$/.test(v.planes) && needsRef(v.input) && !v.reference) return `${base(v.input)} has no reference plane to copy: choose the reference to put it back from.`;
           if (subsetPlanes(v).planes === '') return 'Those choices leave nothing to copy.';
@@ -428,7 +520,7 @@
       argv: (v) => {
         const p = subsetPlanes(v);
         return [
-          'gpxil', 'subset', v.input, ...contigsOf(v.contigs), '-o', v.out,
+          'gpxil', 'subset', v.input, ...contigsOf(v.contigs), ...regionsOf(v.regions), '-o', v.out,
           ...optArgs(p.planes, '--planes', p.planes),
           ...optArgs(p.dropRef && !p.planes, '--no-ref'),
           ...optArgs(p.reference, '--reference', p.reference),
@@ -439,7 +531,7 @@
       wf: { outputs: (v) => [{ name: 'gpxil', label: 'gpxil file', kinds: ['gpxil'], path: v.out }], summary: (res) => ((res.stderr || '').match(/wrote [^:]+: ([^\n]+)/) || [])[1] || '' },
       python: (v) => {
         const p = subsetPlanes(v);
-        const cs = contigsOf(v.contigs);
+        const cs = [...contigsOf(v.contigs), ...regionsOf(v.regions)];
         const args = [`${pyq(v.input)}, ${pyq(v.out)}, ${cs.length ? JSON.stringify(cs) : 'None'}`];
         if (p.planes) args.push(`planes=${JSON.stringify(p.planes.split(','))}`);
         if (p.dropRef && !p.planes) args.push('include_ref=False');
@@ -563,8 +655,7 @@
           ...(hilbert ? ['from gpxiltools.layout import hilbert_image'] : []),
           '',
           `with GpxilFile(${pyq(v.input)}${refPy(v)}) as g:`,
-          `    c = g[${pyq(r.contig)}]`,
-          `    start, end = ${r.start}, ${r.end == null ? 'c.length' : r.end}`,
+          `    c, start, end = g.locate(${pyq(r.contig)}${r.end == null ? '' : `, ${r.start}, ${r.end}`})   # (the contig, and where in it: on a window, by the chromosome's positions)`,
           `    picture = render(c, mode=${pyq(v.mode)}, palette=${pyq(v.palette || 'classic')}, start=start, end=end${int(v.width) ? `, bases_per_row=${int(v.width)}` : ''}${v.mark && v.mode === 'haplotypes' ? ', mark_insertions=True' : ''})`,
           ...(hilbert ? ['    # (the bases along a Hilbert curve, in a square, rather than in rows)', '    picture.index, _ = hilbert_image(picture.index.reshape(-1)[: end - start])'] : []),
           `    picture = picture.scaled(${int(v.scale) || 1})`,
@@ -685,11 +776,15 @@
         const r = String(v.region || '').trim() ? parseRegion(v.region) : null;
         const fn = v.which === 'ref' ? 'iter_reference(c, start, end)' : v.which === 'iupac' ? 'iter_genotype_iupac(c, start, end)' : `iter_haplotype(c, ${v.which}, start, end)`;
         const suffix = v.which === 'ref' ? '' : v.which === 'iupac' ? '_iupac' : '_hap' + v.which;
-        // (each sequence is named as gpxil fasta names it: the contig, or CONTIG:START-END for part of one, and which)
-        const name = `c.name if (start, end) == (0, c.length) else f"{c.name}:{start + 1}-{end}"`;
+        // (each sequence is named as gpxil fasta names it: the contig, or CONTIG:START-END for part of one or a window, and which)
+        const name = `c.name if (start, end) == (0, c.length) and c.window is None else c.region(start, end, commas=False)`;
         const body = r
-          ? [`    c = g[${pyq(r.contig)}]`, `    start, end = ${r.start}, ${r.end == null ? 'c.length' : r.end}`, `    name = ${name}`, `    write_fasta_stream(out, name + ${pyq(suffix)}, ${fn})`]
-          : ['    for c in g:', ...(v.which === 'ref' ? [] : ['        if not c.has("gt"):   # (a contig without calls has no haplotypes)', '            continue']), '        start, end = 0, c.length', `        write_fasta_stream(out, c.name + ${pyq(suffix)}, ${fn})`];
+          ? [
+              `    c, start, end = g.locate(${pyq(r.contig)}${r.end == null ? '' : `, ${r.start}, ${r.end}`})   # (on a window, by the chromosome's positions)`,
+              `    name = ${name}`,
+              `    write_fasta_stream(out, name + ${pyq(suffix)}, ${fn})`
+            ]
+          : ['    for c in g:', ...(v.which === 'ref' ? [] : ['        if not c.has("gt"):   # (a contig without calls has no haplotypes)', '            continue']), '        start, end = 0, c.length', `        name = ${name}`, `        write_fasta_stream(out, name + ${pyq(suffix)}, ${fn})`];
         return [
           `from gpxiltools import GpxilFile`,
           `from gpxiltools.export import ${v.which === 'ref' ? 'iter_reference' : v.which === 'iupac' ? 'iter_genotype_iupac' : 'iter_haplotype'}, write_fasta_stream`,
@@ -1158,6 +1253,9 @@
       const form = h('form.tl-form', { autocomplete: 'off' });
       const rows = {};
       const defOf = (f) => (typeof f.def === 'function' ? f.def(v) : f.def);
+      // (what the form says of its values: set once the form is built, so a field that changes while it is being
+      // built, such as a file that isn't there any more, waits for it)
+      let update = () => {};
       const refreshDerived = (except) => {
         for (const f of tool.fields) {
           if (f.key === except || touched.has(f.key)) continue;
@@ -1242,7 +1340,7 @@
         }
         return x;
       };
-      const update = () => {
+      update = () => {
         const x = full();
         const problem = missing(tool, x);
         msg.textContent = problem;
@@ -1600,10 +1698,22 @@
     if (s && s.callable_regions) row('Called with confidence', s.callable_regions);
     const total = g.contigs.reduce((a, c) => a + c.length, 0);
     row('Contigs', `${fmt(g.contigs.length)}, ${fmt(total)} bases in all`);
+    if ((g.windows || []).length)
+      row('Windows', `${g.windows.length === g.contigs.length ? 'every contig is' : `${fmt(g.windows.length)} contigs are`} a window: a stretch of a chromosome, at the chromosome’s positions (gpxil 0.3)`);
+    if (m.subset && m.subset.of) row('Copied from', `${m.subset.of}${m.subset.gpxil ? ' (gpxil ' + m.subset.gpxil + ')' : ''}`);
     row('Layout', `${fmt(g.width)} bases a row; palette ${m.palette || 'classic'}`);
     box.appendChild(dl);
     const t = h('table.tl-condtable', h('tr', h('th', 'Contig'), h('th', 'Length'), h('th', 'Planes')));
-    g.contigs.slice(0, 60).forEach((c) => t.appendChild(h('tr', h('td', h('code', c.name)), h('td', fmt(c.length)), h('td', c.planes.join(', ')))));
+    g.contigs.slice(0, 60).forEach((c) =>
+      t.appendChild(
+        h(
+          'tr',
+          h('td', h('code', c.name), c.window ? h('div.muted', `a window of ${c.parent}: ${fmt(c.start + 1)}–${fmt(c.end)}`) : null),
+          h('td', fmt(c.length)),
+          h('td', c.planes.join(', '))
+        )
+      )
+    );
     if (g.contigs.length > 60) t.appendChild(h('tr', h('td', { colspan: 3 }, `… and ${fmt(g.contigs.length - 60)} more`)));
     box.appendChild(h('div.table-scroll', t));
     return box;

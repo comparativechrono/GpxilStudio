@@ -40,6 +40,8 @@
 .vw-cmd { margin: 10px 12px 24px; max-width: 110ch; }
 .vw-cmd p { margin: 6px 0; }
 .vw-cmd pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12.5px; }
+.vw-kept { color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.vw-kept .btn { margin-left: 4px; }
 .vw-root > .vw-empty { flex: 1 0 auto; }
 .vw-empty { display: flex; align-items: center; justify-content: center; padding: 20px; }
 .vw-empty[hidden] { display: none; }

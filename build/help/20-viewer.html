@@ -1,16 +1,16 @@
-<!-- id: h-viewer | title: The Viewer | group: The viewer | index: yes | summary: Any gpxil file as pixels: choose a file, a region and a view, move around, point at a base | keys: viewer view look see pixels region zoom pan move keyboard hover point base counts count stats called substitutions file add upload web grch38 save picture command render -->
+<!-- id: h-viewer | title: The Viewer | group: The viewer | index: yes | summary: Any gpxil file as pixels: choose a file, a region and a view, move around, point at a base | keys: viewer view look see pixels region zoom pan move keyboard hover point base counts count stats called substitutions file add upload web grch38 save picture command render window windows stretch part save region gpxil file subset positions -->
 <h1><!--ICON:grid-->The Viewer</h1>
 <p class="lede">The Viewer shows a gpxil file as it is: one pixel, or a square of pixels, for each base, in rows that read from left to right and from top to bottom like a page of text. It reads only the part of the file it shows, straight from the file, without Python, so a whole genome opens at once – even one on the web.</p>
-<div class="tryrow"><button class="do" type="button" data-viewer="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,661,779-7,687,546" data-mode="variants">Open HG002’s TP53</button></div>
+<div class="tryrow"><button class="do" type="button" data-viewer="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,661,779-7,687,546" data-mode="variants">Open HG002’s TP53</button> <button class="do" type="button" data-viewer="/data/examples/HG002_TP53.gpxil.tif" data-mode="variants">Open the TP53 window</button></div>
 
 <h2>Choosing what to see</h2>
 <dl>
   <dt>File</dt><dd>Any gpxil file: yours, the examples, or a chromosome of the GRCh38 reference, read from the Gpxil browser. <b>Add a file…</b> puts one from your computer into <code>~/genomes</code> and opens it; it stays in this browser.</dd>
-  <dt>Region</dt><dd>Choose a contig, or type a region and press <b>Go</b> (or Enter): <code>chr17:7,661,779-7,687,546</code>, counting from 1 and including both ends, with or without the commas. A contig’s name alone means all of it, and one position, such as <code>chr17:7676154</code>, that base.</dd>
+  <dt>Region</dt><dd>Choose a contig, or type a region and press <b>Go</b> (or Enter): <code>chr17:7,661,779-7,687,546</code>, counting from 1 and including both ends, with or without the commas. A contig’s name alone means all of it, and one position, such as <code>chr17:7676154</code>, that base. Positions are always the chromosome’s, in a file of windows too (below).</dd>
   <dt>Show</dt><dd>What to draw: the reference’s bases, the person’s genotype, their two haplotypes, their variants, or the flags, genotype quality, read depth or phase sets. Only the views the file can show are offered: a file without a sample has only the reference. <a href="#h-viewer-views">The views and their colours</a></dd>
   <dt>Colours</dt><dd>One of gpxil’s palettes: classic, Okabe–Ito (safe for colour-blind readers), the GPxI greys, or the process inks (<a href="#h-tool-palettes">The palettes</a>).</dd>
 </dl>
-<p>A file opens at TP53 if it has chromosome 17, and otherwise at the middle 100,000 bases of its first contig. The Viewer remembers the file, region, view and colours you had last time.</p>
+<p>A file opens at TP53 if it holds it (in chromosome 17, or a window of it), and otherwise at the middle 100,000 bases of its first contig. The Viewer remembers the file, region, view and colours you had last time.</p>
 
 <h2>Moving around</h2>
 <ul>
@@ -27,7 +27,17 @@
 <p>Under the key, the Viewer counts what the region in view holds, as <code>gpxil stats</code> does, and follows you as you move: how much of it was called, the person’s heterozygous and homozygous substitutions and their Ti/Tv, insertions and deletions, the share of heterozygous substitutions phased, and the GC content of the reference. <b>All the counts</b> adds the reference’s bases, the phase sets, genotype quality and read depth, and the <code>gpxil stats</code> command that gives the same numbers in the terminal. In HG002’s TP53: 96.2 % called, 3 heterozygous and 11 homozygous substitutions, 2 insertions and 6 deletions (<a href="#h-tool-stats">Count what a file holds</a>).</p>
 
 <h2>Keeping what you see</h2>
-<p>Under the picture is the <code>gpxil render</code> command that draws the same picture, pixel for pixel, as a file, ready to run in the terminal; <b>Save the picture</b> saves the view as it is, as a PNG in <code>~/results</code>. For the flags, quality, depth and phase-set views, which <code>gpxil render</code> doesn’t draw, there’s a Python cell instead, which reads the plane’s values for the region as a NumPy array: <b>Add to notebook</b> puts it in the open notebook.</p>
+<p>Under the picture is the <code>gpxil render</code> command that draws the same picture, pixel for pixel, as a file, ready to run in the terminal; <b>Save the picture</b> saves the view as it is, as a PNG in <code>~/results</code>. <b>Save this region as a gpxil file</b> keeps the bases in view, with every plane the file has there, as a gpxil file of their own in <code>~/genomes</code>: a window (below), cut out by <code>gpxil subset</code>. HG002’s TP53 alone is 17 kB; <b>View it</b> opens it. For the flags, quality, depth and phase-set views, which <code>gpxil render</code> doesn’t draw, there’s a Python cell instead, which reads the plane’s values for the region as a NumPy array: <b>Add to notebook</b> puts it in the open notebook.</p>
+
+<h2>Windows: part of a chromosome</h2>
+<p>A gpxil file can hold windows (version 0.3 of the specification): contigs that each hold a stretch of a chromosome, such as <code>/data/examples/HG002_TP53.gpxil.tif</code> – TP53 and 100,000 bases either side, 76 kB cut out of HG002’s chromosome 17. A window keeps the chromosome’s positions, and the Viewer shows it at its place:</p>
+<ul>
+  <li>the list of contigs names the stretch each window holds, such as <i>chr17 7,561,779–7,787,546 (a window)</i>;</li>
+  <li>a region you type is the chromosome’s, so <code>chr17:7,661,779-7,687,546</code> is found in the window that holds it, and a region outside the file’s windows gets a note saying which stretches it holds;</li>
+  <li>pointing at a base gives its position on the chromosome, and the line above the picture says which window the bases come from;</li>
+  <li>the commands under the picture, and the counts, name the region as the chromosome’s, as gpxil reads one.</li>
+</ul>
+<p>A window without its reference plane, made on GRCh38, borrows its bases from <code>/data/grch38</code>, as a whole chromosome does. Make windows with <b>Save this region as a gpxil file</b>, with <a href="#h-tool-subset">Make a working copy (subset)</a>, or straight from a VCF with <a href="#h-tool-encode">Make a gpxil file (encode)</a>.</p>
 
 <h2>Files on the web, and files without a reference</h2>
 <p>A file on the web, such as GRCh38’s chromosomes in <code>/data/grch38</code>, is read a piece at a time as you move around: the first view of a chromosome takes a moment, and parts you’ve seen are kept for a while. A file written without its reference plane (<code>--no-ref</code>) has only the person’s genotype; if its metadata says its reference is GRCh38, the Viewer reads the bases from <code>/data/grch38</code> and says so above the picture.</p>
@@ -35,5 +45,6 @@
 <h2>From the terminal</h2>
 <p><code>viewer FILE [REGION]</code> opens a file in the Viewer from the terminal, with <code>--plane=gt</code> (or ref, flags, gq, dp, ps) for a view:</p>
 <pre class="code"><code>viewer /data/examples/HG002_chr17.gpxil.tif chr17:7,661,779-7,687,546
+viewer /data/examples/HG002_TP53.gpxil.tif chr17:7,676,001-7,677,000 --plane=gt
 viewer /data/grch38/chr21.gpxil.tif chr21:30,000,001-30,500,000 --plane=ref</code></pre>
 <!--GROUP-->

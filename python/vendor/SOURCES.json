@@ -3,23 +3,23 @@
  "wheels": [
   {
    "project": "gpxiltools",
-   "version": "0.6.0",
-   "wheel": "gpxiltools-0.6.0-py3-none-any.whl",
+   "version": "0.7.0",
+   "wheel": "gpxiltools-0.7.0-py3-none-any.whl",
    "modules": [
     "gpxiltools"
    ],
-   "source": "https://pypi.org/project/gpxiltools/0.6.0/ (released from https://github.com/comparativechrono/Gpxil-tools, tag v0.6.0)",
-   "sha256": "34e761e0e7bf934222421b13041520b8b40258f2f4c1576c2758432dc33afba1"
+   "source": "built with python -m build from https://github.com/comparativechrono/Gpxil-tools at 57f38c8 (main, after pull request #11), the commit to be released as v0.7.0 on PyPI",
+   "sha256": "b2189fce270e3e3c8cab3f1b24e2de319db07f254ac67c332c7f577089a7fd1d"
   },
   {
    "project": "gpxil2pxil",
-   "version": "0.1.0",
-   "wheel": "gpxil2pxil-0.1.0-py3-none-any.whl",
+   "version": "0.2.0",
+   "wheel": "gpxil2pxil-0.2.0-py3-none-any.whl",
    "modules": [
     "gpxil2pxil"
    ],
-   "source": "https://pypi.org/project/gpxil2pxil/0.1.0/ (released from https://github.com/comparativechrono/gpxil2pxil, tag v0.1.0)",
-   "sha256": "527922cf04cb94e7f349c815ae75fcfa311b2852a6e25e68064b67c16e6c4a00"
+   "source": "built with python -m build from https://github.com/comparativechrono/gpxil2pxil at 770ada6 (main, after pull request #1), the commit to be released as v0.2.0 on PyPI",
+   "sha256": "f073ed7ec835608dfdeec65594e901cc69cdabccbbebe186df47237ec6771ac4"
   },
   {
    "project": "pxil",

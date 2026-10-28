@@ -1,12 +1,13 @@
-<!-- id: h-tool-subset | title: Make a working copy (subset) | group: Tools | summary: gpxil subset: some contigs, and some planes, of a gpxil file in a new and smaller file, copied without being decoded | keys: subset working copy copy extract chromosome contig contigs planes smaller small no-ref noref reference plane drop leave out compression whole genome big file web url memory -->
+<!-- id: h-tool-subset | title: Make a working copy (subset) | group: Tools | summary: gpxil subset: some contigs, and some planes, of a gpxil file in a new and smaller file, copied without being decoded; or a region, such as a gene, cut out as a window | keys: subset working copy copy extract chromosome contig contigs planes smaller small no-ref noref reference plane drop leave out compression whole genome big file web url memory window windows region gene cut stretch part send share -->
 <h1><!--ICON:scissors-->Make a working copy (subset)</h1>
-<p class="lede"><code>gpxil subset</code> copies some contigs of a gpxil file, and if you like only some of its planes, into a new file: a working copy, such as one chromosome out of a whole genome. Each contig of a gpxil file stands on its own – its pages and its entry in the metadata – so nothing needs encoding again: the pages’ strips are copied as they are stored, without being decoded. It is quick, needs little memory, and works as well on a file you added to this browser, or one on the web.</p>
-<div class="tryrow"><button class="do" type="button" data-tool="subset" data-input="/data/examples/HG002_chr17.gpxil.tif" data-no-ref>Copy HG002’s chromosome 17 without its reference</button></div>
+<p class="lede"><code>gpxil subset</code> copies some contigs of a gpxil file, and if you like only some of its planes, into a new file: a working copy, such as one chromosome out of a whole genome. Each contig of a gpxil file stands on its own – its pages and its entry in the metadata – so nothing needs encoding again: the pages’ strips are copied as they are stored, without being decoded. It is quick, needs little memory, and works as well on a file you added to this browser, or one on the web. Given a region, such as a gene, it cuts that stretch out as a <b>window</b>, which keeps the chromosome’s positions.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="subset" data-input="/data/examples/HG002_chr17.gpxil.tif" data-regions="" data-no-ref>Copy HG002’s chromosome 17 without its reference</button> <button class="do" type="button" data-tool="subset" data-input="/data/examples/HG002_chr17.gpxil.tif" data-contigs="" data-regions="chr17:7,661,779-7,687,546" data-no-ref="false">Cut TP53 out of it</button></div>
 
 <h2>What it is for</h2>
 <ul>
   <li><b>One chromosome out of a whole genome.</b> A person’s whole genome is about 850 MB as gpxil; chromosome 17 is 25 MB of it. Make the copy on your own computer and add it here (<a href="#h-own-computer">On your own computer</a>), or add the whole genome here: the copy reads only the pages it copies.</li>
   <li><b>A smaller file.</b> The reference plane is most of a file: without it, HG002’s chromosome 17 goes from 24.6 MB to 1.9 MB. The contigs keep the checksums of their reference, so any tool can be given it again (each tool has a field for it, and the Viewer borrows GRCh38’s from the Gpxil browser). Leaving out genotype quality and read depth (<code>gq</code>, <code>dp</code>) saves a little more.</li>
+  <li><b>A gene, or any stretch, as a file of its own.</b> A region becomes a window: a contig that holds just those bases and says where they lie on the chromosome, so every tool, and the Viewer, still gives their positions as the chromosome’s. TP53 and 100,000 bases either side is 76 kB (12 kB without its reference plane), out of the 24.6 MB of chromosome 17. Only the strips that hold the region are read, so it takes a second, from a file here or on the web – the way to send someone a gene.</li>
   <li><b>The reference put back.</b> A file written without its reference plane gets it again from a reference you give, which is checked against the checksums.</li>
   <li><b>Another compression.</b> A file made elsewhere with Zstandard, which the browser can’t read, encoded again with deflate (on a computer with the imagecodecs package).</li>
 </ul>
@@ -14,29 +15,42 @@
 <h2>The form</h2>
 <dl>
   <dt>The gpxil file</dt><dd>Any gpxil file: yours, an example, or a chromosome of GRCh38.</dd>
-  <dt>Contigs</dt><dd>The contigs to copy, by name, separated by spaces or commas (<code>chr17</code>, or <code>chr17 chr21</code>); <code>17</code> finds <code>chr17</code> too. Empty: all of them. The copy keeps them in the file’s order.</dd>
+  <dt>Contigs</dt><dd>The contigs to copy, by name, separated by spaces or commas (<code>chr17</code>, or <code>chr17 chr21</code>); <code>17</code> finds <code>chr17</code> too. Empty: all of them (unless you give regions). The copy keeps them in the file’s order. In a file of windows, a chromosome’s name copies all its windows.</dd>
+  <dt>Regions, cut out as windows</dt><dd>Regions such as <code>chr17:7,661,779-7,687,546</code>, counting from 1 and including both ends, separated by spaces: each becomes a window. The positions are the chromosome’s, in a file of windows too, where a region is cut out of the window that holds it.</dd>
   <dt>Planes</dt><dd>All the planes each contig has, or some of them: without genotype quality and read depth; the reference, genotype and flags only; or the reference only, without the sample. A plane a file doesn’t have is left out.</dd>
   <dt>Leave out the reference plane</dt><dd>As <code>gpxil encode --no-ref</code>: a file about a hundred times smaller.</dd>
   <dt>Put its reference plane back, from</dt><dd>Only for a file written without one: a FASTA file, or a gpxil file with its reference plane, such as a chromosome of GRCh38 from <code>/data/grch38</code>.</dd>
   <dt>Compression</dt><dd>As it is (the default), so that the strips are copied without decoding, or encoded again.</dd>
   <dt>Save as</dt><dd>A file name ending in <code>.gpxil.tif</code>, in <code>~/genomes</code> unless you choose otherwise.</dd>
 </dl>
-<p>It won’t cut a contig: a file of part of a chromosome (TP53, say) needs the specification to say how its coordinates relate to the reference’s, which it doesn’t yet. For a region, <a href="#h-tool-render">gpxil render</a>, <a href="#h-tool-fasta">fasta</a>, <a href="#h-tool-vcf">vcf</a> and <a href="#h-tool-stats">stats</a> take one. Nor will it leave out the phase sets (<code>ps</code>) of a contig with more than one, because its phased calls would then read as one phase set.</p>
+<p>A window holds exactly what the whole chromosome holds over its bases: every plane, the insertions that follow its bases, and its phase sets – and no more, so a deletion that runs past its end, say, stops at its end. It won’t leave out the phase sets (<code>ps</code>) of a contig or window with more than one, because its phased calls would then read as one phase set.</p>
 
 <h2>What it writes</h2>
-<p>A gpxil file with the contigs and planes chosen, each contig with its entry in the metadata – its checksums, how it was encoded, how many records – and a record, <code>subset</code>, of the file it came from. It says how many contigs, bases and megabytes it wrote, and whether the strips were copied as stored. <a href="#h-tool-validate">Check it</a>, look at it in the Viewer, or <a href="#h-tool-stats">count what it holds</a>.</p>
+<p>A gpxil file with the contigs and planes chosen, each contig with its entry in the metadata – its checksums, how it was encoded, how many records – and a record, <code>subset</code>, of the file it came from. A window is named for the stretch it holds, such as <code>chr17:7661779-7687546</code>, and its entry says where it lies, <code>"window": {"of": "chr17", "start": 7661778, …}</code> with the chromosome’s length and checksums; a file with windows follows version 0.3 of the specification (<a href="#h-gpxil">The gpxil format</a>). It says how many contigs, bases and megabytes it wrote, and whether the strips were copied as stored. <a href="#h-tool-validate">Check it</a>, look at it in the Viewer, or <a href="#h-tool-stats">count what it holds</a>.</p>
 
 <h2>In the terminal</h2>
 <pre class="code" data-run="term"><code>gpxil subset /data/examples/HG002_chr17.gpxil.tif chr17 --no-ref -o ~/genomes/HG002_chr17.noref.gpxil.tif
 gpxil subset ~/genomes/HG002_chr17.noref.gpxil.tif --planes ref,gt,flags --reference /data/grch38/chr17.gpxil.tif -o ~/genomes/HG002_chr17.three-planes.gpxil.tif
-gpxil info ~/genomes/HG002_chr17.three-planes.gpxil.tif</code></pre>
-<p>On your own computer, chromosome 17 out of a whole genome: <code>gpxil subset HG002.gpxil.tif chr17 -o HG002_chr17.gpxil.tif</code>. The input can be a URL too, and then only the pages copied are downloaded.</p>
+gpxil info ~/genomes/HG002_chr17.three-planes.gpxil.tif
+gpxil subset /data/examples/HG002_chr17.gpxil.tif chr17:7,661,779-7,687,546 -o ~/genomes/HG002_chr17_7661779-7687546.gpxil.tif
+gpxil info ~/genomes/HG002_chr17_7661779-7687546.gpxil.tif
+gpxil fasta ~/genomes/HG002_chr17_7661779-7687546.gpxil.tif --which 1 --region chr17:7676101-7676200</code></pre>
+<p>On your own computer, chromosome 17 out of a whole genome: <code>gpxil subset HG002.gpxil.tif chr17 -o HG002_chr17.gpxil.tif</code>. The input can be a URL too, and then only the pages copied are downloaded – for a window, only the strips that hold it.</p>
 
 <h2>In Python</h2>
-<pre class="code" data-run="py"><code>from gpxiltools.subset import subset
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.subset import subset
 
 summary = subset("/data/examples/HG002_chr17.gpxil.tif", "/home/user/genomes/HG002_chr17.noq.gpxil.tif",
                  ["chr17"], planes=["ref", "gt", "flags", "ps"])
-print(summary)</code></pre>
-<p><code>GpxilWriter.copy_contig</code> does the copying, a contig at a time, for your own programs.</p>
+print(summary)
+
+# TP53 as a window: its positions are still chromosome 17's
+subset("/data/examples/HG002_chr17.gpxil.tif", "/home/user/genomes/TP53.gpxil.tif", ["chr17:7,661,779-7,687,546"])
+with GpxilFile("/home/user/genomes/TP53.gpxil.tif") as g:
+    w = g.contigs[0]
+    print(w, g[w].parent, g[w].start)                 # chr17:7661779-7687546 chr17 7661778
+    c, s, e = g.locate("chr17", 7676153, 7676154)    # chr17:7,676,154, in the window
+    print(c.read("gt", s, e))</code></pre>
+<p><code>GpxilWriter.copy_contig</code> does the copying, a contig at a time, and <code>GpxilWriter.cut_contig</code> cuts a window, for your own programs.</p>
 <!--CITE: gpxiltools gpxil-->
