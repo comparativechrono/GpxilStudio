@@ -8,7 +8,7 @@
    "modules": [
     "gpxiltools"
    ],
-   "source": "built with python -m build from https://github.com/comparativechrono/Gpxil-tools at 57f38c8 (main, after pull request #11), the commit to be released as v0.7.0 on PyPI",
+   "source": "https://pypi.org/project/gpxiltools/0.7.0/ (released from https://github.com/comparativechrono/Gpxil-tools, tag v0.7.0)",
    "sha256": "b2189fce270e3e3c8cab3f1b24e2de319db07f254ac67c332c7f577089a7fd1d"
   },
   {
@@ -18,7 +18,7 @@
    "modules": [
     "gpxil2pxil"
    ],
-   "source": "built with python -m build from https://github.com/comparativechrono/gpxil2pxil at 770ada6 (main, after pull request #1), the commit to be released as v0.2.0 on PyPI",
+   "source": "https://pypi.org/project/gpxil2pxil/0.2.0/ (released from https://github.com/comparativechrono/gpxil2pxil, tag v0.2.0)",
    "sha256": "f073ed7ec835608dfdeec65594e901cc69cdabccbbebe186df47237ec6771ac4"
   },
   {

@@ -9,8 +9,8 @@ when copying or redistributing its files.
 
 | Component | Version | Licence | Where | Origin |
 |---|---|---|---|---|
-| gpxiltools (Chronomic Medicine Group) | 0.7.0 | MIT | its wheel in `python/vendor`, packed into `assets/py/gpxil-tools.zip` with its licence | built from [comparativechrono/Gpxil-tools](https://github.com/comparativechrono/Gpxil-tools) at `57f38c8`, the commit to be released as 0.7.0 on [PyPI](https://pypi.org/project/gpxiltools/) (`python/vendor/SOURCES.json`) |
-| gpxil2pxil (Chronomic Medicine Group) | 0.2.0 | MIT | the same | built from [comparativechrono/gpxil2pxil](https://github.com/comparativechrono/gpxil2pxil) at `770ada6`, the commit to be released as 0.2.0 on [PyPI](https://pypi.org/project/gpxil2pxil/) (`python/vendor/SOURCES.json`) |
+| gpxiltools (Chronomic Medicine Group) | 0.7.0 | MIT | its wheel in `python/vendor`, packed into `assets/py/gpxil-tools.zip` with its licence | [PyPI](https://pypi.org/project/gpxiltools/0.7.0/), unchanged; released from [comparativechrono/Gpxil-tools](https://github.com/comparativechrono/Gpxil-tools) |
+| gpxil2pxil (Chronomic Medicine Group) | 0.2.0 | MIT | the same | [PyPI](https://pypi.org/project/gpxil2pxil/0.2.0/), unchanged; released from [comparativechrono/gpxil2pxil](https://github.com/comparativechrono/gpxil2pxil) |
 | pxil (Chronomic Medicine Group) | 0.1.1 | MIT | the same | [PyPI](https://pypi.org/project/pxil/0.1.1/), unchanged; released from [comparativechrono/pxil](https://github.com/comparativechrono/pxil) |
 | tifffile (Christoph Gohlke) | 2026.10.15 | BSD 3-clause | the same, with its licence | [PyPI](https://pypi.org/project/tifffile/2026.10.15/), unchanged |
 | gpxilwb | 1.0.0 | MIT | `python/gpxilwb`, packed into the same archive | written for the studio |
