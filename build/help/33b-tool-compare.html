@@ -15,7 +15,7 @@
 <h2>The form</h2>
 <dl>
   <dt>A, and B (the truth)</dt><dd>Two gpxil files of one person on the same reference: the genome to check, and the one to check it against. Either can be without its reference plane, but to spell stretches out one of them needs it, or the reference is given (a field for it appears when neither has one).</dd>
-  <dt>Regions</dt><dd>One or more regions, separated by spaces: a contig, or CONTIG:START-END counting from 1. Empty: every contig the two have.</dd>
+  <dt>Regions</dt><dd>One or more regions, separated by spaces: a contig, or CONTIG:START-END counting from 1. Empty: every contig the two have. Files of windows compare too, at the chromosome’s positions, where both hold the bases: windows of one file that overlap or touch are read as one stretch, so each base is compared once.</dd>
   <dt>Draw a region</dt><dd>A region to draw, one pixel a base, with its bases per row and pixels per base as in <a href="#h-tool-render">gpxil render</a>; TP53 to begin with. Clear it for no picture.</dd>
   <dt>The gap</dt><dd>How far apart two differences can be and still be spelled out together: 50 bases. Repeats are taken in whole, however long, so it matters only for differences far apart outside a repeat.</dd>
 </dl>

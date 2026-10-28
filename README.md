@@ -32,7 +32,7 @@ One page, `index.html`, with the help on the left and five tabs on the right:
 
 | Tab | What it is for |
 |---|---|
-| **Viewer** | Any gpxil file – yours, an example, or a chromosome of GRCh38 – as pixels: the reference, the genotype, the two haplotypes, the variants by zygosity, and the flags, quality, depth and phase-set planes. Pointing at a pixel says what the file holds there, and under the picture it counts what the region holds, as `gpxil stats` does. It reads only the strips it shows, so a whole genome opens at once, and it draws exactly what `gpxil render` draws, whose command it gives. |
+| **Viewer** | Any gpxil file – yours, an example, or a chromosome of GRCh38 – as pixels: the reference, the genotype, the two haplotypes, the variants by zygosity, and the flags, quality, depth and phase-set planes. Pointing at a pixel says what the file holds there, and under the picture it counts what the region holds, as `gpxil stats` does. It reads only the strips it shows, so a whole genome opens at once, and it draws exactly what `gpxil render` draws, whose command it gives. A window – a contig that holds a stretch of a chromosome – is shown at the chromosome's positions, and what is in view can be saved as one. |
 | **Tools** | The packages behind forms: each tool runs one command, exactly as the terminal would, and shows that command, and the same work in Python. The first page is a map of the formats and the common tasks. **Workflows** chains the tools together, after the Galaxy-style workflows of the lab's other workbenches. |
 | **Files** | Your files and the examples: look at them (a gpxil file's contigs and planes, read in the page), edit, upload and download. |
 | **Notebook** | Python notebooks (`.ipynb`) with all the packages, starting with *gpxil in Python*, which works through a genome pixel by pixel. |
@@ -51,7 +51,9 @@ The tools:
 
 The examples (`data/examples`) are the gpxil specification's worked example;
 chromosome 17 of HG002, the Genome in a Bottle benchmark genome, as a gpxil
-file; HG002's variants around TP53 as a VCF with its callable regions;
+file, and his TP53 cut out of it as a window (gpxil 0.3), which keeps the
+chromosome's positions; HG002's variants around TP53 as a VCF with its
+callable regions;
 chromosome 17 of HG002's father and mother, HG003 and HG004, and of HG002's
 newer benchmark (v5.0q), each without its reference plane, for comparing
 genomes; and TP53's lines of the Ensembl GTF. Five example workflows run on

@@ -6,7 +6,9 @@
    reference's bases, the sample's genotype, its two haplotypes, its
    variants, or the flags, quality, depth and phase-set planes. Pointing
    at a pixel says what the file holds there. Only the strips shown are
-   read (gpxil-read.js), so a whole genome opens at once.
+   read (gpxil-read.js), so a whole genome opens at once. A window (a
+   contig that holds a stretch of a chromosome, gpxil 0.3) is shown at
+   the chromosome's positions, and what is in view can be saved as one.
 
    MG.ViewerTab(root, {fs}) → .ready, .shown(opts), .open(path, opts).
    ===================================================================== */
@@ -39,14 +41,15 @@
   ];
   const MODE = Object.fromEntries(MODES.map(([k, label, planes]) => [k, { label, planes }]));
   const fmt = (n) => Math.round(n).toLocaleString('en-GB');
+  /** [s, e) of a contig as the region it is of its chromosome, as gpxil reads one: chr17:7661779-7687546 */
+  const place = (c, s, e) => `${c.parent}:${c.start + s + 1}-${c.start + e}`;
 
-  /** chr17:7,661,779-7,687,546 → {contig, start (0-based), end}; chr17 → whole contig */
+  /** chr17:7,661,779-7,687,546 → {contig, start (0-based), end}; chr17:7,661,779 → one base; chr17 → whole contig
+      (end null). The name ends at the last colon, so a window's name (chr17:7561779-7787546) is one too */
   function parseRegion(text) {
-    const m = String(text || '').trim().replace(/[\s,]/g, '').match(/^([^:]+)(?::(\d+)(?:-(\d+))?)?$/);
-    if (!m) return null;
-    const start = m[2] ? Math.max(0, Number(m[2]) - 1) : 0;
-    const end = m[3] ? Number(m[3]) : m[2] ? start + 1 : null;
-    return { contig: m[1], start, end };
+    const r = R().reader.parseRegion(text);
+    if (!r) return null;
+    return { contig: r.name, start: r.start === undefined ? 0 : r.start, end: r.end === undefined ? null : r.end };
   }
 
   /* the colour of each ref code (0–31) for a palette, as gpxiltools.palettes.ref_colours works it out: one base its
@@ -283,7 +286,8 @@
       this.refFile = null;
       const g = this.file;
       this.contigSel.innerHTML = '';
-      for (const c of g.contigs.slice(0, 500)) this.contigSel.appendChild(h('option', { value: c.name }, `${c.name} (${fmt(c.length)} bp)`));
+      for (const c of g.contigs.slice(0, 500))
+        this.contigSel.appendChild(h('option', { value: c.name }, c.window ? `${c.parent} ${fmt(c.start + 1)}–${fmt(c.end)} (a window, ${fmt(c.length)} bp)` : `${c.name} (${fmt(c.length)} bp)`));
       const hasGt = g.contigs.some((c) => 'gt' in c.pages);
       const planes = new Set(g.contigs.flatMap((c) => Object.keys(c.pages)));
       this.modeSel.innerHTML = '';
@@ -294,11 +298,16 @@
       const mode = opts.mode || (opts.plane && { ref: 'reference', gt: 'genotype', flags: 'flags', gq: 'gq', dp: 'dp', ps: 'ps' }[opts.plane]) || (hasGt ? 'variants' : 'reference');
       this.state.mode = [...this.modeSel.options].some((o) => o.value === mode) ? mode : this.modeSel.options[0] && this.modeSel.options[0].value;
       this.modeSel.value = this.state.mode;
-      let region = opts.region ? parseRegion(opts.region) : null;
+      let region = opts.region || null;
       if (!region) {
-        const first = g.contigs.find((c) => /^chr17$/.test(c.name)) || g.contigs[0];
-        // TP53 on chromosome 17 (the examples are about it), else the middle of the first contig
-        region = first.name === 'chr17' && first.length > 7687546 ? { contig: 'chr17', start: 7661778, end: 7687546 } : { contig: first.name, start: Math.max(0, Math.floor(first.length / 2) - 50000), end: Math.min(first.length, Math.floor(first.length / 2) + 50000) };
+        // TP53 on chromosome 17, if the file holds it (the examples are about it), else the middle of the first contig
+        let tp53 = null;
+        try {
+          tp53 = g.locate('chr17', 7661778, 7687546);
+        } catch (e) {}
+        const first = g.contigs[0];
+        const mid = Math.floor(first.length / 2);
+        region = tp53 ? { contig: tp53.contig.name, start: tp53.start, end: tp53.end } : { contig: first.name, start: Math.max(0, mid - 50000), end: Math.min(first.length, mid + 50000) };
       }
       await this.goto(region);
     }
@@ -307,34 +316,73 @@
       const ref = (this.file && this.file.meta.reference) || {};
       return /grch38/i.test(ref.name || '') && (MG.app.referenceFiles || []).length > 0;
     }
+    /** the GRCh38 file with the reference of a contig (of a window, its parent's), checked against the digests the
+        file gives; read where the contig's bases are (readRef) */
     async refFor(contig) {
       if (!this.canBorrowRef()) return null;
-      const f = (MG.app.referenceFiles || []).find((x) => (x.contigs || []).includes(contig.name) || (x.contigs || []).includes('chr' + contig.name));
+      const name = contig.parent;
+      const f = (MG.app.referenceFiles || []).find((x) => (x.contigs || []).includes(name) || (x.contigs || []).includes('chr' + name));
       if (!f) return null;
       if (!this.refFile || this.refFile._url !== f.url) {
         this.refFile = await R().open(R().urlSource(f.url, f.size));
         this.refFile._url = f.url;
       }
+      const rc = this.refFile.contig(name);
+      const mine = contig.window || contig.entry || {};
+      const theirs = (rc && rc.entry) || {};
+      if (!rc || (rc.length !== (contig.parentLength || rc.length)) || (mine.md5 && theirs.md5 && mine.md5 !== theirs.md5))
+        throw new Error(`${name} of GRCh38 isn’t the reference this file was made on`);
       this.refPath = f.path;
       return this.refFile;
     }
+    /** the borrowed reference's bases over [start, end) of a contig (a window's at its parent's positions) */
+    readRef(contig, start, end) {
+      return this.refFile.read(contig.parent, 'ref', contig.start + start, contig.start + end);
+    }
 
     /* ---------------- where ---------------- */
+    /** where a region given as text is: a contig and its offsets. Positions are the chromosome's: on a window, its
+        parent's, so chr17:7,661,779-7,687,546 is found in a window of chromosome 17 that holds it */
+    where(text) {
+      const g = this.file;
+      const t = String(text || '').trim();
+      const whole = g.contig(t);
+      if (whole) return { contig: whole, start: 0, end: whole.length };
+      const r = parseRegion(t);
+      if (!r) throw new Error('Give a region as CONTIG or CONTIG:START-END, such as chr17:7,661,779-7,687,546');
+      const c = g.contig(r.contig);
+      if (c && !c.window) {
+        // (a whole contig: a region past its end is cut at its end)
+        const start = Math.max(0, Math.min(r.start, c.length - 1));
+        return { contig: c, start, end: r.end == null ? c.length : Math.min(c.length, Math.max(start + 1, r.end)) };
+      }
+      try {
+        const at = r.end == null && !r.start ? g.locate(r.contig) : g.locate(r.contig, r.start, r.end == null ? undefined : r.end);
+        return { contig: at.contig, start: at.start, end: at.end };
+      } catch (e) {
+        if (e.code === 'contig') throw new Error(`${r.contig} isn’t in this file`);
+        throw e;
+      }
+    }
     async goto(where) {
       if (!this.file) return;
-      const r = typeof where === 'string' ? parseRegion(where) : where;
-      if (!r) return toast('Give a region as CONTIG or CONTIG:START-END, such as chr17:7,661,779-7,687,546', 'warn');
-      const c = this.file.contig(r.contig);
-      if (!c) return toast(`${esc(r.contig)} isn’t in this file`, 'warn');
+      let r;
+      try {
+        r = typeof where === 'string' ? this.where(where) : { contig: this.file.contig(where.contig), start: where.start, end: where.end };
+      } catch (e) {
+        return toast(esc(e.message), 'warn');
+      }
+      const c = r.contig;
+      if (!c) return toast(`${esc(where.contig)} isn’t in this file`, 'warn');
       let start = Math.max(0, Math.min(r.start || 0, c.length - 1));
       let end = Math.min(c.length, r.end == null ? c.length : Math.max(start + 1, r.end));
       if (end - start > MAX_BASES) {
-        toast(`Showing ${fmt(MAX_BASES)} bases from ${fmt(start + 1)}: the viewer draws at most 4 Mb at a time (gpxil render draws any size)`, 'warn');
+        toast(`Showing ${fmt(MAX_BASES)} bases from ${fmt(c.start + start + 1)}: the viewer draws at most 4 Mb at a time (gpxil render draws any size)`, 'warn');
         end = start + MAX_BASES;
       }
       this.region = { contig: c, start, end };
       this.contigSel.value = c.name;
-      this.regionIn.value = `${c.name}:${fmt(start + 1)}-${fmt(end)}`;
+      this.regionIn.value = R().reader.regionText(c, start, end);
       await this.load();
     }
     zoom(f, centre) {
@@ -372,7 +420,7 @@
       const { contig, start, end } = this.region;
       const mode = this.state.mode;
       const need = MODE[mode].planes;
-      this.infoEl.textContent = `Reading ${contig.name}:${fmt(start + 1)}-${fmt(end)}…`;
+      this.infoEl.textContent = `Reading ${R().reader.regionText(contig, start, end)}…`;
       try {
         const planes = {};
         for (const p of need) {
@@ -380,7 +428,7 @@
           else if (p === 'ref') {
             const rf = await this.refFor(contig);
             if (!rf) throw new Error(`${contig.name} has no reference plane in this file`);
-            planes.ref = await rf.read(contig.name, 'ref', start, end);
+            planes.ref = await this.readRef(contig, start, end);
             planes._refFrom = 'the GRCh38 reference (Gpxil browser)';
           }
         }
@@ -400,7 +448,7 @@
     saveState() {
       const d = this.data;
       if (!d) return;
-      this.state.region = `${d.contig.name}:${d.start + 1}-${d.end}`;
+      this.state.region = place(d.contig, d.start, d.end);
       store.set('viewerState', { path: this.state.path, region: this.state.region, mode: this.state.mode, palette: this.state.palette });
     }
     draw() {
@@ -509,7 +557,8 @@
       const g = C.getContext('2d');
       g.imageSmoothingEnabled = false;
       g.drawImage(small, 0, 0, C.width, C.height);
-      this.infoEl.innerHTML = `<b>${esc(d.contig.name)}:${fmt(d.start + 1)}-${fmt(d.end)}</b> · ${fmt(n)} bases · ${fmt(W)} bases a row, ${rows > 1 ? fmt(rows) + ' rows' : 'one row'} · ${scale} pixel${scale > 1 ? 's' : ''} a base${two ? ' (two rows for each row of bases: haplotype 1 above, 2 below)' : ''}${P._refFrom ? ` · the bases come from ${esc(P._refFrom)}` : ''}`;
+      const win = d.contig.window ? ` · from the window ${esc(d.contig.name)}, which holds ${esc(R().reader.regionText(d.contig))}` : '';
+      this.infoEl.innerHTML = `<b>${esc(R().reader.regionText(d.contig, d.start, d.end))}</b>${win} · ${fmt(n)} bases · ${fmt(W)} bases a row, ${rows > 1 ? fmt(rows) + ' rows' : 'one row'} · ${scale} pixel${scale > 1 ? 's' : ''} a base${two ? ' (two rows for each row of bases: haplotype 1 above, 2 below)' : ''}${P._refFrom ? ` · the bases come from ${esc(P._refFrom)}` : ''}`;
       this.drawLegend(pal, refRgb, seen);
       this.drawCommand();
       this.countView();
@@ -530,7 +579,7 @@
         let ref = 'ref' in c.pages ? await get('ref') : null;
         let refPath = null;
         if (!ref && (await this.refFor(c))) {
-          ref = P.ref && P._refFrom && P.ref.length === d.end - d.start ? P.ref : await this.refFile.read(c.name, 'ref', d.start, d.end);
+          ref = P.ref && P._refFrom && P.ref.length === d.end - d.start ? P.ref : await this.readRef(c, d.start, d.end);
           refPath = this.refPath;
         }
         const [flags, gq, dp, ps] = await Promise.all(['flags', 'gq', 'dp', 'ps'].map(get));
@@ -568,7 +617,7 @@
       for (const [k, v] of MG.app.statsRows ? MG.app.statsRows(counts) : []) t.appendChild(h('tr', h('th', { scope: 'row' }, k), h('td', v)));
       more.appendChild(h('div.table-scroll', t));
       const q = (x) => (/^[\w~@%+=:,./-]+$/.test(x) ? x : "'" + String(x).replace(/'/g, "'\\''") + "'");
-      const cmd = `gpxil stats ${q(this.fs.pretty(this.state.path))} ${d.contig.name}:${d.start + 1}-${d.end}${refPath ? ' --reference ' + q(this.fs.pretty(refPath)) : ''}`;
+      const cmd = `gpxil stats ${q(this.fs.pretty(this.state.path))} ${place(d.contig, d.start, d.end)}${refPath ? ' --reference ' + q(this.fs.pretty(refPath)) : ''}`;
       const pre = h('pre.code', { 'data-run': 'term' }, h('code', cmd));
       more.append(h('p.vw-note', 'The same counts from the terminal (gpxil stats), or for any region or the whole file in the Tools tab:'), pre);
       this.countsEl.append(line, more);
@@ -622,30 +671,77 @@
       const q = (s) => (/^[\w~@%+=:,./-]+$/.test(s) ? s : "'" + String(s).replace(/'/g, "'\\''") + "'");
       const mode = { reference: 'reference', genotype: 'genotype', haplotypes: 'haplotypes', variants: 'variants' }[d.mode];
       const name = rel.split('/').pop().replace(/\.gpxil(\.tiff?)?$/i, '');
+      const c = d.contig;
+      const where = place(c, d.start, d.end);
+      const slug = `${c.parent}_${c.start + d.start + 1}-${c.start + d.end}`;
       this.cmdEl.innerHTML = '';
       let pre;
       if (mode) {
         const pal = this.state.palette && this.state.palette !== 'classic' ? ` --palette ${this.state.palette}` : '';
         const ref = this.data.planes._refFrom && this.refFile ? ` --reference ${q(this.fs.pretty(this.refPath || ''))}` : '';
-        const cmd = `gpxil render ${q(rel)} ${d.contig.name}:${d.start + 1}-${d.end} -o ~/results/${name}_${d.contig.name}_${d.start + 1}-${d.end}_${mode}.png --mode ${mode}${pal} --width ${d.W}${d.scale > 1 ? ' --scale ' + d.scale : ''}${ref}`;
+        const cmd = `gpxil render ${q(rel)} ${where} -o ~/results/${name}_${slug}_${mode}.png --mode ${mode}${pal} --width ${d.W}${d.scale > 1 ? ' --scale ' + d.scale : ''}${ref}`;
         pre = h('pre.code', { 'data-run': 'term' }, h('code', cmd));
         this.cmdEl.append(h('p.vw-note', 'The same picture as a file, from the terminal (gpxil render):'), pre);
       } else {
         const path = this.state.path;
-        const code = `from gpxiltools import GpxilFile\n\nwith GpxilFile(${JSON.stringify(path)}) as g:\n    ${d.mode} = g[${JSON.stringify(d.contig.name)}].read(${JSON.stringify(d.mode)}, ${d.start}, ${d.end})\nprint(${d.mode}[:40])`;
+        // (located as gpxil finds a region: on a window, by the chromosome's positions, at the window's own offsets)
+        const code = c.window
+          ? `from gpxiltools import GpxilFile\n\nwith GpxilFile(${JSON.stringify(path)}) as g:\n    c, s, e = g.locate(${JSON.stringify(c.parent)}, ${c.start + d.start}, ${c.start + d.end})   # the window, and where in it\n    ${d.mode} = c.read(${JSON.stringify(d.mode)}, s, e)\nprint(${d.mode}[:40])`
+          : `from gpxiltools import GpxilFile\n\nwith GpxilFile(${JSON.stringify(path)}) as g:\n    ${d.mode} = g[${JSON.stringify(c.name)}].read(${JSON.stringify(d.mode)}, ${d.start}, ${d.end})\nprint(${d.mode}[:40])`;
         pre = h('pre.code', { 'data-run': 'py' }, h('code', code));
         this.cmdEl.append(h('p.vw-note', `These values in Python, as a NumPy array (${d.mode === 'ps' ? '32-bit' : '8-bit'} numbers):`), pre);
       }
       const save = h('button.btn.small', { type: 'button', html: MG.icon('download') + '<span>Save the picture</span>', title: 'Save what is shown as a PNG in ~/results' });
       save.addEventListener('click', () => this.savePicture(name));
-      this.cmdEl.append(h('p', save));
+      const keep = h('button.btn.small.vw-keep', {
+        type: 'button',
+        html: MG.icon('grid') + '<span>Save this region as a gpxil file</span>',
+        title: 'A window of the file: the bases in view, every plane, at the chromosome’s positions (gpxil subset)'
+      });
+      const kept = h('span.vw-kept', { 'aria-live': 'polite' });
+      keep.addEventListener('click', () => this.saveWindow(name, keep, kept));
+      this.cmdEl.append(h('p', save, ' ', keep, ' ', kept));
       if (MG.app.decorateCode) MG.app.decorateCode(pre);
+    }
+    /** what is in view as a gpxil file of its own: a window (gpxil 0.3), cut out by gpxil subset in Python, or the
+        whole contig if all of it is in view; said in `kept`, with a button to view it */
+    async saveWindow(name, btn, kept) {
+      const d = this.data;
+      if (!d || !MG.app.pyCall) return;
+      const c = d.contig;
+      const whole = d.start === 0 && d.end === c.length;
+      const region = whole ? c.name : place(c, d.start, d.end);
+      const stem = name.replace(/\.noref$/, '');
+      // (HG002_chr17 → HG002_chr17_7661779-7687546; a file named otherwise gets the chromosome too)
+      const of = stem.endsWith('_' + c.parent) ? '' : `${c.parent}_`;
+      const own = c.name.replace(/[^\w.-]+/g, '_');
+      const slug = whole ? (stem.endsWith('_' + own) ? 'copy' : own) : `${of}${c.start + d.start + 1}-${c.start + d.end}`;
+      const dest = `${MG.app.HOME}/genomes/${stem}_${slug}${'ref' in c.pages ? '' : '.noref'}.gpxil.tif`;
+      const argv = ['gpxil', 'subset', this.state.path, region, '-o', dest];
+      btn.disabled = true;
+      kept.textContent = `Saving ${R().reader.regionText(c, d.start, d.end)}… (gpxil subset, in Python)`;
+      try {
+        const r = await MG.app.pyCall('gpxilwb.gui.run', { argv });
+        if (!r.ok || !r.result || r.result.code !== 0) throw new Error(((r.result && r.result.stderr) || r.error || 'gpxil subset failed').trim().split('\n').pop());
+        this.lastSaved = dest;
+        const view = h('button.btn.small', { type: 'button' }, 'View it');
+        view.addEventListener('click', () => this.open(dest, { mode: this.state.mode }));
+        kept.innerHTML = `Saved <b>${esc(this.fs.pretty(dest))}</b>${whole ? '' : `: a window of ${esc(c.parent)}, at its positions`}. `;
+        kept.append(view);
+        toast(`Saved <b>${esc(this.fs.pretty(dest))}</b>`, 'ok');
+      } catch (e) {
+        kept.textContent = '';
+        toast(`The region couldn’t be saved: ${esc(e.message)}`, 'error');
+      } finally {
+        btn.disabled = false;
+      }
     }
     savePicture(name) {
       const d = this.data;
       this.canvas.toBlob((blob) => {
         if (!blob) return;
-        const dest = `${MG.app.HOME}/results/${name}_${d.contig.name}_${d.start + 1}-${d.end}_${d.mode}.png`;
+        const c = d.contig;
+        const dest = `${MG.app.HOME}/results/${name}_${c.parent}_${c.start + d.start + 1}-${c.start + d.end}_${d.mode}.png`;
         this.fs.mkdirp(MG.app.HOME + '/results');
         this.fs.put(dest, { kind: 'blob', blob, size: blob.size, mtime: Date.now(), fresh: true });
         toast(`Saved <b>${esc(this.fs.pretty(dest))}</b>`, 'ok');
@@ -683,7 +779,7 @@
     }
     /** what the file holds at a base: {plane: value} */
     say(d, pos, v) {
-      const parts = [`<b>${esc(d.contig.name)}:${fmt(pos + 1)}</b>`];
+      const parts = [`<b>${esc(d.contig.parent)}:${fmt(d.contig.start + pos + 1)}</b>`];
       if (v.ref != null) parts.push(`reference <b>${esc(R().base(v.ref))}</b>${v.ref & 16 ? ' (soft-masked)' : ''}`);
       if (v.gt != null) parts.push(`haplotype 1 <b>${R().state(v.gt >> 4)}</b>, haplotype 2 <b>${R().state(v.gt & 15)}</b> <span class="muted">(gt ${v.gt})</span>`);
       if (v.flags != null) {

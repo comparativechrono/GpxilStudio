@@ -219,7 +219,7 @@ async function units() {
     check(/Give the region/.test(K.missing(T.render, v('render', {}, { input: EX + 'HG002_chr17.gpxil.tif' }))), 'Draw a region needs a region');
     check(/isn’t a region/.test(K.missing(T.render, v('render', { region: 'chr17:200-100' }, { input: EX + 'HG002_chr17.gpxil.tif' }))), '… a region that is one');
     check(/at most 25,000,000/.test(K.missing(T.render, v('render', { region: 'chr17:1-30000000' }, { input: EX + 'HG002_chr17.gpxil.tif' }))), '… and one small enough for the browser');
-    check(K.parseRegion('chr17:7,661,779-7,687,546').start === 7661778 && K.parseRegion('chrM').end === null && K.parseRegion('chr1:5') === null, 'regions are read as gpxil reads them');
+    check(K.parseRegion('chr17:7,661,779-7,687,546').start === 7661778 && K.parseRegion('chrM').end === null && K.parseRegion('chr1:5').start === 4 && K.parseRegion('chr1:5').end === 5 && K.parseRegion('chr1:0') === null && K.parseRegion('HLA-A*01:01:01:01').end === null, 'regions are read as gpxil reads them: one base, from 1, names with colons');
   }
 }
 
