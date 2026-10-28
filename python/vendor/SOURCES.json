@@ -1,5 +1,5 @@
 {
- "about": "The wheels python/build_bundle.py packs into assets/py/gpxil-tools.zip, and where each came from: PyPI, unchanged, or, for a release not yet on PyPI, built from its release commit. Replace a wheel and its record here to update a package.",
+ "about": "The wheels python/build_bundle.py packs into assets/py/gpxil-tools.zip, and where each came from: PyPI, unchanged. Replace a wheel and its record here to update a package.",
  "wheels": [
   {
    "project": "gpxiltools",
@@ -8,7 +8,7 @@
    "modules": [
     "gpxiltools"
    ],
-   "source": "built with python -m build from https://github.com/comparativechrono/Gpxil-tools at 5ecc627 (main, after pull request #10), the commit to be released as v0.6.0 on PyPI",
+   "source": "https://pypi.org/project/gpxiltools/0.6.0/ (released from https://github.com/comparativechrono/Gpxil-tools, tag v0.6.0)",
    "sha256": "34e761e0e7bf934222421b13041520b8b40258f2f4c1576c2758432dc33afba1"
   },
   {
