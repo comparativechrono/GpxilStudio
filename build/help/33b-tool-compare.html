@@ -1,0 +1,59 @@
+<!-- id: h-tool-compare | title: Compare two genomes | group: Tools | summary: gpxil compare: two gpxil files of one person, base by base, the second as the truth: the same, written differently or different, with precision, recall and a picture | keys: compare comparison two genomes benchmark benchmarking truth call set calls precision recall f1 sensitivity concordance agreement same different written differently representation repeat normalise normalize indel shift hap.py vcfeval v4.2.1 v5.0q giab picture gap all calls -->
+<h1><!--ICON:align-->Compare two genomes</h1>
+<p class="lede"><code>gpxil compare</code> compares two gpxil files of one person base by base: two sets of calls, say, or two versions of a benchmark. Both are laid out on the same reference, base for base, so they are compared as arrays, without matching VCF records: what is the same in both, what only one has, and what the two only write differently. With the second taken as the truth, it gives each kind of variant’s precision and recall, as benchmarking tools do. A whole chromosome takes a few seconds on a computer, and about ten here.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="compare" data-a="/data/examples/HG002_chr17.gpxil.tif" data-b="/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif">Compare HG002’s two benchmarks of chromosome 17</button></div>
+
+<h2>How it compares</h2>
+<dl>
+  <dt>base by base</dt><dd>At each base called in both files, the two genotypes are compared as pairs of alleles in either order: A/G is the same as G/A, phased or not, and one copy (on a man’s X, say) is the same as two copies of the same allele. An allele is what one haplotype has at a base – the reference’s base, another base, nothing (deleted) or a COMPLEX allele – with any bases inserted after it.</dd>
+  <dt>written differently</dt><dd>The same change can often be written in more than one way: an insertion in a run of As can be anchored at either end of the run, and a deletion in a repeat can take any of its units. Where the files differ, the bases near each other (no more than 50 apart: <b>the gap</b>) are taken together, widened over any repeat their insertions and deletions could move along, and each file’s two haplotypes are spelled out over them, its heterozygous pieces tried either way round. If both files can spell the same pair of sequences, they only write it differently, and it counts as the same.</dd>
+  <dt>events</dt><dd>Each file’s substitutions, insertions, deletions and COMPLEX alleles, counted as <a href="#h-tool-stats">gpxil stats</a> counts them, are then looked for in the other: <b>found</b> if every base they cover is the same in both (or written differently), <b>not in</b> the other, or there with <b>another genotype</b>. Events over bases the other file didn’t call aren’t compared.</dd>
+  <dt>precision and recall</dt><dd>With B as the truth, precision is the share of A’s events found in B, recall the share of B’s events found in A, and F1 is the two together (their harmonic mean).</dd>
+  <dt>calls outside the confident regions</dt><dd>A file made with a BED file of the regions called with confidence keeps the VCF’s calls outside them too, each on its own among bases not called. They aren’t compared, as a benchmark’s own rules say. Tick <b>Also compare the calls outside…</b> to compare them as well.</dd>
+</dl>
+
+<h2>The form</h2>
+<dl>
+  <dt>A, and B (the truth)</dt><dd>Two gpxil files of one person on the same reference: the genome to check, and the one to check it against. Either can be without its reference plane, but to spell stretches out one of them needs it, or the reference is given (a field for it appears when neither has one).</dd>
+  <dt>Regions</dt><dd>One or more regions, separated by spaces: a contig, or CONTIG:START-END counting from 1. Empty: every contig the two have.</dd>
+  <dt>Draw a region</dt><dd>A region to draw, one pixel a base, with its bases per row and pixels per base as in <a href="#h-tool-render">gpxil render</a>; TP53 to begin with. Clear it for no picture.</dd>
+  <dt>The gap</dt><dd>How far apart two differences can be and still be spelled out together: 50 bases. Repeats are taken in whole, however long, so it matters only for differences far apart outside a repeat.</dd>
+</dl>
+
+<h2>What it gives</h2>
+<p>A table, as <code>gpxil compare</code> prints it: the bases called in both, in only one or in neither; the variant bases that are the same (and of those, how many are only written differently), only in A, only in B, or there with another genotype; and for each kind of event, how many each file has, found, not found and with another genotype, with precision, recall and F1. Then the first stretches where the two differ, with A’s and B’s genotypes there, and the picture, with its key:</p>
+<table>
+<tr><th>Colour</th><th>The bases</th></tr>
+<tr><td>the reference, faded</td><td>the same in both, without a variant</td></tr>
+<tr><td>green</td><td>the same variant in both</td></tr>
+<tr><td>teal</td><td>the same, written differently</td></tr>
+<tr><td>red</td><td>a variant only in A</td></tr>
+<tr><td>blue</td><td>a variant only in B</td></tr>
+<tr><td>orange</td><td>a variant in both, but another genotype</td></tr>
+<tr><td>grey</td><td>not called in both</td></tr>
+</table>
+<p><b>Look at the first difference in the Viewer</b> opens A there.</p>
+
+<h2>HG002’s two benchmarks</h2>
+<p>Genome in a Bottle’s benchmarks of HG002 have been made twice: version 4.2.1 from short and linked reads, and version 5.0q from a whole assembly of his genome. The examples hold chromosome 17 of each. Compared in the regions both call with confidence (83.7 % of the chromosome), 113,164 bases have a variant in one or the other, and all but 8 are the same in both; 410 of them are only written differently. Precision and recall are over 99.99 % for substitutions, and 99.99 % and over 99.99 % for insertions and deletions. Of the three stretches that differ, two are substitutions only version 4.2.1 has; the third is two deletions that version 4.2.1 writes as overlapping, unphased calls, which version 0.1 of the specification puts on one haplotype (<a href="#h-walk-trio">A family</a> says more).</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil compare /data/examples/HG002_chr17.gpxil.tif /data/examples/HG002_chr17_v5.0q.noref.gpxil.tif \
+    -o ~/results/HG002_v4_v5_TP53.png --draw chr17:7,661,779-7,687,546 --width 256 --scale 2
+gpxil compare /data/examples/HG002_chr17.gpxil.tif /data/examples/HG002_chr17_v5.0q.noref.gpxil.tif --region chr17:7,661,779-7,687,546 --json | head -20</code></pre>
+<p><code>--region</code> (one or more) compares regions rather than every contig; <code>--gap</code> sets the gap; <code>--all-calls</code> compares the calls outside the confident regions too; <code>--json</code> gives every number to programs.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.compare import compare_pair, format_compare
+
+with (
+    GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as a,
+    GpxilFile("/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif") as b,
+):
+    result = compare_pair(a, b, [("chr17", 0, 40_000_000)])   # (0-based, the end not included)
+print(format_compare(result))
+subs = result["total"]["events"]["substitutions"]
+print(subs["precision"], subs["recall"], result["total"]["examples"][:2])</code></pre>
+<p><code>compare_pair(a, b)</code> compares every contig the two have; <code>stretches=[]</code> collects every stretch where they differ, and <code>picture([a, b], contig, start, end)</code> draws a region.</p>
+<!--CITE: gpxiltools giab-->

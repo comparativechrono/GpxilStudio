@@ -252,6 +252,12 @@ async function examplesRun() {
       const text = v && v.outputs && fs.readFileSync(files.real(v.outputs.vcf), 'utf8');
       check(text && /\n?chr17\t7676154\t[^\n]*\tG\tC\t/.test(text), `${f}: the VCF of TP53 has P72R (chr17:7,676,154 G>C)`);
     }
+    if (f === 'family.workflow.json') {
+      const [pair, trio] = ['compare', 'trio'].map((id) => rec.steps.find((e) => e.tool === id));
+      const pics = [pair, trio].map((e) => e && e.outputs && e.outputs.picture).filter((p) => p && files.exists(p));
+      // (the summaries' shares are written with spaces that don't break)
+      check(pair && /^> 99\.99 % of variant bases the same; substitutions: precision > 99\.99 %, recall > 99\.99 %/.test(pair.summary.replace(/\u00a0/g, ' ')) && trio && /^23 Mendelian errors, 23 of them candidate new mutations, in 106,558 variant bases of the child’s$/.test(trio.summary) && pics.length === 2, `${f}: HG002’s two benchmarks agree but for 8 variant bases, and he has 23 Mendelian errors; TP53 drawn twice (${pair && pair.summary} · ${trio && trio.summary})`);
+    }
     fs.rmSync(files.tmp, { recursive: true, force: true });
   }
 }

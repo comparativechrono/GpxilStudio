@@ -25,6 +25,9 @@ const EX = '/data/examples/';
 const R = HOME + '/results/';
 const HG = EX + 'HG002_chr17.gpxil.tif';
 const TP53 = 'chr17:7661779-7687546';
+const V5 = EX + 'HG002_chr17_v5.0q.noref.gpxil.tif';
+const HG3 = EX + 'HG003_chr17.noref.gpxil.tif';
+const HG4 = EX + 'HG004_chr17.noref.gpxil.tif';
 // [tool, values, {fails: the command and the Python must both stop with an error; same: they print the same}]
 const CASES = [
   ['info', { input: HG }],
@@ -53,6 +56,14 @@ const CASES = [
   ['subset', { input: HG, noRef: true }],
   ['subset', { input: HG, contigs: '17', planes: 'ref,gt,flags', compression: 'deflate', out: '~/genomes/hg002-three-planes.gpxil.tif' }],
   ['subset', { input: EX + 'worked-example.gpxil.tif', planes: 'ref', compression: 'none', out: '~/genomes/we-reference.gpxil.tif' }],
+  // two benchmarks of HG002, the second without its reference plane: TP53, drawn; and two regions, with the calls
+  // outside the confident regions and a smaller gap, without a picture
+  ['compare', { a: HG, b: V5, regions: TP53, draw: TP53 }],
+  ['compare', { a: HG, b: V5, regions: 'chr17:7661779-7670000 chr17:72,800,001-72,820,000', allCalls: true, gap: '10' }],
+  // HG002 and his parents, who are without their reference planes, around the first Mendelian error, drawn as a TIFF
+  ['trio', { child: HG, father: HG3, mother: HG4, regions: 'chr17:4,000,001-4,100,000', draw: 'chr17:4,047,904-4,047,964', scale: '8', out: '~/results/trio-error.tif' }],
+  // all three without (HG002's working copy, made above), with GRCh38's chromosome 17 as their reference
+  ['trio', { child: HOME + '/genomes/HG002_chr17.noref.gpxil.tif', father: HG3, mother: HG4, regions: 'chr17:58,300,001-58,400,000', draw: 'chr17:58,332,201-58,332,300', reference: '/data/grch38/chr17.gpxil.tif' }],
   // the VCF of TP53 encoded again, with the gpxil file itself as the reference
   ['encode', { reference: HG, vcf: R + 'HG002_chr17_chr17_7661779-7687546.vcf', contigs: 'chr17', out: '~/genomes/round-trip.gpxil.tif' }],
   // on GRCh38 from /data/grch38, without the reference plane; and drawn with the reference given

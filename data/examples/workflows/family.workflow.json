@@ -1,0 +1,101 @@
+{
+  "gpxilstudio_workflow": 1,
+  "name": "A family: two benchmarks, and a son with both parents",
+  "annotation": "HG002’s chromosome 17 in Genome in a Bottle’s two benchmarks, version 4.2.1 and version 5.0q, compared base by base, the newer taken as the truth: what is the same, what is only written differently, and what differs. Then HG002 is checked against his father and mother, HG003 and HG004: the Mendelian errors, the candidate new mutations, and where each of his variants came from. Both draw TP53.",
+  "steps": [
+    {
+      "id": "s1",
+      "type": "input",
+      "label": "The son, HG002",
+      "kinds": [
+        "gpxil"
+      ],
+      "x": 16,
+      "y": 16,
+      "default": "/data/examples/HG002_chr17.gpxil.tif"
+    },
+    {
+      "id": "s2",
+      "type": "input",
+      "label": "The son, in the newer benchmark (the truth)",
+      "kinds": [
+        "gpxil"
+      ],
+      "x": 16,
+      "y": 127,
+      "default": "/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif"
+    },
+    {
+      "id": "s3",
+      "type": "input",
+      "label": "The father, HG003",
+      "kinds": [
+        "gpxil"
+      ],
+      "x": 16,
+      "y": 256,
+      "default": "/data/examples/HG003_chr17.noref.gpxil.tif"
+    },
+    {
+      "id": "s4",
+      "type": "input",
+      "label": "The mother, HG004",
+      "kinds": [
+        "gpxil"
+      ],
+      "x": 16,
+      "y": 367,
+      "default": "/data/examples/HG004_chr17.noref.gpxil.tif"
+    },
+    {
+      "id": "s5",
+      "type": "tool",
+      "tool": "compare",
+      "params": {
+        "draw": "chr17:7661779-7687546",
+        "width": "256",
+        "scale": "2"
+      },
+      "connections": {
+        "a": {
+          "step": "s1",
+          "output": "file"
+        },
+        "b": {
+          "step": "s2",
+          "output": "file"
+        }
+      },
+      "x": 286,
+      "y": 16
+    },
+    {
+      "id": "s6",
+      "type": "tool",
+      "tool": "trio",
+      "params": {
+        "draw": "chr17:7661779-7687546",
+        "width": "256",
+        "scale": "2"
+      },
+      "connections": {
+        "child": {
+          "step": "s1",
+          "output": "file"
+        },
+        "father": {
+          "step": "s3",
+          "output": "file"
+        },
+        "mother": {
+          "step": "s4",
+          "output": "file"
+        }
+      },
+      "x": 286,
+      "y": 173
+    }
+  ],
+  "created": "2026-10-20T12:00:00.000Z",
+  "updated": "2026-10-20T12:00:00.000Z"
+}

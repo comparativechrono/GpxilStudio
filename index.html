@@ -79,6 +79,7 @@
 <li><a href="#h-walk-workflow">Do the same steps again: workflows<small>Run an example workflow, run it on another file, change it, and make one from the tools you’ve run</small></a></li>
 <li><a href="#h-walk-python">Work with a gpxil file pixel by pixel, in Python<small>Planes as NumPy arrays: read a region, decode the codes, find variants, count, compare haplotypes, draw, and write files of your own</small></a></li>
 <li><a href="#h-walk-big">A whole genome without running out of memory<small>Regions and strips, a chromosome a piece at a time, files without the reference that borrow it, working copies and their counts, and the whole genome on your own computer</small></a></li>
+<li><a href="#h-walk-trio">A family: comparing genomes<small>HG002’s two benchmarks compared base by base, then HG002 against both his parents: what each variant came from, and the few that are new</small></a></li>
 </ul></section>
 <section><h2><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><a href="#h-viewer">The viewer</a></h2><ul>
 <li><a href="#h-viewer-views">The views and their colours<small>What each of the Viewer’s views shows, and what its colours mean</small></a></li>
@@ -90,6 +91,8 @@
 <li><a href="#h-tool-stats">Count what a file holds<small>gpxil stats: bases called, substitutions and Ti/Tv, insertions, deletions, phasing, quality and depth, for every contig or for regions</small></a></li>
 <li><a href="#h-tool-encode">Make a gpxil file (encode)<small>gpxil encode: a reference, and one person’s VCF, as a gpxil file</small></a></li>
 <li><a href="#h-tool-subset">Make a working copy (subset)<small>gpxil subset: some contigs, and some planes, of a gpxil file in a new and smaller file, copied without being decoded</small></a></li>
+<li><a href="#h-tool-compare">Compare two genomes<small>gpxil compare: two gpxil files of one person, base by base, the second as the truth: the same, written differently or different, with precision, recall and a picture</small></a></li>
+<li><a href="#h-tool-trio">A child and both parents (trio)<small>gpxil compare --father --mother: Mendelian errors and candidate new mutations, where the child’s variants came from, and crossovers where the parents are phased</small></a></li>
 <li><a href="#h-tool-render">Draw a region as a picture<small>gpxil render: a region in four views, as PNG for the screen or TIFF (RGB or CMYK) for print</small></a></li>
 <li><a href="#h-tool-book">Print it as a book (PDF)<small>gpxil book: a PDF to print with one dot per base, in CMYK or RGB</small></a></li>
 <li><a href="#h-tool-palettes">The palettes<small>gpxil palettes: the colours of A, C, G, T and N in each palette, for the screen and in ink</small></a></li>
@@ -207,7 +210,7 @@ gpxil validate ~/genomes/worked-example.gpxil.tif</code></pre>
 <tr><td><code>~/notebooks</code></td><td>notebooks, including <code>gpxil-in-python.ipynb</code>, which a new visitor is given</td></tr>
 <tr><td><code>~/workflows</code></td><td>your workflows, made the first time you save one</td></tr>
 <tr><td><code>~/examples</code></td><td>copies of examples you ask for, which are yours to change</td></tr>
-<tr><td><code>/data/examples</code></td><td>the examples (read-only): HG002’s chromosome 17, HG002’s variants around TP53 with the regions called with confidence, TP53’s transcripts, the specification’s worked example, and example workflows</td></tr>
+<tr><td><code>/data/examples</code></td><td>the examples (read-only): HG002’s chromosome 17 (and a newer benchmark of it), his father’s and mother’s (HG003 and HG004, without the reference plane), HG002’s variants around TP53 with the regions called with confidence, TP53’s transcripts, the specification’s worked example, and example workflows</td></tr>
 <tr><td><code>/data/grch38</code></td><td>the GRCh38 reference, a gpxil file for each chromosome (read-only), read from the Gpxil browser’s web site a piece at a time (<a href="#h-reference">The GRCh38 reference</a>)</td></tr>
 </table>
 <p>You can make any other folders you like. The tools save in <code>~/results</code> unless you choose otherwise, and they can only save in your home folder.</p>
@@ -253,7 +256,7 @@ gpxil validate ~/genomes/worked-example.gpxil.tif</code></pre>
 </article>
 <article class="help-page" id="h-walks" data-title="Walkthroughs" data-group="Walkthroughs" data-group-page="h-walks" data-keys="walkthrough walkthroughs tutorial how to steps guide task jobs recipe" hidden>
 <h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M7.5 6H15a3.5 3.5 0 0 1 0 7H9a3.5 3.5 0 0 0 0 7h7.5"/></svg>Walkthroughs</h1>
-<p class="lede">Each walkthrough takes you through one job from beginning to end, with a button for every step. They use the examples – HG002’s chromosome 17, his variants around TP53, the GRCh38 reference and the specification’s worked example – so you can follow one through before you try it with files of your own.</p>
+<p class="lede">Each walkthrough takes you through one job from beginning to end, with a button for every step. They use the examples – HG002’s chromosome 17 and his parents’, his variants around TP53, the GRCh38 reference and the specification’s worked example – so you can follow one through before you try it with files of your own.</p>
 <ul class="help-grouplist">
 <li><a href="#h-walk-look">Look inside a gpxil file, and check it<small>What a file holds, its planes, its metadata, its counts, and a check against the specification</small></a></li>
 <li><a href="#h-walk-encode">Turn someone’s VCF into a gpxil file<small>A person’s variants and a reference become a gpxil file: with GRCh38 from the web, without the reference plane, and from a FASTA file</small></a></li>
@@ -264,6 +267,7 @@ gpxil validate ~/genomes/worked-example.gpxil.tif</code></pre>
 <li><a href="#h-walk-workflow">Do the same steps again: workflows<small>Run an example workflow, run it on another file, change it, and make one from the tools you’ve run</small></a></li>
 <li><a href="#h-walk-python">Work with a gpxil file pixel by pixel, in Python<small>Planes as NumPy arrays: read a region, decode the codes, find variants, count, compare haplotypes, draw, and write files of your own</small></a></li>
 <li><a href="#h-walk-big">A whole genome without running out of memory<small>Regions and strips, a chromosome a piece at a time, files without the reference that borrow it, working copies and their counts, and the whole genome on your own computer</small></a></li>
+<li><a href="#h-walk-trio">A family: comparing genomes<small>HG002’s two benchmarks compared base by base, then HG002 against both his parents: what each variant came from, and the few that are new</small></a></li>
 </ul>
 <p>You’ll also find most of these jobs on the first page of the Tools tab, under <b>Common tasks</b>, each with its tools in the order you need them.</p>
 <div class="tryrow"><button class="do" type="button" data-tool="start">Open the Tools tab’s first page</button></div>
@@ -406,11 +410,14 @@ print(summary["contigs"], "contig,", summary["bases"], "bases,", summary["bytes"
 <dl class="cite-list">
 <dt>gpxiltools (the gpxil command, and the Python package)</dt>
 <dd>Chronomic Medicine Group, University of Cambridge (2026) gpxiltools: read, write, render and check gpxil files (Python). <a href="https://github.com/comparativechrono/Gpxil-tools" target="_blank" rel="noopener">github.com/comparativechrono/Gpxil-tools</a></dd>
-<dt>Genome in a Bottle: HG002 and its benchmark</dt>
-<dd class="cite-note">The example HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from the v4.2.1 benchmark.</dd>
+<dt>Genome in a Bottle: HG002, his parents HG003 and HG004, and their benchmarks</dt>
+<dd class="cite-note">The examples HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from HG002’s v4.2.1 benchmark, HG003_chr17.noref.gpxil.tif and HG004_chr17.noref.gpxil.tif from his parents’, and HG002_chr17_v5.0q.noref.gpxil.tif from his v5.0q benchmark, which is made from the T2T HG002 Q100 assembly of his genome (Hansen et al. 2026).</dd>
 <dd>Zook JM, Catoe D, McDaniel J, Vang L, Spies N, Sidow A, et al. (2016) Extensive sequencing of seven human genomes to characterize benchmark reference materials. <i>Scientific Data</i> 3: 160025. <a href="https://doi.org/10.1038/sdata.2016.25" target="_blank" rel="noopener">doi:10.1038/sdata.2016.25</a></dd>
 <dd>Wagner J, Olson ND, Harris L, Khan Z, Farek J, Mahmoud M, et al. (2022) Benchmarking challenging small variants with linked and long reads. <i>Cell Genomics</i> 2(5): 100128. <a href="https://doi.org/10.1016/j.xgen.2022.100128" target="_blank" rel="noopener">doi:10.1016/j.xgen.2022.100128</a></dd>
 <dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) small-variant benchmark v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG003 (NA24149) and HG004 (NA24143), the parents of HG002: small-variant benchmarks v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio</a></dd>
+<dd>Hansen NF, Dwarshuis N, Ji HJ, Rhie A, Loucks H, Logsdon GA, et al. (2026) A complete diploid human genome benchmark for personalized genomics. <i>Cell</i> 189(16): 4857–4875.e31. <a href="https://doi.org/10.1016/j.cell.2026.06.016" target="_blank" rel="noopener">doi:10.1016/j.cell.2026.06.016</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) assembly-based small-variant benchmark v5.0q, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q</a></dd>
 <dt>The GRCh38 reference genome</dt>
 <dd>Schneider VA, Graves-Lindsay T, Howe K, Bouk N, Chen HC, Kitts PA, et al. (2017) Evaluation of GRCh38 and de novo haploid genome assemblies demonstrates the enduring quality of the reference assembly. <i>Genome Research</i> 27(5): 849–864. <a href="https://doi.org/10.1101/gr.213611.116" target="_blank" rel="noopener">doi:10.1101/gr.213611.116</a></dd>
 <dt>VCF, the variant call format</dt>
@@ -571,11 +578,14 @@ with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
 <dd>Yates AD, Austine-Orimoloye O, Azov AG, Barba M, Barnes I, Barrera-Enriquez VP, et al. (2026) Ensembl 2026. <i>Nucleic Acids Research</i> 54(D1): D1053–D1060. <a href="https://doi.org/10.1093/nar/gkaf1239" target="_blank" rel="noopener">doi:10.1093/nar/gkaf1239</a></dd>
 <dt>MANE transcripts</dt>
 <dd>Morales J, Pujar S, Loveland JE, Astashyn A, Bennett R, Berry A, et al. (2022) A joint NCBI and EMBL-EBI transcript set for clinical genomics and research. <i>Nature</i> 604(7905): 310–315. <a href="https://doi.org/10.1038/s41586-022-04558-8" target="_blank" rel="noopener">doi:10.1038/s41586-022-04558-8</a></dd>
-<dt>Genome in a Bottle: HG002 and its benchmark</dt>
-<dd class="cite-note">The example HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from the v4.2.1 benchmark.</dd>
+<dt>Genome in a Bottle: HG002, his parents HG003 and HG004, and their benchmarks</dt>
+<dd class="cite-note">The examples HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from HG002’s v4.2.1 benchmark, HG003_chr17.noref.gpxil.tif and HG004_chr17.noref.gpxil.tif from his parents’, and HG002_chr17_v5.0q.noref.gpxil.tif from his v5.0q benchmark, which is made from the T2T HG002 Q100 assembly of his genome (Hansen et al. 2026).</dd>
 <dd>Zook JM, Catoe D, McDaniel J, Vang L, Spies N, Sidow A, et al. (2016) Extensive sequencing of seven human genomes to characterize benchmark reference materials. <i>Scientific Data</i> 3: 160025. <a href="https://doi.org/10.1038/sdata.2016.25" target="_blank" rel="noopener">doi:10.1038/sdata.2016.25</a></dd>
 <dd>Wagner J, Olson ND, Harris L, Khan Z, Farek J, Mahmoud M, et al. (2022) Benchmarking challenging small variants with linked and long reads. <i>Cell Genomics</i> 2(5): 100128. <a href="https://doi.org/10.1016/j.xgen.2022.100128" target="_blank" rel="noopener">doi:10.1016/j.xgen.2022.100128</a></dd>
 <dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) small-variant benchmark v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG003 (NA24149) and HG004 (NA24143), the parents of HG002: small-variant benchmarks v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio</a></dd>
+<dd>Hansen NF, Dwarshuis N, Ji HJ, Rhie A, Loucks H, Logsdon GA, et al. (2026) A complete diploid human genome benchmark for personalized genomics. <i>Cell</i> 189(16): 4857–4875.e31. <a href="https://doi.org/10.1016/j.cell.2026.06.016" target="_blank" rel="noopener">doi:10.1016/j.cell.2026.06.016</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) assembly-based small-variant benchmark v5.0q, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q</a></dd>
 </dl>
 </article>
 <article class="help-page" id="h-walk-export" data-title="Get sequences and variants back out" data-group="Walkthroughs" data-group-page="h-walks" data-keys="export fasta vcf haplotype sequence iupac genotype consensus variants records no-call blocks round trip other programs bcftools" hidden>
@@ -969,7 +979,7 @@ gpxil stats ~/genomes/HG002_chr17.noref.gpxil.tif</code></pre>
 
 <h2>5 · What uses memory, and what doesn’t</h2>
 <ul>
-  <li><b>Doesn’t:</b> opening a file, its metadata, the Viewer, the Files tab, reading a region, a loop over pieces, <code>gpxil info</code>, <code>gpxil vcf</code> and <code>gpxil fasta</code> (which write as they go), <code>gpxil validate</code> and <code>gpxil stats</code> (which read a piece at a time), <code>gpxil subset</code> (which copies a strip at a time).</li>
+  <li><b>Doesn’t:</b> opening a file, its metadata, the Viewer, the Files tab, reading a region, a loop over pieces, <code>gpxil info</code>, <code>gpxil vcf</code> and <code>gpxil fasta</code> (which write as they go), <code>gpxil validate</code>, <code>gpxil stats</code> and <code>gpxil compare</code> (which read a piece at a time), <code>gpxil subset</code> (which copies a strip at a time).</li>
   <li><b>Does:</b> <code>gpxil encode</code>, which holds each contig’s planes whole while it works: about 6 bytes a base with the planes <code>gt</code> and <code>flags</code>, so half a gigabyte for chromosome 17 and about 1.5 GB for chromosome 1, more than a browser tab may have. In the browser, encode one chromosome at a time (<b>Only these contigs</b>, or <code>--contigs</code>), and the biggest chromosomes, or a whole genome, on your own computer (section 6). Also a whole plane read at once (<code>c.read("gt")</code> on chromosome 1 is 249 MB), and big pictures, which is why the tools stop at 25 million bases a picture in the browser.</li>
   <li>Keep arrays small: <code>uint8</code> as they come, not converted to 64-bit numbers. <code>del</code> big arrays you’ve finished with, and if Python gets slow or stops with a <i>MemoryError</i>, restart it (the Notebook’s <b>Restart</b>, or the Python pill in the Tools tab): your files are safe, only Python’s variables are lost.</li>
 </ul>
@@ -1003,6 +1013,80 @@ gpxil subset my.gpxil.tif chr17 -o my_chr17.gpxil.tif   # a working copy to add 
 <dd>Chronomic Medicine Group, University of Cambridge (2026) gpxiltools: read, write, render and check gpxil files (Python). <a href="https://github.com/comparativechrono/Gpxil-tools" target="_blank" rel="noopener">github.com/comparativechrono/Gpxil-tools</a></dd>
 <dt>The Gpxil browser, and its GRCh38 files and gene files</dt>
 <dd>Chronomic Medicine Group, University of Cambridge (2026) The Gpxil browser: the GRCh38 genome as gpxil pictures, in a web browser. <a href="https://comparativechrono.github.io/Gpxil-browser/" target="_blank" rel="noopener">comparativechrono.github.io/Gpxil-browser</a></dd>
+<dt>The GRCh38 reference genome</dt>
+<dd>Schneider VA, Graves-Lindsay T, Howe K, Bouk N, Chen HC, Kitts PA, et al. (2017) Evaluation of GRCh38 and de novo haploid genome assemblies demonstrates the enduring quality of the reference assembly. <i>Genome Research</i> 27(5): 849–864. <a href="https://doi.org/10.1101/gr.213611.116" target="_blank" rel="noopener">doi:10.1101/gr.213611.116</a></dd>
+</dl>
+</article>
+<article class="help-page" id="h-walk-trio" data-title="A family: comparing genomes" data-group="Walkthroughs" data-group-page="h-walks" data-keys="family trio compare comparison two genomes benchmark v4.2.1 v5.0q hg002 hg003 hg004 father mother parents son child mendelian error new mutation de novo inherited parent of origin crossover written differently repeat precision recall pedigree ashkenazi" hidden>
+<h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="6" height="6" rx="0.5"/><circle cx="18" cy="6" r="3"/><path d="M9 6h6M12 6v5.5M7 11.5h10M7 11.5V15M17 11.5V15"/><rect x="4.5" y="15" width="5" height="5" rx="0.5"/><circle cx="17" cy="17.5" r="2.5"/></svg>A family: comparing genomes</h1>
+<p class="lede">Because every gpxil file on a reference is laid out base for base on it, two genomes can be compared as two pictures, pixel by pixel. This walkthrough compares two benchmarks of one man’s genome, and then the man with his mother and father: which of his variants came from whom, and which neither parent has.</p>
+
+<h2>1 · The family</h2>
+<p>HG002 is a man of the Personal Genome Project, and HG003 and HG004 are his father and mother. The Genome in a Bottle Consortium has benchmarked the genomes of all three, and the examples hold chromosome 17 of each: HG002’s with its reference plane (24.6 MB), and his parents’ without it (1.9 MB each), as made by <code>gpxil subset --no-ref</code>. The Viewer borrows the reference for those from GRCh38. Look at TP53 in the three:</p>
+<div class="tryrow"><button class="do" type="button" data-viewer="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,668,421-7,687,490" data-mode="variants">HG002, the son</button> <button class="do" type="button" data-viewer="/data/examples/HG003_chr17.noref.gpxil.tif" data-region="chr17:7,668,421-7,687,490" data-mode="variants">HG003, his father</button> <button class="do" type="button" data-viewer="/data/examples/HG004_chr17.noref.gpxil.tif" data-region="chr17:7,668,421-7,687,490" data-mode="variants">HG004, his mother</button></div>
+<p>A fourth file, <code>HG002_chr17_v5.0q.noref.gpxil.tif</code>, holds HG002’s chromosome 17 from the newer benchmark, version 5.0q, made from a whole assembly of his genome rather than from reads.</p>
+
+<h2>2 · Two benchmarks of one genome</h2>
+<p>First, the two benchmarks of HG002 against each other, the newer taken as the truth. Where the two differ, <code>gpxil compare</code> spells both out as sequences, in case they only write the same thing differently, as in a repeat, where an insertion can be anchored at either end.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="compare" data-a="/data/examples/HG002_chr17.gpxil.tif" data-b="/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif">Compare HG002’s two benchmarks</button></div>
+<pre class="code" data-run="term"><code>gpxil compare /data/examples/HG002_chr17.gpxil.tif /data/examples/HG002_chr17_v5.0q.noref.gpxil.tif</code></pre>
+<p>Where both call with confidence, 83.7 % of the chromosome, 113,164 bases have a variant in one or the other, and all but eight are the same in both; 410 of them only written differently. Precision and recall are over 99.99 %. Of the three stretches that differ, two are substitutions only the older benchmark has. The third, at 72,809,199, isn’t a difference at all: version 4.2.1 writes two deletions there as two overlapping calls, unphased, and version 0.1 of the gpxil specification puts both on one haplotype, where they make one longer deletion. (A note for the specification’s next version.)</p>
+
+<h2>3 · A son and both his parents</h2>
+<p>Now HG002 against HG003 and HG004. At each base called in all three, his two alleles must be one from his father and one from his mother.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="trio" data-child="/data/examples/HG002_chr17.gpxil.tif" data-father="/data/examples/HG003_chr17.noref.gpxil.tif" data-mother="/data/examples/HG004_chr17.noref.gpxil.tif">Check HG002 against his parents</button></div>
+<pre class="code" data-run="term"><code>gpxil compare /data/examples/HG002_chr17.gpxil.tif \
+    --father /data/examples/HG003_chr17.noref.gpxil.tif --mother /data/examples/HG004_chr17.noref.gpxil.tif \
+    -o ~/results/HG002_trio_TP53.png --draw chr17:7,661,779-7,687,546 --width 256 --scale 2</code></pre>
+<ul>
+  <li><b>Where his variants came from.</b> Of HG002’s 106,558 variant bases called in all three, 28,419 came from his father, 27,061 from his mother and 40,337 from both (he is homozygous there); for 10,716 – where all three are heterozygous, say – it can’t be told.</li>
+  <li><b>What neither parent has.</b> 23 sites are Mendelian errors, every one inside all three benchmarks’ regions. At 22 of them HG002 has something neither parent has: 21 substitutions (11 of them C to T or G to A, as new mutations mostly are) and a deleted base. These are candidate new mutations; three of them lie within 82 bases of each other, at 58,332,214-58,332,296. The 23rd, at 77,145,099, is the specification’s artefact again: two overlapping deletions of HG002’s, put on one haplotype.</li>
+  <li><b>What was written differently.</b> One stretch, at 71,915,487, is consistent only once spelled out as sequences: there the three write a deletion and an insertion in a run of Cs in different ways.</li>
+</ul>
+<p>Look at one of them in the Viewer, the first that is C to T, at 4,047,934, in HG002 and in each parent:</p>
+<div class="tryrow"><button class="do" type="button" data-viewer="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:4,047,904-4,047,964" data-mode="genotype">HG002 at 4,047,934</button> <button class="do" type="button" data-viewer="/data/examples/HG003_chr17.noref.gpxil.tif" data-region="chr17:4,047,904-4,047,964" data-mode="genotype">HG003 there</button> <button class="do" type="button" data-viewer="/data/examples/HG004_chr17.noref.gpxil.tif" data-region="chr17:4,047,904-4,047,964" data-mode="genotype">HG004 there</button></div>
+<p>HG002 is heterozygous there, C and T (the mix of blue and yellow); both parents are C, the reference.</p>
+<p>Both comparisons, each with its picture of TP53, are also an example workflow, to run again on files of your own:</p>
+<div class="tryrow"><button class="do" type="button" data-workflow="/data/examples/workflows/family.workflow.json">Open the workflow “A family”</button></div>
+
+<h2>4 · Crossovers</h2>
+<p>Each parent passes on one of their two copies of chromosome 17, but cut and joined where their two copies crossed over in the egg or sperm. Where a parent’s calls are phased – their variants put on one copy or the other – the child’s genotypes show which copy the child received at each site, and a change from one copy to the other along a phase set is a crossover. The picture shows variants from the parent’s second copy lighter, so a crossover is where the colour changes. HG003’s and HG004’s benchmarks aren’t phased, so the comparison says that it can’t see crossovers in them; with phased parents, it lists them, with where each happened.</p>
+
+<h2>5 · The numbers, in Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.compare import compare_trio
+
+EX = "/data/examples/"
+errors = []
+with (
+    GpxilFile(EX + "HG002_chr17.gpxil.tif") as son,
+    GpxilFile(EX + "HG003_chr17.noref.gpxil.tif") as father,
+    GpxilFile(EX + "HG004_chr17.noref.gpxil.tif") as mother,
+):
+    t = compare_trio(son, father, mother, errors=errors)["total"]
+print(f"from the father {t['from_father']:,}, from the mother {t['from_mother']:,}, from both {t['from_both']:,}")
+for e in errors[:5]:
+    print(f"{e['position']:,}: son {e['child']}, father {e['father']}, mother {e['mother']}", "(new)" if e["new"] else "")</code></pre>
+
+<h2>6 · On your own computer</h2>
+<p>For whole genomes, compare on your own computer: two genomes take a few seconds a chromosome. Make the parents’ files from Genome in a Bottle’s benchmarks as HG002’s were, without the reference plane:</p>
+<pre class="code"><code>gpxil encode GRCh38.gpxil.tif -v HG003_GRCh38_1_22_v4.2.1_benchmark.vcf.gz \
+    --callable HG003_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.bed --no-ref -o HG003.noref.gpxil.tif
+gpxil compare HG002.gpxil.tif --father HG003.noref.gpxil.tif --mother HG004.noref.gpxil.tif --json > trio.json</code></pre>
+<p><a href="#h-tool-compare">Compare two genomes</a> and <a href="#h-tool-trio">A child and both parents</a> say exactly what is counted.</p>
+<h2 data-anchor="cite">References</h2>
+<p>If you use these programs in your work, cite the papers below, and give the versions you used (<a href="#h-versions">Versions, and how to cite</a>):</p>
+<dl class="cite-list">
+<dt>gpxiltools (the gpxil command, and the Python package)</dt>
+<dd>Chronomic Medicine Group, University of Cambridge (2026) gpxiltools: read, write, render and check gpxil files (Python). <a href="https://github.com/comparativechrono/Gpxil-tools" target="_blank" rel="noopener">github.com/comparativechrono/Gpxil-tools</a></dd>
+<dt>Genome in a Bottle: HG002, his parents HG003 and HG004, and their benchmarks</dt>
+<dd class="cite-note">The examples HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from HG002’s v4.2.1 benchmark, HG003_chr17.noref.gpxil.tif and HG004_chr17.noref.gpxil.tif from his parents’, and HG002_chr17_v5.0q.noref.gpxil.tif from his v5.0q benchmark, which is made from the T2T HG002 Q100 assembly of his genome (Hansen et al. 2026).</dd>
+<dd>Zook JM, Catoe D, McDaniel J, Vang L, Spies N, Sidow A, et al. (2016) Extensive sequencing of seven human genomes to characterize benchmark reference materials. <i>Scientific Data</i> 3: 160025. <a href="https://doi.org/10.1038/sdata.2016.25" target="_blank" rel="noopener">doi:10.1038/sdata.2016.25</a></dd>
+<dd>Wagner J, Olson ND, Harris L, Khan Z, Farek J, Mahmoud M, et al. (2022) Benchmarking challenging small variants with linked and long reads. <i>Cell Genomics</i> 2(5): 100128. <a href="https://doi.org/10.1016/j.xgen.2022.100128" target="_blank" rel="noopener">doi:10.1016/j.xgen.2022.100128</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) small-variant benchmark v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG003 (NA24149) and HG004 (NA24143), the parents of HG002: small-variant benchmarks v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio</a></dd>
+<dd>Hansen NF, Dwarshuis N, Ji HJ, Rhie A, Loucks H, Logsdon GA, et al. (2026) A complete diploid human genome benchmark for personalized genomics. <i>Cell</i> 189(16): 4857–4875.e31. <a href="https://doi.org/10.1016/j.cell.2026.06.016" target="_blank" rel="noopener">doi:10.1016/j.cell.2026.06.016</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) assembly-based small-variant benchmark v5.0q, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q</a></dd>
 <dt>The GRCh38 reference genome</dt>
 <dd>Schneider VA, Graves-Lindsay T, Howe K, Bouk N, Chen HC, Kitts PA, et al. (2017) Evaluation of GRCh38 and de novo haploid genome assemblies demonstrates the enduring quality of the reference assembly. <i>Genome Research</i> 27(5): 849–864. <a href="https://doi.org/10.1101/gr.213611.116" target="_blank" rel="noopener">doi:10.1101/gr.213611.116</a></dd>
 </dl>
@@ -1124,6 +1208,7 @@ viewer /data/grch38/chr21.gpxil.tif chr21:30,000,001-30,500,000 --plane=ref</cod
 <tr><th>Group</th><th>Tools</th></tr>
 <tr><td>Look inside and check</td><td><a href="#h-tool-info">What’s in a gpxil file</a> · <a href="#h-tool-validate">Check a gpxil file</a> · <a href="#h-tool-stats">Count what a file holds</a></td></tr>
 <tr><td>Make gpxil files</td><td><a href="#h-tool-encode">Make a gpxil file (encode)</a> · <a href="#h-tool-subset">Make a working copy (subset)</a></td></tr>
+<tr><td>Compare genomes</td><td><a href="#h-tool-compare">Compare two genomes</a> · <a href="#h-tool-trio">A child and both parents (trio)</a></td></tr>
 <tr><td>Pictures and print</td><td><a href="#h-tool-render">Draw a region as a picture</a> · <a href="#h-tool-book">Print it as a book (PDF)</a> · <a href="#h-tool-palettes">The palettes</a></td></tr>
 <tr><td>Back to FASTA and VCF</td><td><a href="#h-tool-fasta">Sequences as FASTA</a> · <a href="#h-tool-vcf">Variants as VCF</a></td></tr>
 <tr><td>Genes as pictures (pxil)</td><td><a href="#h-tool-gpxil2pxil">Genes, transcripts and proteins as pxil pictures</a> · <a href="#h-tool-pxil-fasta">pxil pictures → FASTA</a></td></tr>
@@ -1157,6 +1242,8 @@ viewer /data/grch38/chr21.gpxil.tif chr21:30,000,001-30,500,000 --plane=ref</cod
 <li><a href="#h-tool-stats">Count what a file holds<small>gpxil stats: bases called, substitutions and Ti/Tv, insertions, deletions, phasing, quality and depth, for every contig or for regions</small></a></li>
 <li><a href="#h-tool-encode">Make a gpxil file (encode)<small>gpxil encode: a reference, and one person’s VCF, as a gpxil file</small></a></li>
 <li><a href="#h-tool-subset">Make a working copy (subset)<small>gpxil subset: some contigs, and some planes, of a gpxil file in a new and smaller file, copied without being decoded</small></a></li>
+<li><a href="#h-tool-compare">Compare two genomes<small>gpxil compare: two gpxil files of one person, base by base, the second as the truth: the same, written differently or different, with precision, recall and a picture</small></a></li>
+<li><a href="#h-tool-trio">A child and both parents (trio)<small>gpxil compare --father --mother: Mendelian errors and candidate new mutations, where the child’s variants came from, and crossovers where the parents are phased</small></a></li>
 <li><a href="#h-tool-render">Draw a region as a picture<small>gpxil render: a region in four views, as PNG for the screen or TIFF (RGB or CMYK) for print</small></a></li>
 <li><a href="#h-tool-book">Print it as a book (PDF)<small>gpxil book: a PDF to print with one dot per base, in CMYK or RGB</small></a></li>
 <li><a href="#h-tool-palettes">The palettes<small>gpxil palettes: the colours of A, C, G, T and N in each palette, for the screen and in ink</small></a></li>
@@ -1342,11 +1429,14 @@ print(tp53["substitutions"], tp53["calls"]["not_called"])</code></pre>
 <dl class="cite-list">
 <dt>gpxiltools (the gpxil command, and the Python package)</dt>
 <dd>Chronomic Medicine Group, University of Cambridge (2026) gpxiltools: read, write, render and check gpxil files (Python). <a href="https://github.com/comparativechrono/Gpxil-tools" target="_blank" rel="noopener">github.com/comparativechrono/Gpxil-tools</a></dd>
-<dt>Genome in a Bottle: HG002 and its benchmark</dt>
-<dd class="cite-note">The example HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from the v4.2.1 benchmark.</dd>
+<dt>Genome in a Bottle: HG002, his parents HG003 and HG004, and their benchmarks</dt>
+<dd class="cite-note">The examples HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from HG002’s v4.2.1 benchmark, HG003_chr17.noref.gpxil.tif and HG004_chr17.noref.gpxil.tif from his parents’, and HG002_chr17_v5.0q.noref.gpxil.tif from his v5.0q benchmark, which is made from the T2T HG002 Q100 assembly of his genome (Hansen et al. 2026).</dd>
 <dd>Zook JM, Catoe D, McDaniel J, Vang L, Spies N, Sidow A, et al. (2016) Extensive sequencing of seven human genomes to characterize benchmark reference materials. <i>Scientific Data</i> 3: 160025. <a href="https://doi.org/10.1038/sdata.2016.25" target="_blank" rel="noopener">doi:10.1038/sdata.2016.25</a></dd>
 <dd>Wagner J, Olson ND, Harris L, Khan Z, Farek J, Mahmoud M, et al. (2022) Benchmarking challenging small variants with linked and long reads. <i>Cell Genomics</i> 2(5): 100128. <a href="https://doi.org/10.1016/j.xgen.2022.100128" target="_blank" rel="noopener">doi:10.1016/j.xgen.2022.100128</a></dd>
 <dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) small-variant benchmark v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG003 (NA24149) and HG004 (NA24143), the parents of HG002: small-variant benchmarks v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio</a></dd>
+<dd>Hansen NF, Dwarshuis N, Ji HJ, Rhie A, Loucks H, Logsdon GA, et al. (2026) A complete diploid human genome benchmark for personalized genomics. <i>Cell</i> 189(16): 4857–4875.e31. <a href="https://doi.org/10.1016/j.cell.2026.06.016" target="_blank" rel="noopener">doi:10.1016/j.cell.2026.06.016</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) assembly-based small-variant benchmark v5.0q, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q</a></dd>
 </dl>
 </article>
 <article class="help-page" id="h-tool-encode" data-title="Make a gpxil file (encode)" data-group="Tools" data-group-page="h-tools" data-keys="encode make create convert vcf fasta reference gpxil sample callable bed planes no-ref sex haploid width compression palette contigs" hidden>
@@ -1462,6 +1552,152 @@ print(summary)</code></pre>
 <dd class="cite-note">gpxil continues Albrecht-Buehler’s genome pixel images (GPxI) as a file format.</dd>
 <dd>Chronomic Medicine Group, University of Cambridge (2026) gpxil: Genome Pixel Image format, version 0.1 (draft specification). <a href="https://github.com/comparativechrono/Gpxil" target="_blank" rel="noopener">github.com/comparativechrono/Gpxil</a></dd>
 <dd>Albrecht-Buehler G (2009) Outline of a genome navigation system based on the properties of GA-sequences and their flanks. <i>PLoS ONE</i> 4(3): e4701. <a href="https://doi.org/10.1371/journal.pone.0004701" target="_blank" rel="noopener">doi:10.1371/journal.pone.0004701</a></dd>
+</dl>
+</article>
+<article class="help-page" id="h-tool-compare" data-title="Compare two genomes" data-group="Tools" data-group-page="h-tools" data-keys="compare comparison two genomes benchmark benchmarking truth call set calls precision recall f1 sensitivity concordance agreement same different written differently representation repeat normalise normalize indel shift hap.py vcfeval v4.2.1 v5.0q giab picture gap all calls" hidden>
+<h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 6h16M4 10h11M4 14h16M4 18h9"/></svg>Compare two genomes</h1>
+<p class="lede"><code>gpxil compare</code> compares two gpxil files of one person base by base: two sets of calls, say, or two versions of a benchmark. Both are laid out on the same reference, base for base, so they are compared as arrays, without matching VCF records: what is the same in both, what only one has, and what the two only write differently. With the second taken as the truth, it gives each kind of variant’s precision and recall, as benchmarking tools do. A whole chromosome takes a few seconds on a computer, and about ten here.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="compare" data-a="/data/examples/HG002_chr17.gpxil.tif" data-b="/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif">Compare HG002’s two benchmarks of chromosome 17</button></div>
+
+<h2>How it compares</h2>
+<dl>
+  <dt>base by base</dt><dd>At each base called in both files, the two genotypes are compared as pairs of alleles in either order: A/G is the same as G/A, phased or not, and one copy (on a man’s X, say) is the same as two copies of the same allele. An allele is what one haplotype has at a base – the reference’s base, another base, nothing (deleted) or a COMPLEX allele – with any bases inserted after it.</dd>
+  <dt>written differently</dt><dd>The same change can often be written in more than one way: an insertion in a run of As can be anchored at either end of the run, and a deletion in a repeat can take any of its units. Where the files differ, the bases near each other (no more than 50 apart: <b>the gap</b>) are taken together, widened over any repeat their insertions and deletions could move along, and each file’s two haplotypes are spelled out over them, its heterozygous pieces tried either way round. If both files can spell the same pair of sequences, they only write it differently, and it counts as the same.</dd>
+  <dt>events</dt><dd>Each file’s substitutions, insertions, deletions and COMPLEX alleles, counted as <a href="#h-tool-stats">gpxil stats</a> counts them, are then looked for in the other: <b>found</b> if every base they cover is the same in both (or written differently), <b>not in</b> the other, or there with <b>another genotype</b>. Events over bases the other file didn’t call aren’t compared.</dd>
+  <dt>precision and recall</dt><dd>With B as the truth, precision is the share of A’s events found in B, recall the share of B’s events found in A, and F1 is the two together (their harmonic mean).</dd>
+  <dt>calls outside the confident regions</dt><dd>A file made with a BED file of the regions called with confidence keeps the VCF’s calls outside them too, each on its own among bases not called. They aren’t compared, as a benchmark’s own rules say. Tick <b>Also compare the calls outside…</b> to compare them as well.</dd>
+</dl>
+
+<h2>The form</h2>
+<dl>
+  <dt>A, and B (the truth)</dt><dd>Two gpxil files of one person on the same reference: the genome to check, and the one to check it against. Either can be without its reference plane, but to spell stretches out one of them needs it, or the reference is given (a field for it appears when neither has one).</dd>
+  <dt>Regions</dt><dd>One or more regions, separated by spaces: a contig, or CONTIG:START-END counting from 1. Empty: every contig the two have.</dd>
+  <dt>Draw a region</dt><dd>A region to draw, one pixel a base, with its bases per row and pixels per base as in <a href="#h-tool-render">gpxil render</a>; TP53 to begin with. Clear it for no picture.</dd>
+  <dt>The gap</dt><dd>How far apart two differences can be and still be spelled out together: 50 bases. Repeats are taken in whole, however long, so it matters only for differences far apart outside a repeat.</dd>
+</dl>
+
+<h2>What it gives</h2>
+<p>A table, as <code>gpxil compare</code> prints it: the bases called in both, in only one or in neither; the variant bases that are the same (and of those, how many are only written differently), only in A, only in B, or there with another genotype; and for each kind of event, how many each file has, found, not found and with another genotype, with precision, recall and F1. Then the first stretches where the two differ, with A’s and B’s genotypes there, and the picture, with its key:</p>
+<table>
+<tr><th>Colour</th><th>The bases</th></tr>
+<tr><td>the reference, faded</td><td>the same in both, without a variant</td></tr>
+<tr><td>green</td><td>the same variant in both</td></tr>
+<tr><td>teal</td><td>the same, written differently</td></tr>
+<tr><td>red</td><td>a variant only in A</td></tr>
+<tr><td>blue</td><td>a variant only in B</td></tr>
+<tr><td>orange</td><td>a variant in both, but another genotype</td></tr>
+<tr><td>grey</td><td>not called in both</td></tr>
+</table>
+<p><b>Look at the first difference in the Viewer</b> opens A there.</p>
+
+<h2>HG002’s two benchmarks</h2>
+<p>Genome in a Bottle’s benchmarks of HG002 have been made twice: version 4.2.1 from short and linked reads, and version 5.0q from a whole assembly of his genome. The examples hold chromosome 17 of each. Compared in the regions both call with confidence (83.7 % of the chromosome), 113,164 bases have a variant in one or the other, and all but 8 are the same in both; 410 of them are only written differently. Precision and recall are over 99.99 % for substitutions, and 99.99 % and over 99.99 % for insertions and deletions. Of the three stretches that differ, two are substitutions only version 4.2.1 has; the third is two deletions that version 4.2.1 writes as overlapping, unphased calls, which version 0.1 of the specification puts on one haplotype (<a href="#h-walk-trio">A family</a> says more).</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil compare /data/examples/HG002_chr17.gpxil.tif /data/examples/HG002_chr17_v5.0q.noref.gpxil.tif \
+    -o ~/results/HG002_v4_v5_TP53.png --draw chr17:7,661,779-7,687,546 --width 256 --scale 2
+gpxil compare /data/examples/HG002_chr17.gpxil.tif /data/examples/HG002_chr17_v5.0q.noref.gpxil.tif --region chr17:7,661,779-7,687,546 --json | head -20</code></pre>
+<p><code>--region</code> (one or more) compares regions rather than every contig; <code>--gap</code> sets the gap; <code>--all-calls</code> compares the calls outside the confident regions too; <code>--json</code> gives every number to programs.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.compare import compare_pair, format_compare
+
+with (
+    GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as a,
+    GpxilFile("/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif") as b,
+):
+    result = compare_pair(a, b, [("chr17", 0, 40_000_000)])   # (0-based, the end not included)
+print(format_compare(result))
+subs = result["total"]["events"]["substitutions"]
+print(subs["precision"], subs["recall"], result["total"]["examples"][:2])</code></pre>
+<p><code>compare_pair(a, b)</code> compares every contig the two have; <code>stretches=[]</code> collects every stretch where they differ, and <code>picture([a, b], contig, start, end)</code> draws a region.</p>
+<h2 data-anchor="cite">References</h2>
+<p>If you use these programs in your work, cite the papers below, and give the versions you used (<a href="#h-versions">Versions, and how to cite</a>):</p>
+<dl class="cite-list">
+<dt>gpxiltools (the gpxil command, and the Python package)</dt>
+<dd>Chronomic Medicine Group, University of Cambridge (2026) gpxiltools: read, write, render and check gpxil files (Python). <a href="https://github.com/comparativechrono/Gpxil-tools" target="_blank" rel="noopener">github.com/comparativechrono/Gpxil-tools</a></dd>
+<dt>Genome in a Bottle: HG002, his parents HG003 and HG004, and their benchmarks</dt>
+<dd class="cite-note">The examples HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from HG002’s v4.2.1 benchmark, HG003_chr17.noref.gpxil.tif and HG004_chr17.noref.gpxil.tif from his parents’, and HG002_chr17_v5.0q.noref.gpxil.tif from his v5.0q benchmark, which is made from the T2T HG002 Q100 assembly of his genome (Hansen et al. 2026).</dd>
+<dd>Zook JM, Catoe D, McDaniel J, Vang L, Spies N, Sidow A, et al. (2016) Extensive sequencing of seven human genomes to characterize benchmark reference materials. <i>Scientific Data</i> 3: 160025. <a href="https://doi.org/10.1038/sdata.2016.25" target="_blank" rel="noopener">doi:10.1038/sdata.2016.25</a></dd>
+<dd>Wagner J, Olson ND, Harris L, Khan Z, Farek J, Mahmoud M, et al. (2022) Benchmarking challenging small variants with linked and long reads. <i>Cell Genomics</i> 2(5): 100128. <a href="https://doi.org/10.1016/j.xgen.2022.100128" target="_blank" rel="noopener">doi:10.1016/j.xgen.2022.100128</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) small-variant benchmark v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG003 (NA24149) and HG004 (NA24143), the parents of HG002: small-variant benchmarks v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio</a></dd>
+<dd>Hansen NF, Dwarshuis N, Ji HJ, Rhie A, Loucks H, Logsdon GA, et al. (2026) A complete diploid human genome benchmark for personalized genomics. <i>Cell</i> 189(16): 4857–4875.e31. <a href="https://doi.org/10.1016/j.cell.2026.06.016" target="_blank" rel="noopener">doi:10.1016/j.cell.2026.06.016</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) assembly-based small-variant benchmark v5.0q, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q</a></dd>
+</dl>
+</article>
+<article class="help-page" id="h-tool-trio" data-title="A child and both parents (trio)" data-group="Tools" data-group-page="h-tools" data-keys="trio family child son daughter father mother parents mendelian error errors inheritance inherited consistent inconsistent de novo new mutation mutations parent of origin crossover crossovers recombination phase phased haplotype transmitted hg002 hg003 hg004 ashkenazi pedigree" hidden>
+<h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="6" height="6" rx="0.5"/><circle cx="18" cy="6" r="3"/><path d="M9 6h6M12 6v5.5M7 11.5h10M7 11.5V15M17 11.5V15"/><rect x="4.5" y="15" width="5" height="5" rx="0.5"/><circle cx="17" cy="17.5" r="2.5"/></svg>A child and both parents (trio)</h1>
+<p class="lede">With <code>--father</code> and <code>--mother</code>, <code>gpxil compare</code> checks a child’s genome against both parents’, base by base: whether each of the child’s genotypes can be one allele from each parent (or a Mendelian error), which variants neither parent has (candidate new mutations), where each of the child’s variants came from, and, where the parents are phased, which of each parent’s two haplotypes the child received, and where that changes (crossovers).</p>
+<div class="tryrow"><button class="do" type="button" data-tool="trio" data-child="/data/examples/HG002_chr17.gpxil.tif" data-father="/data/examples/HG003_chr17.noref.gpxil.tif" data-mother="/data/examples/HG004_chr17.noref.gpxil.tif">Check HG002 against HG003 and HG004</button></div>
+
+<h2>What it finds</h2>
+<dl>
+  <dt>Mendelian errors</dt><dd>At each base called in all three, the child’s two alleles must be one from the father and one from the mother; where the child has one copy, as on a son’s X, it must come from either. Where it can’t, the stretch around the error, with every variant of the three near it, is spelled out first, as the three may only write the same thing differently (an insertion anchored at the other end of a repeat, say): if the child’s two sequences there can be one of the father’s and one of the mother’s, it isn’t an error. What is left are the <b>Mendelian errors</b>, counted by sites (runs of bases) and bases.</dd>
+  <dt>candidate new mutations</dt><dd>Errors where the child has an allele that neither parent has. In a family’s calls, most errors are mistakes in the calls; a few are mutations new in the child.</dd>
+  <dt>where each variant came from</dt><dd>Where the child has a variant and only one way of taking an allele from each parent fits, it came from the <b>father</b>, from the <b>mother</b>, or from <b>both</b> (a homozygous variant). Where both ways fit – the child and both parents heterozygous for it, say – it can’t be told.</dd>
+  <dt>crossovers</dt><dd>Where a parent’s calls are phased, the child’s genotype at a base where that parent is heterozygous often shows which of the parent’s two haplotypes the child received. Along a phase set, a change from one to the other is a crossover in that parent’s meiosis, or an error in the phasing or in the calls: so a change counts as a crossover only where at least three sites in a row back each side. With unphased parents, it says so.</dd>
+  <dt>calls outside the confident regions</dt><dd>As with two genomes, calls a file keeps outside its regions called with confidence aren’t compared, unless you tick <b>Also compare the calls outside…</b>. With them, a trio of benchmarks shows many more errors, nearly all where one of the three isn’t called with confidence.</dd>
+</dl>
+
+<h2>The form</h2>
+<dl>
+  <dt>The child, the father, the mother</dt><dd>Three gpxil files on the same reference, each with a sample. Any of them can be without its reference plane, as the parents in the examples are; one needs it to spell stretches out, or the reference is given.</dd>
+  <dt>Regions, Draw a region, the gap</dt><dd>As for <a href="#h-tool-compare">two genomes</a>.</dd>
+</dl>
+
+<h2>What it gives</h2>
+<p>A table, as <code>gpxil compare</code> prints it: the bases called in all three; the child’s variant bases, by where they came from; the Mendelian errors and how many are candidate new mutations; the stretches consistent once spelled out; and, for each parent, the crossovers. Then the first errors, with the three genotypes at each and whether it is a candidate new mutation, and the picture, with its key:</p>
+<table>
+<tr><th>Colour</th><th>The child’s bases</th></tr>
+<tr><td>the reference, faded</td><td>no variant</td></tr>
+<tr><td>blue (light blue: his haplotype 2)</td><td>a variant from the father</td></tr>
+<tr><td>pink (light pink: her haplotype 2)</td><td>a variant from the mother</td></tr>
+<tr><td>purple</td><td>a variant from both parents</td></tr>
+<tr><td>olive</td><td>a variant from either: it can’t be told</td></tr>
+<tr><td>teal</td><td>consistent, written differently</td></tr>
+<tr><td>red</td><td>a Mendelian error</td></tr>
+<tr><td>gold</td><td>a candidate new mutation</td></tr>
+<tr><td>grey</td><td>not called in all three</td></tr>
+</table>
+<p>The light colours appear only where that parent is phased, so a crossover shows as a change from dark to light along the chromosome. <b>Look at the first error in the Viewer</b> opens the child there.</p>
+
+<h2>HG002 and his parents</h2>
+<p>HG003 and HG004 are HG002’s father and mother, and Genome in a Bottle has benchmarked all three. On chromosome 17, 84.3 % is called with confidence in all three, and of HG002’s 106,558 variant bases there, 28,419 came from his father, 27,061 from his mother and 40,337 from both; for 10,716, it can’t be told. 23 sites are Mendelian errors, all inside the three benchmarks’ regions: 21 substitutions and a deleted base that HG002 has and neither parent has – candidate new mutations – and one artefact of version 0.1 of the specification, at 77,145,099 (<a href="#h-walk-trio">A family</a> says more). The parents’ benchmarks aren’t phased, so no crossovers can be seen.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil compare /data/examples/HG002_chr17.gpxil.tif \
+    --father /data/examples/HG003_chr17.noref.gpxil.tif --mother /data/examples/HG004_chr17.noref.gpxil.tif \
+    -o ~/results/HG002_trio_TP53.png --draw chr17:7,661,779-7,687,546 --width 256 --scale 2</code></pre>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.compare import compare_trio, format_compare
+
+errors = []
+with (
+    GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as child,
+    GpxilFile("/data/examples/HG003_chr17.noref.gpxil.tif") as father,
+    GpxilFile("/data/examples/HG004_chr17.noref.gpxil.tif") as mother,
+):
+    result = compare_trio(child, father, mother, errors=errors)
+print(format_compare(result))
+print(len(errors), "Mendelian errors:", [e["position"] for e in errors if e["new"]][:5], "...")</code></pre>
+<p><code>errors=[]</code> collects every Mendelian error (the result lists the first 20), each with where its site begins and ends and the three genotypes; <code>result["total"]["haplotypes"]</code> holds each phased parent’s crossovers.</p>
+<h2 data-anchor="cite">References</h2>
+<p>If you use these programs in your work, cite the papers below, and give the versions you used (<a href="#h-versions">Versions, and how to cite</a>):</p>
+<dl class="cite-list">
+<dt>gpxiltools (the gpxil command, and the Python package)</dt>
+<dd>Chronomic Medicine Group, University of Cambridge (2026) gpxiltools: read, write, render and check gpxil files (Python). <a href="https://github.com/comparativechrono/Gpxil-tools" target="_blank" rel="noopener">github.com/comparativechrono/Gpxil-tools</a></dd>
+<dt>Genome in a Bottle: HG002, his parents HG003 and HG004, and their benchmarks</dt>
+<dd class="cite-note">The examples HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from HG002’s v4.2.1 benchmark, HG003_chr17.noref.gpxil.tif and HG004_chr17.noref.gpxil.tif from his parents’, and HG002_chr17_v5.0q.noref.gpxil.tif from his v5.0q benchmark, which is made from the T2T HG002 Q100 assembly of his genome (Hansen et al. 2026).</dd>
+<dd>Zook JM, Catoe D, McDaniel J, Vang L, Spies N, Sidow A, et al. (2016) Extensive sequencing of seven human genomes to characterize benchmark reference materials. <i>Scientific Data</i> 3: 160025. <a href="https://doi.org/10.1038/sdata.2016.25" target="_blank" rel="noopener">doi:10.1038/sdata.2016.25</a></dd>
+<dd>Wagner J, Olson ND, Harris L, Khan Z, Farek J, Mahmoud M, et al. (2022) Benchmarking challenging small variants with linked and long reads. <i>Cell Genomics</i> 2(5): 100128. <a href="https://doi.org/10.1016/j.xgen.2022.100128" target="_blank" rel="noopener">doi:10.1016/j.xgen.2022.100128</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) small-variant benchmark v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG003 (NA24149) and HG004 (NA24143), the parents of HG002: small-variant benchmarks v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio</a></dd>
+<dd>Hansen NF, Dwarshuis N, Ji HJ, Rhie A, Loucks H, Logsdon GA, et al. (2026) A complete diploid human genome benchmark for personalized genomics. <i>Cell</i> 189(16): 4857–4875.e31. <a href="https://doi.org/10.1016/j.cell.2026.06.016" target="_blank" rel="noopener">doi:10.1016/j.cell.2026.06.016</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) assembly-based small-variant benchmark v5.0q, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q</a></dd>
 </dl>
 </article>
 <article class="help-page" id="h-tool-render" data-title="Draw a region as a picture" data-group="Tools" data-group-page="h-tools" data-keys="render draw picture png tiff cmyk rgb print region mode reference genotype haplotypes variants palette width scale hilbert layout dpi insertions" hidden>
@@ -2169,11 +2405,14 @@ with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
 <dt>VCF, the variant call format</dt>
 <dd>Danecek P, Auton A, Abecasis G, Albers CA, Banks E, DePristo MA, et al. (2011) The variant call format and VCFtools. <i>Bioinformatics</i> 27(15): 2156–2158. <a href="https://doi.org/10.1093/bioinformatics/btr330" target="_blank" rel="noopener">doi:10.1093/bioinformatics/btr330</a></dd>
 <dd>GA4GH and the SAMtools team (hts-specs). The Variant Call Format specification, VCFv4.4. <a href="https://samtools.github.io/hts-specs/VCFv4.4.pdf" target="_blank" rel="noopener">samtools.github.io/hts-specs/VCFv4.4.pdf</a></dd>
-<dt>Genome in a Bottle: HG002 and its benchmark</dt>
-<dd class="cite-note">The example HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from the v4.2.1 benchmark.</dd>
+<dt>Genome in a Bottle: HG002, his parents HG003 and HG004, and their benchmarks</dt>
+<dd class="cite-note">The examples HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from HG002’s v4.2.1 benchmark, HG003_chr17.noref.gpxil.tif and HG004_chr17.noref.gpxil.tif from his parents’, and HG002_chr17_v5.0q.noref.gpxil.tif from his v5.0q benchmark, which is made from the T2T HG002 Q100 assembly of his genome (Hansen et al. 2026).</dd>
 <dd>Zook JM, Catoe D, McDaniel J, Vang L, Spies N, Sidow A, et al. (2016) Extensive sequencing of seven human genomes to characterize benchmark reference materials. <i>Scientific Data</i> 3: 160025. <a href="https://doi.org/10.1038/sdata.2016.25" target="_blank" rel="noopener">doi:10.1038/sdata.2016.25</a></dd>
 <dd>Wagner J, Olson ND, Harris L, Khan Z, Farek J, Mahmoud M, et al. (2022) Benchmarking challenging small variants with linked and long reads. <i>Cell Genomics</i> 2(5): 100128. <a href="https://doi.org/10.1016/j.xgen.2022.100128" target="_blank" rel="noopener">doi:10.1016/j.xgen.2022.100128</a></dd>
 <dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) small-variant benchmark v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG003 (NA24149) and HG004 (NA24143), the parents of HG002: small-variant benchmarks v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio</a></dd>
+<dd>Hansen NF, Dwarshuis N, Ji HJ, Rhie A, Loucks H, Logsdon GA, et al. (2026) A complete diploid human genome benchmark for personalized genomics. <i>Cell</i> 189(16): 4857–4875.e31. <a href="https://doi.org/10.1016/j.cell.2026.06.016" target="_blank" rel="noopener">doi:10.1016/j.cell.2026.06.016</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) assembly-based small-variant benchmark v5.0q, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q</a></dd>
 </dl>
 </article>
 <article class="help-page" id="h-pxil" data-title="pxil pictures of sequences" data-group="gpxil and pxil" data-group-page="h-formats" data-keys="pxil png picture sequence protein transcript gene alphabet metadata itxt palette colours taylor pixel residue amino acid read write pillow fasta file names files tab point" hidden>
@@ -2473,6 +2712,7 @@ Image.fromarray(picture.scaled(2).to_rgb())</code></pre>
 <tr><td><code>gpxiltools.validate</code></td><td><code>validate(path)</code>: a report with <code>.ok</code>, <code>.errors</code> and <code>.warnings</code></td></tr>
 <tr><td><code>gpxiltools.stats</code></td><td><code>stats(g, regions=None)</code>: what <code>gpxil stats</code> counts, per region and in all, as plain data; <code>format_stats</code> makes the table of it; <code>region_tally(contig, start, end)</code> counts one region (<a href="#h-tool-stats">Count what a file holds</a>)</td></tr>
 <tr><td><code>gpxiltools.subset</code></td><td><code>subset(path, out, contigs, planes=…, include_ref=…, reference=…)</code>: what <code>gpxil subset</code> does; <code>GpxilWriter.copy_contig</code> copies one contig (<a href="#h-tool-subset">Make a working copy</a>)</td></tr>
+<tr><td><code>gpxiltools.compare</code></td><td><code>compare_pair(a, b, regions=None)</code> and <code>compare_trio(child, father, mother, regions=None)</code>: what <code>gpxil compare</code> finds, per region and in all, as plain data; <code>format_compare</code> makes the table of it; <code>picture(files, contig, start, end)</code> draws a region (<a href="#h-tool-compare">Compare two genomes</a>, <a href="#h-tool-trio">A child and both parents</a>)</td></tr>
 <tr><td><code>gpxiltools.render</code></td><td><code>render(contig, mode=…, palette=…, start=…, end=…, bases_per_row=…)</code>: a picture, with <code>.scaled(n)</code>, <code>.to_rgb()</code>, <code>.to_cmyk()</code>, <code>.save_png(…)</code> and <code>.save_tiff(…)</code>. <code>render_arrays</code> draws arrays you’ve made yourself.</td></tr>
 <tr><td><code>gpxiltools.layout</code></td><td><code>hilbert_image</code>, and <code>position_to_pixel</code> and <code>pixel_to_position</code> between a base and its pixel</td></tr>
 <tr><td><code>gpxiltools.book</code></td><td><code>make_book(g, out, contigs=…, mode=…, colorspace=…, layout=BookLayout(…), max_pages=…)</code>: what <code>gpxil book</code> does</td></tr>
@@ -2598,7 +2838,7 @@ for path in sorted(glob.glob("/data/examples/*.gpxil.tif") + glob.glob("/home/us
 <dd>Harris CR, Millman KJ, van der Walt SJ, Gommers R, Virtanen P, Cournapeau D, et al. (2020) Array programming with NumPy. <i>Nature</i> 585(7825): 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></dd>
 </dl>
 </article>
-<article class="help-page" id="h-terminal" data-title="The Terminal" data-group="Notebook and terminal" data-group-page="h-notebook" data-keys="terminal shell stats subset bash command line commands programs gpxil gpxil2pxil pxil encode info validate render book fasta vcf palettes viewer man help pipe grep cut loop script curl wget download open nano session ctrl c stop redirect binary" hidden>
+<article class="help-page" id="h-terminal" data-title="The Terminal" data-group="Notebook and terminal" data-group-page="h-notebook" data-keys="terminal shell stats subset compare trio bash command line commands programs gpxil gpxil2pxil pxil encode info validate render book fasta vcf palettes viewer man help pipe grep cut loop script curl wget download open nano session ctrl c stop redirect binary" hidden>
 <h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 17l6-5-6-5M12 19h8"/></svg>The Terminal</h1>
 <p class="lede">The Terminal tab is a Linux-style shell in your browser. <code>gpxil</code>, <code>gpxil2pxil</code> and <code>pxil</code> are commands in it, and they run exactly as they do on a computer where the packages have been installed with pip, with the same options and the same output. Every tool in the Tools tab shows its command, with a button to run it here.</p>
 <div class="tryrow"><button class="do" type="button" data-term-run="help">Show the commands</button> <button class="do" type="button" data-term-run="man gpxil">man gpxil</button></div>
@@ -2611,6 +2851,7 @@ for path in sorted(glob.glob("/data/examples/*.gpxil.tif") + glob.glob("/home/us
 <tr><td><code>gpxil validate</code></td><td>checks a file against the specification; it ends with status 1 if the file isn’t valid</td></tr>
 <tr><td><code>gpxil stats</code></td><td>counts what a file holds – bases called, substitutions and Ti/Tv, insertions, deletions, phasing, quality – for every contig or for regions; <code>--json</code> for programs</td></tr>
 <tr><td><code>gpxil subset</code></td><td>copies some contigs, and planes, into a new gpxil file: a working copy, made without decoding (<code>--no-ref</code> leaves out the reference plane)</td></tr>
+<tr><td><code>gpxil compare</code></td><td>two genomes base by base, the second as the truth: what is the same, written differently or different, with precision and recall; or a child with <code>--father</code> and <code>--mother</code>: Mendelian errors, new mutations, where each variant came from, crossovers. <code>-o</code> draws a region of it</td></tr>
 <tr><td><code>gpxil render</code></td><td>a contig or a region as a picture: PNG for the screen, TIFF in RGB or CMYK for print</td></tr>
 <tr><td><code>gpxil book</code></td><td>a PDF to print, one dot per base</td></tr>
 <tr><td><code>gpxil fasta</code></td><td>the reference’s sequence, one of the person’s haplotypes (<code>--which 1</code> or <code>2</code>), or their genotype in IUPAC letters (<code>--which iupac</code>), as FASTA</td></tr>
@@ -2684,7 +2925,8 @@ grep '>' ~/results/P72/TP53-proteins.fa</code></pre>
 gpxil encode GRCh38.gpxil.tif -v HG002.vcf.gz --callable HG002.callable.bed --sex XY --no-ref -o HG002.gpxil.tif
 gpxil render HG002.gpxil.tif chr21 --mode variants -o chr21.png --reference GRCh38.gpxil.tif
 gpxil stats HG002.gpxil.tif --reference GRCh38.gpxil.tif           # what it holds, chromosome by chromosome
-gpxil subset HG002.gpxil.tif chr17 chr21 -o HG002_17_21.gpxil.tif   # a working copy to add to the studio</code></pre>
+gpxil subset HG002.gpxil.tif chr17 chr21 -o HG002_17_21.gpxil.tif   # a working copy to add to the studio
+gpxil compare HG002.gpxil.tif --father HG003.gpxil.tif --mother HG004.gpxil.tif --json > trio.json</code></pre>
 <p>Encoding holds a chromosome’s planes in memory while it works, about 6 bytes a base, so the largest, chromosome 1, needs about 1.5 GB. HG002’s whole genome took 12 minutes and at most 2 GB of memory on an ordinary computer, and made a file of 888 MB with the reference plane. The Gpxil browser’s <a href="https://comparativechrono.github.io/Gpxil-browser/" target="_blank" rel="noopener">downloads</a> also have each chromosome on its own, and a checksum to check the download with. Files without their reference plane (<code>--no-ref</code>) are a hundred times smaller; give the reference with <code>--reference</code> to the commands that need its bases (<a href="#h-reference">The GRCh38 reference</a>).</p>
 <p>To work on part of a whole genome here, make a working copy of the chromosomes you need with <code>gpxil subset</code>, which copies them without decoding, and add the copy with <b>Add a file…</b> in the Viewer or the Files tab (<a href="#h-tool-subset">Make a working copy</a>). The studio can also take the whole file and copy from it itself: it reads only the pages it copies.</p>
 
@@ -2715,13 +2957,13 @@ python3 serve.py 8000 --reference DIR      # the GRCh38 reference from a copy on
 <dd>Schneider VA, Graves-Lindsay T, Howe K, Bouk N, Chen HC, Kitts PA, et al. (2017) Evaluation of GRCh38 and de novo haploid genome assemblies demonstrates the enduring quality of the reference assembly. <i>Genome Research</i> 27(5): 849–864. <a href="https://doi.org/10.1101/gr.213611.116" target="_blank" rel="noopener">doi:10.1101/gr.213611.116</a></dd>
 </dl>
 </article>
-<article class="help-page" id="h-versions" data-title="Versions, and how to cite" data-group="Reference" data-group-page="h-versions" data-keys="versions version cite citation reference papers pypi release gpxiltools 0.4.0 gpxil2pxil 0.1.0 pxil 0.1.1 tifffile pyodide numpy pillow python github specification zook wagner genome in a bottle ensembl" hidden>
+<article class="help-page" id="h-versions" data-title="Versions, and how to cite" data-group="Reference" data-group-page="h-versions" data-keys="versions version cite citation reference papers pypi release gpxiltools 0.5.0 gpxil2pxil 0.1.0 pxil 0.1.1 tifffile pyodide numpy pillow python github specification zook wagner genome in a bottle ensembl" hidden>
 <h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg>Versions, and how to cite</h1>
-<p class="lede">These are the versions that this copy of the studio runs. When you report work done with it, say which versions you used. The files record them too: a gpxil file names the program that wrote it in its metadata (<code>"generator": "gpxiltools 0.4.0"</code>), with the version of the specification it follows, and a pxil file does the same.</p>
+<p class="lede">These are the versions that this copy of the studio runs. When you report work done with it, say which versions you used. The files record them too: a gpxil file names the program that wrote it in its metadata (<code>"generator": "gpxiltools 0.5.0"</code>), with the version of the specification it follows, and a pxil file does the same.</p>
 
 <table>
 <tr><th>Package</th><th>Version</th></tr>
-<tr><td>gpxiltools</td><td>0.4.0</td></tr>
+<tr><td>gpxiltools</td><td>0.5.0</td></tr>
 <tr><td>gpxil2pxil</td><td>0.1.0</td></tr>
 <tr><td>pxil</td><td>0.1.1</td></tr>
 <tr><td>tifffile (which gpxiltools reads and writes TIFF with)</td><td>2026.10.15</td></tr>
@@ -2731,7 +2973,7 @@ python3 serve.py 8000 --reference DIR      # the GRCh38 reference from a copy on
 
 <h2>The packages</h2>
 <ul>
-  <li><b>gpxiltools 0.4.0</b> reads gpxil files on web servers a piece at a time (with HTTP range requests), takes a gpxil file as the reference, such as a chromosome of GRCh38 from the Gpxil browser, writes VCF of chosen regions (<code>gpxil vcf --region</code>), and runs without imagecodecs, which Pyodide doesn’t have: all new in 0.3.0. 0.3.1 gives N, a base that isn’t known, a colour that no base or mix of bases has: near-black in the classic and Okabe–Ito palettes, where it was a grey that a heterozygous C/T base shared. 0.4.0 adds <code>gpxil subset</code>, working copies of some contigs and planes made without decoding, and <code>gpxil stats</code>, the counts of what a file holds.</li>
+  <li><b>gpxiltools 0.5.0</b> reads gpxil files on web servers a piece at a time (with HTTP range requests), takes a gpxil file as the reference, such as a chromosome of GRCh38 from the Gpxil browser, writes VCF of chosen regions (<code>gpxil vcf --region</code>), and runs without imagecodecs, which Pyodide doesn’t have: all new in 0.3.0. 0.3.1 gives N, a base that isn’t known, a colour that no base or mix of bases has: near-black in the classic and Okabe–Ito palettes, where it was a grey that a heterozygous C/T base shared. 0.4.0 adds <code>gpxil subset</code>, working copies of some contigs and planes made without decoding, and <code>gpxil stats</code>, the counts of what a file holds. 0.5.0 adds <code>gpxil compare</code>: two genomes base by base, and a child with both parents.</li>
   <li><b>gpxil2pxil 0.1.0</b> is new: it makes pxil pictures of genes, transcripts and proteins from a gpxil genome, from the reference or from either of a person’s haplotypes, with the genes of Ensembl from the Gpxil browser’s files or from a GTF file, and says how a person’s protein differs from the reference’s.</li>
   <li><b>pxil 0.1.1</b> reads and writes pxil files, and has a command, <code>pxil</code>, that prints them as FASTA. 0.1.1 colours N near-black, as gpxiltools does.</li>
   <li><b>gpxilwb 1.0.0</b> is the studio’s own runner, which joins the page to the packages. You don’t need it anywhere else.</li>
@@ -2741,7 +2983,7 @@ python3 serve.py 8000 --reference DIR      # the GRCh38 reference from a copy on
 <h2>The data</h2>
 <ul>
   <li><b>The GRCh38 reference</b> in <code>/data/grch38</code> is the Gpxil browser’s: the primary assembly of GRCh38 from Ensembl release 116, soft-masked, with Ensembl 116’s genes and transcripts.</li>
-  <li><b>HG002</b> in the examples is the Genome in a Bottle benchmark for HG002, version 4.2.1 on GRCh38, with its regions called with confidence. Cite Zook et al. 2016 and Wagner et al. 2022 if you use it.</li>
+  <li><b>HG002</b> in the examples is the Genome in a Bottle benchmark for HG002, version 4.2.1 on GRCh38, with its regions called with confidence; <b>HG003</b> and <b>HG004</b>, his father and mother, are their version 4.2.1 benchmarks, and <code>HG002_chr17_v5.0q</code> is HG002’s newer benchmark, version 5.0q. Cite Zook et al. 2016 and Wagner et al. 2022 if you use them.</li>
 </ul>
 <h2 data-anchor="cite">References</h2>
 <p>If you use these programs in your work, cite the papers below, and give the versions you used (<a href="#h-versions">Versions, and how to cite</a>):</p>
@@ -2760,11 +3002,14 @@ python3 serve.py 8000 --reference DIR      # the GRCh38 reference from a copy on
 <dd>Chronomic Medicine Group, University of Cambridge (2026) The Gpxil browser: the GRCh38 genome as gpxil pictures, in a web browser. <a href="https://comparativechrono.github.io/Gpxil-browser/" target="_blank" rel="noopener">comparativechrono.github.io/Gpxil-browser</a></dd>
 <dt>Genome pixel images (GPxI)</dt>
 <dd>Albrecht-Buehler G (2009) Outline of a genome navigation system based on the properties of GA-sequences and their flanks. <i>PLoS ONE</i> 4(3): e4701. <a href="https://doi.org/10.1371/journal.pone.0004701" target="_blank" rel="noopener">doi:10.1371/journal.pone.0004701</a></dd>
-<dt>Genome in a Bottle: HG002 and its benchmark</dt>
-<dd class="cite-note">The example HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from the v4.2.1 benchmark.</dd>
+<dt>Genome in a Bottle: HG002, his parents HG003 and HG004, and their benchmarks</dt>
+<dd class="cite-note">The examples HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from HG002’s v4.2.1 benchmark, HG003_chr17.noref.gpxil.tif and HG004_chr17.noref.gpxil.tif from his parents’, and HG002_chr17_v5.0q.noref.gpxil.tif from his v5.0q benchmark, which is made from the T2T HG002 Q100 assembly of his genome (Hansen et al. 2026).</dd>
 <dd>Zook JM, Catoe D, McDaniel J, Vang L, Spies N, Sidow A, et al. (2016) Extensive sequencing of seven human genomes to characterize benchmark reference materials. <i>Scientific Data</i> 3: 160025. <a href="https://doi.org/10.1038/sdata.2016.25" target="_blank" rel="noopener">doi:10.1038/sdata.2016.25</a></dd>
 <dd>Wagner J, Olson ND, Harris L, Khan Z, Farek J, Mahmoud M, et al. (2022) Benchmarking challenging small variants with linked and long reads. <i>Cell Genomics</i> 2(5): 100128. <a href="https://doi.org/10.1016/j.xgen.2022.100128" target="_blank" rel="noopener">doi:10.1016/j.xgen.2022.100128</a></dd>
 <dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) small-variant benchmark v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG003 (NA24149) and HG004 (NA24143), the parents of HG002: small-variant benchmarks v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio</a></dd>
+<dd>Hansen NF, Dwarshuis N, Ji HJ, Rhie A, Loucks H, Logsdon GA, et al. (2026) A complete diploid human genome benchmark for personalized genomics. <i>Cell</i> 189(16): 4857–4875.e31. <a href="https://doi.org/10.1016/j.cell.2026.06.016" target="_blank" rel="noopener">doi:10.1016/j.cell.2026.06.016</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) assembly-based small-variant benchmark v5.0q, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q</a></dd>
 <dt>The GRCh38 reference genome</dt>
 <dd>Schneider VA, Graves-Lindsay T, Howe K, Bouk N, Chen HC, Kitts PA, et al. (2017) Evaluation of GRCh38 and de novo haploid genome assemblies demonstrates the enduring quality of the reference assembly. <i>Genome Research</i> 27(5): 849–864. <a href="https://doi.org/10.1101/gr.213611.116" target="_blank" rel="noopener">doi:10.1101/gr.213611.116</a></dd>
 <dt>Ensembl (GRCh38 sequence, and genes from release 116)</dt>
@@ -2923,7 +3168,7 @@ python3 serve.py 8000 --reference DIR      # the GRCh38 reference from a copy on
   <li>The genome pixel image is Guenter Albrecht-Buehler’s idea: a genome drawn as pictures, one pixel a base. gpxil takes it from one sequence to a person’s genome, with their genotype at every base, and the gpxi palette keeps his four greys.</li>
   <li>gpxil files are TIFF files, and they name their reference sequences by the GA4GH’s refget checksums. Variants come from VCF files, and bases are written in the IUPAC’s codes.</li>
   <li>The GRCh38 reference is the Genome Reference Consortium’s, as Ensembl release 116 gives it, with Ensembl’s genes and transcripts, and MANE’s choice of transcripts; the Gpxil browser made them into the files the studio reads.</li>
-  <li>HG002’s genome in the examples is the Genome in a Bottle Consortium’s benchmark (NIST), version 4.2.1, for a man of the Personal Genome Project who agreed to its release; the examples were made from it with gpxiltools. TP53’s transcripts in <code>TP53.gtf</code> are Ensembl’s.</li>
+  <li>HG002’s genome in the examples is the Genome in a Bottle Consortium’s benchmark (NIST), version 4.2.1 and version 5.0q, for a man of the Personal Genome Project who agreed to its release, and HG003’s and HG004’s, his father’s and mother’s, are their version 4.2.1 benchmarks; the examples were made from them with gpxiltools. TP53’s transcripts in <code>TP53.gtf</code> are Ensembl’s.</li>
   <li>The worked example is the gpxil specification’s.</li>
 </ul>
 <p>Copyright © 2026 Chronomic Medicine Group, Department of Genomic Medicine, University of Cambridge.</p>
@@ -2957,11 +3202,14 @@ python3 serve.py 8000 --reference DIR      # the GRCh38 reference from a copy on
 <dd>Yates AD, Austine-Orimoloye O, Azov AG, Barba M, Barnes I, Barrera-Enriquez VP, et al. (2026) Ensembl 2026. <i>Nucleic Acids Research</i> 54(D1): D1053–D1060. <a href="https://doi.org/10.1093/nar/gkaf1239" target="_blank" rel="noopener">doi:10.1093/nar/gkaf1239</a></dd>
 <dt>MANE transcripts</dt>
 <dd>Morales J, Pujar S, Loveland JE, Astashyn A, Bennett R, Berry A, et al. (2022) A joint NCBI and EMBL-EBI transcript set for clinical genomics and research. <i>Nature</i> 604(7905): 310–315. <a href="https://doi.org/10.1038/s41586-022-04558-8" target="_blank" rel="noopener">doi:10.1038/s41586-022-04558-8</a></dd>
-<dt>Genome in a Bottle: HG002 and its benchmark</dt>
-<dd class="cite-note">The example HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from the v4.2.1 benchmark.</dd>
+<dt>Genome in a Bottle: HG002, his parents HG003 and HG004, and their benchmarks</dt>
+<dd class="cite-note">The examples HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from HG002’s v4.2.1 benchmark, HG003_chr17.noref.gpxil.tif and HG004_chr17.noref.gpxil.tif from his parents’, and HG002_chr17_v5.0q.noref.gpxil.tif from his v5.0q benchmark, which is made from the T2T HG002 Q100 assembly of his genome (Hansen et al. 2026).</dd>
 <dd>Zook JM, Catoe D, McDaniel J, Vang L, Spies N, Sidow A, et al. (2016) Extensive sequencing of seven human genomes to characterize benchmark reference materials. <i>Scientific Data</i> 3: 160025. <a href="https://doi.org/10.1038/sdata.2016.25" target="_blank" rel="noopener">doi:10.1038/sdata.2016.25</a></dd>
 <dd>Wagner J, Olson ND, Harris L, Khan Z, Farek J, Mahmoud M, et al. (2022) Benchmarking challenging small variants with linked and long reads. <i>Cell Genomics</i> 2(5): 100128. <a href="https://doi.org/10.1016/j.xgen.2022.100128" target="_blank" rel="noopener">doi:10.1016/j.xgen.2022.100128</a></dd>
 <dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) small-variant benchmark v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG003 (NA24149) and HG004 (NA24143), the parents of HG002: small-variant benchmarks v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio</a></dd>
+<dd>Hansen NF, Dwarshuis N, Ji HJ, Rhie A, Loucks H, Logsdon GA, et al. (2026) A complete diploid human genome benchmark for personalized genomics. <i>Cell</i> 189(16): 4857–4875.e31. <a href="https://doi.org/10.1016/j.cell.2026.06.016" target="_blank" rel="noopener">doi:10.1016/j.cell.2026.06.016</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) assembly-based small-variant benchmark v5.0q, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q</a></dd>
 <dt>Pyodide (Python in the browser)</dt>
 <dd>The Pyodide development team. Pyodide: Python with the scientific stack, compiled to WebAssembly. <a href="https://pyodide.org" target="_blank" rel="noopener">pyodide.org</a></dd>
 <dt>NumPy</dt>
@@ -2999,9 +3247,9 @@ python3 serve.py 8000 --reference DIR      # the GRCh38 reference from a copy on
 
 <noscript><p style="padding:20px">This page needs JavaScript.</p></noscript>
 
-<script>window.WB_EXAMPLES = [{"p":"HG002_TP53.bed","s":1144},{"p":"HG002_TP53.vcf","s":147019},{"p":"HG002_chr17.gpxil.tif","s":24648591},{"p":"TP53.gtf","s":415424},{"p":"worked-example.fa","s":73},{"p":"worked-example.gpxil.tif","s":6889},{"p":"worked-example.vcf","s":330},{"p":"workflows/gene-pictures.workflow.json","s":1537},{"p":"workflows/pictures-and-print.workflow.json","s":2024},{"p":"workflows/round-trip.workflow.json","s":2189},{"p":"workflows/vcf-to-gpxil.workflow.json","s":2890}];
+<script>window.WB_EXAMPLES = [{"p":"HG002_TP53.bed","s":1144},{"p":"HG002_TP53.vcf","s":147019},{"p":"HG002_chr17.gpxil.tif","s":24648591},{"p":"HG002_chr17_v5.0q.noref.gpxil.tif","s":1240814},{"p":"HG003_chr17.noref.gpxil.tif","s":1897666},{"p":"HG004_chr17.noref.gpxil.tif","s":1877154},{"p":"TP53.gtf","s":415424},{"p":"worked-example.fa","s":73},{"p":"worked-example.gpxil.tif","s":6889},{"p":"worked-example.vcf","s":330},{"p":"workflows/family.workflow.json","s":2440},{"p":"workflows/gene-pictures.workflow.json","s":1537},{"p":"workflows/pictures-and-print.workflow.json","s":2024},{"p":"workflows/round-trip.workflow.json","s":2189},{"p":"workflows/vcf-to-gpxil.workflow.json","s":2890}];
 window.WB_STARTERS = [{"p":"notebooks/gpxil-in-python.ipynb"}];
-window.WB_BUNDLE = {"archive":"gpxil-tools.zip","sha256":"8ed2f64a9bb47345724befef66c3a54d7799cf89fecbc8f4dbbf0ac480558e27","bytes":368989,"packages":{"gpxiltools":"0.4.0","gpxil2pxil":"0.1.0","pxil":"0.1.1","tifffile":"2026.10.15","gpxilwb":"1.0.0"},"pyodide_packages":["numpy","pillow","jsonschema"]};
+window.WB_BUNDLE = {"archive":"gpxil-tools.zip","sha256":"e32e45d642f2351332d1aadaafcabe4f81c1e42260475d16a372e65a9f69f6c0","bytes":388133,"packages":{"gpxiltools":"0.5.0","gpxil2pxil":"0.1.0","pxil":"0.1.1","tifffile":"2026.10.15","gpxilwb":"1.0.0"},"pyodide_packages":["numpy","pillow","jsonschema"]};
 window.WB_REFERENCE = {"assembly":"GRCh38","source":"Ensembl release 116: Homo_sapiens.GRCh38.dna_sm.primary_assembly.fa.gz","genes_source":"Ensembl release 116: Homo_sapiens.GRCh38.116.gtf.gz (all transcripts)","base":"https://comparativechrono.github.io/Gpxil-browser/data/grch38/","files":[{"p":"chr1.gpxil.tif","u":"gpxil/chr1.gpxil.tif","s":66743472,"contigs":["chr1"]},{"p":"chr2.gpxil.tif","u":"gpxil/chr2.gpxil.tif","s":70505688,"contigs":["chr2"]},{"p":"chr3.gpxil.tif","u":"gpxil/chr3.gpxil.tif","s":57767884,"contigs":["chr3"]},{"p":"chr4.gpxil.tif","u":"gpxil/chr4.gpxil.tif","s":55527502,"contigs":["chr4"]},{"p":"chr5.gpxil.tif","u":"gpxil/chr5.gpxil.tif","s":52625604,"contigs":["chr5"]},{"p":"chr6.gpxil.tif","u":"gpxil/chr6.gpxil.tif","s":49821294,"contigs":["chr6"]},{"p":"chr7.gpxil.tif","u":"gpxil/chr7.gpxil.tif","s":45568084,"contigs":["chr7"]},{"p":"chr8.gpxil.tif","u":"gpxil/chr8.gpxil.tif","s":42130516,"contigs":["chr8"]},{"p":"chr9.gpxil.tif","u":"gpxil/chr9.gpxil.tif","s":35187824,"contigs":["chr9"]},{"p":"chr10.gpxil.tif","u":"gpxil/chr10.gpxil.tif","s":38569639,"contigs":["chr10"]},{"p":"chr11.gpxil.tif","u":"gpxil/chr11.gpxil.tif","s":38637833,"contigs":["chr11"]},{"p":"chr12.gpxil.tif","u":"gpxil/chr12.gpxil.tif","s":38299323,"contigs":["chr12"]},{"p":"chr13.gpxil.tif","u":"gpxil/chr13.gpxil.tif","s":28531071,"contigs":["chr13"]},{"p":"chr14.gpxil.tif","u":"gpxil/chr14.gpxil.tif","s":26098851,"contigs":["chr14"]},{"p":"chr15.gpxil.tif","u":"gpxil/chr15.gpxil.tif","s":24163955,"contigs":["chr15"]},{"p":"chr16.gpxil.tif","u":"gpxil/chr16.gpxil.tif","s":23165189,"contigs":["chr16"]},{"p":"chr17.gpxil.tif","u":"gpxil/chr17.gpxil.tif","s":22773525,"contigs":["chr17"]},{"p":"chr18.gpxil.tif","u":"gpxil/chr18.gpxil.tif","s":22265231,"contigs":["chr18"]},{"p":"chr19.gpxil.tif","u":"gpxil/chr19.gpxil.tif","s":15551213,"contigs":["chr19"]},{"p":"chr20.gpxil.tif","u":"gpxil/chr20.gpxil.tif","s":17998813,"contigs":["chr20"]},{"p":"chr21.gpxil.tif","u":"gpxil/chr21.gpxil.tif","s":11250873,"contigs":["chr21"]},{"p":"chr22.gpxil.tif","u":"gpxil/chr22.gpxil.tif","s":10739611,"contigs":["chr22"]},{"p":"chrX.gpxil.tif","u":"gpxil/chrX.gpxil.tif","s":44142282,"contigs":["chrX"]},{"p":"chrY.gpxil.tif","u":"gpxil/chrY.gpxil.tif","s":7342464,"contigs":["chrY"]},{"p":"chrM.gpxil.tif","u":"gpxil/chrM.gpxil.tif","s":7163,"contigs":["chrM"]},{"p":"unplaced.gpxil.tif","u":"gpxil/unplaced.gpxil.tif","s":3129299,"contigs":["KI270728.1","KI270727.1","KI270442.1","KI270729.1","GL000225.1","KI270743.1","GL000008.2","GL000009.2","KI270747.1","KI270722.1","GL000194.1","KI270742.1","GL000205.2","GL000195.1","KI270736.1","KI270733.1","GL000224.1","GL000219.1","KI270719.1","GL000216.2","KI270712.1","KI270706.1","KI270725.1","KI270744.1","KI270734.1","GL000213.1","GL000220.1","KI270715.1","GL000218.1","KI270749.1","KI270741.1","GL000221.1","KI270716.1","KI270731.1","KI270751.1","KI270750.1","KI270519.1","GL000214.1","KI270708.1","KI270730.1","KI270438.1","KI270737.1","KI270721.1","KI270738.1","KI270748.1","KI270435.1","GL000208.1","KI270538.1","KI270756.1","KI270739.1","KI270757.1","KI270709.1","KI270746.1","KI270753.1","KI270589.1","KI270726.1","KI270735.1","KI270711.1","KI270745.1","KI270714.1","KI270732.1","KI270713.1","KI270754.1","KI270710.1","KI270717.1","KI270724.1","KI270720.1","KI270723.1","KI270718.1","KI270317.1","KI270740.1","KI270755.1","KI270707.1","KI270579.1","KI270752.1","KI270512.1","KI270322.1","GL000226.1","KI270311.1","KI270366.1","KI270511.1","KI270448.1","KI270521.1","KI270581.1","KI270582.1","KI270515.1","KI270588.1","KI270591.1","KI270522.1","KI270507.1","KI270590.1","KI270584.1","KI270320.1","KI270382.1","KI270468.1","KI270467.1","KI270362.1","KI270517.1","KI270593.1","KI270528.1","KI270587.1","KI270364.1","KI270371.1","KI270333.1","KI270374.1","KI270411.1","KI270414.1","KI270510.1","KI270390.1","KI270375.1","KI270420.1","KI270509.1","KI270315.1","KI270302.1","KI270518.1","KI270530.1","KI270304.1","KI270418.1","KI270424.1","KI270417.1","KI270508.1","KI270303.1","KI270381.1","KI270529.1","KI270425.1","KI270396.1","KI270363.1","KI270386.1","KI270465.1","KI270383.1","KI270384.1","KI270330.1","KI270372.1","KI270548.1","KI270580.1","KI270387.1","KI270391.1","KI270305.1","KI270373.1","KI270422.1","KI270316.1","KI270340.1","KI270338.1","KI270583.1","KI270334.1","KI270429.1","KI270393.1","KI270516.1","KI270389.1","KI270466.1","KI270388.1","KI270544.1","KI270310.1","KI270412.1","KI270395.1","KI270376.1","KI270337.1","KI270335.1","KI270378.1","KI270379.1","KI270329.1","KI270419.1","KI270336.1","KI270312.1","KI270539.1","KI270385.1","KI270423.1","KI270392.1","KI270394.1"]}],"genes":{"index":"genes/index.json.gz","count":78941,"transcripts":646577}};</script>
 <script src="assets/js/config.js"></script>
 <script src="assets/js/core.js"></script>

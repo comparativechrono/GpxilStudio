@@ -204,6 +204,18 @@ textarea.tl-input { font: 13px var(--mono); resize: vertical; }
 .tl-statsregions td:not(:first-child), .tl-statsregions th:not(:first-child) { text-align: right; }
 table.tl-stats caption { text-align: left; font-weight: 600; color: var(--ink); padding: 10px 0 4px; }
 table.tl-stats th { text-align: left; vertical-align: top; white-space: nowrap; font-weight: 600; color: var(--ink-2); padding-right: 14px; }
+/* gpxil compare (tools.js renderCompare): the first differences, and the picture with its key */
+table.tl-cmpex td { white-space: nowrap; }
+table.tl-cmpex caption { text-align: left; font-weight: 600; color: var(--ink); padding: 10px 0 4px; }
+.tl-cmppic { margin: 12px 0 4px; }
+.tl-cmpimg { overflow-x: auto; }
+.tl-cmpimg img { display: block; max-width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; border: 1px solid var(--line); background: #fff; }
+.tl-cmppic figcaption { margin: 6px 0 4px; color: var(--ink-2); font-size: 13px; }
+.tl-cmpkey { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; }
+.tl-cmpkey li { display: inline-flex; align-items: center; gap: 6px; }
+.tl-cmpsw { display: inline-flex; }
+.tl-cmpsw i { display: inline-block; width: 12px; height: 12px; border: 1px solid rgba(0, 0, 0, 0.18); }
+.tl-cmpsw i + i { border-left: 0; }
 /* the palettes page: each palette's colours as swatches, which wrap on a phone */
 .help-page dd.help-chips { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 0.4em; }
 

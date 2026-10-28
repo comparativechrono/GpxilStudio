@@ -116,3 +116,25 @@ make('pictures-and-print.workflow.json', 'Pictures of a gene, and a proof to pri
     book.params = { contigs: 'chr17', mode: 'genotype', maxPages: '5' };
     join(w, g, 'file', book, 'input');
   });
+
+make('family.workflow.json', 'A family: two benchmarks, and a son with both parents',
+  'HG002’s chromosome 17 in Genome in a Bottle’s two benchmarks, version 4.2.1 and version 5.0q, compared base by base, the newer taken as the truth: what is the same, what is only written differently, and what differs. Then HG002 is checked against his father and mother, HG003 and HG004: the Mendelian errors, the candidate new mutations, and where each of his variants came from. Both draw TP53.',
+  (w) => {
+    const son = E.addInput(w, ['gpxil'], 'The son, HG002');
+    son.default = EX + 'HG002_chr17.gpxil.tif';
+    const truth = E.addInput(w, ['gpxil'], 'The son, in the newer benchmark (the truth)');
+    truth.default = EX + 'HG002_chr17_v5.0q.noref.gpxil.tif';
+    const father = E.addInput(w, ['gpxil'], 'The father, HG003');
+    father.default = EX + 'HG003_chr17.noref.gpxil.tif';
+    const mother = E.addInput(w, ['gpxil'], 'The mother, HG004');
+    mother.default = EX + 'HG004_chr17.noref.gpxil.tif';
+    const pair = E.addTool(w, 'compare');
+    pair.params = { draw: TP53, width: '256', scale: '2' };
+    join(w, son, 'file', pair, 'a');
+    join(w, truth, 'file', pair, 'b');
+    const trio = E.addTool(w, 'trio');
+    trio.params = { draw: TP53, width: '256', scale: '2' };
+    join(w, son, 'file', trio, 'child');
+    join(w, father, 'file', trio, 'father');
+    join(w, mother, 'file', trio, 'mother');
+  });

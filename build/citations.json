@@ -67,6 +67,27 @@
    "title": "HG002 (NA24385) small-variant benchmark v4.2.1, GRCh38",
    "url": "https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38/"
   },
+  "giabtrio": {
+   "corporate": "Genome in a Bottle Consortium, NIST",
+   "title": "HG003 (NA24149) and HG004 (NA24143), the parents of HG002: small-variant benchmarks v4.2.1, GRCh38",
+   "url": "https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/"
+  },
+  "giabv5": {
+   "corporate": "Genome in a Bottle Consortium, NIST",
+   "title": "HG002 (NA24385) assembly-based small-variant benchmark v5.0q, GRCh38",
+   "url": "https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q"
+  },
+  "hansen2026": {
+   "authors": ["Hansen NF", "Dwarshuis N", "Ji HJ", "Rhie A", "Loucks H", "Logsdon GA", "Vollger MR", "Storer JM"],
+   "short": "Hansen et al.",
+   "year": 2026,
+   "title": "A complete diploid human genome benchmark for personalized genomics",
+   "container": "Cell",
+   "volume": "189",
+   "issue": "16",
+   "pages": "4857-4875.e31",
+   "doi": "10.1016/j.cell.2026.06.016"
+  },
   "ensembl2026": {
    "authors": ["Yates AD", "Austine-Orimoloye O", "Azov AG", "Barba M", "Barnes I", "Barrera-Enriquez VP", "Becker A", "Bennett R"],
    "short": "Yates et al.",
@@ -194,7 +215,7 @@
   "numpy": {"name": "NumPy", "refs": ["harris2020"]},
   "tifffile": {"name": "tifffile, which gpxiltools reads and writes TIFF with", "refs": ["tifffile"]},
   "pillow": {"name": "Pillow, which writes the PNG pictures", "refs": ["pillow"]},
-  "giab": {"name": "Genome in a Bottle: HG002 and its benchmark", "refs": ["zook2016", "wagner2022", "giabdata"], "note": "The example HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from the v4.2.1 benchmark."},
+  "giab": {"name": "Genome in a Bottle: HG002, his parents HG003 and HG004, and their benchmarks", "refs": ["zook2016", "wagner2022", "giabdata", "giabtrio", "hansen2026", "giabv5"], "note": "The examples HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from HG002’s v4.2.1 benchmark, HG003_chr17.noref.gpxil.tif and HG004_chr17.noref.gpxil.tif from his parents’, and HG002_chr17_v5.0q.noref.gpxil.tif from his v5.0q benchmark, which is made from the T2T HG002 Q100 assembly of his genome (Hansen et al. 2026)."},
   "ensembl": {"name": "Ensembl (GRCh38 sequence, and genes from release 116)", "refs": ["ensembl2026"]},
   "grch38": {"name": "The GRCh38 reference genome", "refs": ["schneider2017"]},
   "mane": {"name": "MANE transcripts", "refs": ["morales2022"]},

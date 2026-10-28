@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Open GpxilStudio in headless Chromium and use it as a first session would: the Viewer on an example (its modes,
-pointing at a pixel, a region typed in), the Tools tab (draw a region, check a file, encode the worked example,
-pictures of TP53's protein and their sequences), the Files tab on a gpxil file, the terminal, the starter notebook,
+pointing at a pixel, a region typed in), the Tools tab (draw a region, count and copy a file, check it, compare
+HG002's two benchmarks and HG002 with his parents, encode the worked example, pictures of TP53's protein and their
+sequences), the Files tab on a gpxil file, the terminal, the starter notebook,
 an example workflow, and the help's buttons; on a phone too. With a copy of the GRCh38 reference (STUDIO_REFERENCE,
 the Gpxil browser's site/data/grch38), also a chromosome of GRCh38 in the Viewer, in the terminal and in Python, and
 a VCF encoded on it. Then, on a desktop, a later visit (the page loaded again): what the first visit made is still
@@ -114,6 +115,29 @@ async (opts) => {
     await MG.app.useTool('validate', { input: '/data/examples/HG002_chr17.gpxil.tif' });
     await runTool();
     check(document.querySelector('.tl-verdict.ok'), 'Tools: HG002’s file is valid, checksums and all');
+    // Compare genomes: HG002's two benchmarks in TP53, drawn; then HG002 and his parents, from the walkthrough's button,
+    // over the whole chromosome, and the first Mendelian error in the Viewer
+    await MG.app.useTool('compare', { a: '/data/examples/HG002_chr17.gpxil.tif', b: '/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif', regions: 'chr17:7,661,779-7,687,546' });
+    await wait(() => val('draw'), 20000);
+    check(val('draw') === 'chr17:7661779-7687546' && val('reference') === null && val('out') === '~/results/HG002_chr17_vs_HG002_chr17_v5.0q.noref_chr17_7661779-7687546.png', 'Tools: Compare two genomes suggests drawing TP53, and asks for no reference, as A has its own');
+    res = await runTool();
+    const shown = () => wait(() => { const i = document.querySelector('.tl-cmpimg img'); return i && i.complete && i.naturalWidth ? i : null; }, 20000).catch(() => null);
+    let img = await shown();
+    check(document.querySelector('.tl-done.ok') && /the same 42 \(100\.00\s%\), of them written differently 0/.test(res) && /precision 100\.00\s% · recall 100\.00\s%/.test(res) && img && img.naturalWidth === 512 && document.querySelectorAll('.tl-cmpkey li').length === 7, `Tools: HG002’s two benchmarks agree in TP53, drawn, with the key (${img ? img.naturalWidth + ' pixels wide' : 'no picture'})`);
+    MG.app.showHelp('h-walk-trio');
+    document.querySelector('#h-walk-trio [data-tool="trio"]').click();
+    await wait(() => MG.app.currentBench === 'tools' && val('mother') === '/data/examples/HG004_chr17.noref.gpxil.tif' && val('draw'), 20000).catch(() => null);
+    check(val('child') === '/data/examples/HG002_chr17.gpxil.tif' && val('father') === '/data/examples/HG003_chr17.noref.gpxil.tif' && val('draw') === 'chr17:7661779-7687546', 'Help: the walkthrough’s button fills in the son and both parents');
+    const t0 = Date.now();
+    res = await runTool();
+    const secs = (Date.now() - t0) / 1000;
+    img = await shown();
+    const errRows = document.querySelectorAll('table.tl-cmpex tr').length - 1;
+    check(document.querySelector('.tl-done.ok') && /23 sites \(24 bases\), 23 of them candidate new mutations/.test(res) && /from the father 28,419 · from the mother 27,061 · from both 40,337/.test(res) && errRows === 20 && img && document.querySelectorAll('.tl-cmpkey li').length === 9, `Tools: HG002 and his parents, all of chromosome 17 in ${secs.toFixed(0)} s: 23 Mendelian errors, the first ${errRows} listed`);
+    const look = Array.from(document.querySelectorAll('.tl-next button')).find((b) => /first error/.test(b.textContent));
+    if (look) look.click();
+    await wait(() => V.data && V.data.start === 3343220 && V.data.end === 3343321, 20000).catch(() => null);
+    check(MG.app.currentBench === 'viewer' && V.data.start === 3343220 && V.data.end === 3343321, 'Tools: … and the first error, at 3,343,271, in the Viewer');
     // (the examples go together: Make a gpxil file works out the reference from the VCF, and the other way round)
     await MG.app.useTool('encode', {});
     await sleep(300);
@@ -146,7 +170,7 @@ async (opts) => {
     check(JSON.stringify(names) === JSON.stringify(['>ENSP00000269305', '>ENSP00000269305_HG002-hap1', '>ENSP00000269305_HG002-hap2']), `Tools: … each with a name of its own (${names.join(' ')})`);
     MG.app.tools.go({ page: 'start' });
     await wait(() => document.querySelector('.pw-map svg'));
-    check(document.querySelectorAll('.tl-task').length === 7 && fits(), 'Tools: the map and the common tasks');
+    check(document.querySelectorAll('.tl-task').length === 8 && fits(), 'Tools: the map and the common tasks');
 
     // the Files tab: a gpxil file's contigs and planes, read in the page
     await MG.app.editFile('/data/examples/HG002_chr17.gpxil.tif');

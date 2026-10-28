@@ -14,7 +14,8 @@
 gpxil encode GRCh38.gpxil.tif -v HG002.vcf.gz --callable HG002.callable.bed --sex XY --no-ref -o HG002.gpxil.tif
 gpxil render HG002.gpxil.tif chr21 --mode variants -o chr21.png --reference GRCh38.gpxil.tif
 gpxil stats HG002.gpxil.tif --reference GRCh38.gpxil.tif           # what it holds, chromosome by chromosome
-gpxil subset HG002.gpxil.tif chr17 chr21 -o HG002_17_21.gpxil.tif   # a working copy to add to the studio</code></pre>
+gpxil subset HG002.gpxil.tif chr17 chr21 -o HG002_17_21.gpxil.tif   # a working copy to add to the studio
+gpxil compare HG002.gpxil.tif --father HG003.gpxil.tif --mother HG004.gpxil.tif --json > trio.json</code></pre>
 <p>Encoding holds a chromosome’s planes in memory while it works, about 6 bytes a base, so the largest, chromosome 1, needs about 1.5 GB. HG002’s whole genome took 12 minutes and at most 2 GB of memory on an ordinary computer, and made a file of 888 MB with the reference plane. The Gpxil browser’s <a href="https://comparativechrono.github.io/Gpxil-browser/" target="_blank" rel="noopener">downloads</a> also have each chromosome on its own, and a checksum to check the download with. Files without their reference plane (<code>--no-ref</code>) are a hundred times smaller; give the reference with <code>--reference</code> to the commands that need its bases (<a href="#h-reference">The GRCh38 reference</a>).</p>
 <p>To work on part of a whole genome here, make a working copy of the chromosomes you need with <code>gpxil subset</code>, which copies them without decoding, and add the copy with <b>Add a file…</b> in the Viewer or the Files tab (<a href="#h-tool-subset">Make a working copy</a>). The studio can also take the whole file and copy from it itself: it reads only the pages it copies.</p>
 

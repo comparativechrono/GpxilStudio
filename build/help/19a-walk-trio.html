@@ -1,0 +1,58 @@
+<!-- id: h-walk-trio | title: A family: comparing genomes | group: Walkthroughs | summary: HG002’s two benchmarks compared base by base, then HG002 against both his parents: what each variant came from, and the few that are new | keys: family trio compare comparison two genomes benchmark v4.2.1 v5.0q hg002 hg003 hg004 father mother parents son child mendelian error new mutation de novo inherited parent of origin crossover written differently repeat precision recall pedigree ashkenazi -->
+<h1><!--ICON:pedigree-->A family: comparing genomes</h1>
+<p class="lede">Because every gpxil file on a reference is laid out base for base on it, two genomes can be compared as two pictures, pixel by pixel. This walkthrough compares two benchmarks of one man’s genome, and then the man with his mother and father: which of his variants came from whom, and which neither parent has.</p>
+
+<h2>1 · The family</h2>
+<p>HG002 is a man of the Personal Genome Project, and HG003 and HG004 are his father and mother. The Genome in a Bottle Consortium has benchmarked the genomes of all three, and the examples hold chromosome 17 of each: HG002’s with its reference plane (24.6 MB), and his parents’ without it (1.9 MB each), as made by <code>gpxil subset --no-ref</code>. The Viewer borrows the reference for those from GRCh38. Look at TP53 in the three:</p>
+<div class="tryrow"><button class="do" type="button" data-viewer="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,668,421-7,687,490" data-mode="variants">HG002, the son</button> <button class="do" type="button" data-viewer="/data/examples/HG003_chr17.noref.gpxil.tif" data-region="chr17:7,668,421-7,687,490" data-mode="variants">HG003, his father</button> <button class="do" type="button" data-viewer="/data/examples/HG004_chr17.noref.gpxil.tif" data-region="chr17:7,668,421-7,687,490" data-mode="variants">HG004, his mother</button></div>
+<p>A fourth file, <code>HG002_chr17_v5.0q.noref.gpxil.tif</code>, holds HG002’s chromosome 17 from the newer benchmark, version 5.0q, made from a whole assembly of his genome rather than from reads.</p>
+
+<h2>2 · Two benchmarks of one genome</h2>
+<p>First, the two benchmarks of HG002 against each other, the newer taken as the truth. Where the two differ, <code>gpxil compare</code> spells both out as sequences, in case they only write the same thing differently, as in a repeat, where an insertion can be anchored at either end.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="compare" data-a="/data/examples/HG002_chr17.gpxil.tif" data-b="/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif">Compare HG002’s two benchmarks</button></div>
+<pre class="code" data-run="term"><code>gpxil compare /data/examples/HG002_chr17.gpxil.tif /data/examples/HG002_chr17_v5.0q.noref.gpxil.tif</code></pre>
+<p>Where both call with confidence, 83.7 % of the chromosome, 113,164 bases have a variant in one or the other, and all but eight are the same in both; 410 of them only written differently. Precision and recall are over 99.99 %. Of the three stretches that differ, two are substitutions only the older benchmark has. The third, at 72,809,199, isn’t a difference at all: version 4.2.1 writes two deletions there as two overlapping calls, unphased, and version 0.1 of the gpxil specification puts both on one haplotype, where they make one longer deletion. (A note for the specification’s next version.)</p>
+
+<h2>3 · A son and both his parents</h2>
+<p>Now HG002 against HG003 and HG004. At each base called in all three, his two alleles must be one from his father and one from his mother.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="trio" data-child="/data/examples/HG002_chr17.gpxil.tif" data-father="/data/examples/HG003_chr17.noref.gpxil.tif" data-mother="/data/examples/HG004_chr17.noref.gpxil.tif">Check HG002 against his parents</button></div>
+<pre class="code" data-run="term"><code>gpxil compare /data/examples/HG002_chr17.gpxil.tif \
+    --father /data/examples/HG003_chr17.noref.gpxil.tif --mother /data/examples/HG004_chr17.noref.gpxil.tif \
+    -o ~/results/HG002_trio_TP53.png --draw chr17:7,661,779-7,687,546 --width 256 --scale 2</code></pre>
+<ul>
+  <li><b>Where his variants came from.</b> Of HG002’s 106,558 variant bases called in all three, 28,419 came from his father, 27,061 from his mother and 40,337 from both (he is homozygous there); for 10,716 – where all three are heterozygous, say – it can’t be told.</li>
+  <li><b>What neither parent has.</b> 23 sites are Mendelian errors, every one inside all three benchmarks’ regions. At 22 of them HG002 has something neither parent has: 21 substitutions (11 of them C to T or G to A, as new mutations mostly are) and a deleted base. These are candidate new mutations; three of them lie within 82 bases of each other, at 58,332,214-58,332,296. The 23rd, at 77,145,099, is the specification’s artefact again: two overlapping deletions of HG002’s, put on one haplotype.</li>
+  <li><b>What was written differently.</b> One stretch, at 71,915,487, is consistent only once spelled out as sequences: there the three write a deletion and an insertion in a run of Cs in different ways.</li>
+</ul>
+<p>Look at one of them in the Viewer, the first that is C to T, at 4,047,934, in HG002 and in each parent:</p>
+<div class="tryrow"><button class="do" type="button" data-viewer="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:4,047,904-4,047,964" data-mode="genotype">HG002 at 4,047,934</button> <button class="do" type="button" data-viewer="/data/examples/HG003_chr17.noref.gpxil.tif" data-region="chr17:4,047,904-4,047,964" data-mode="genotype">HG003 there</button> <button class="do" type="button" data-viewer="/data/examples/HG004_chr17.noref.gpxil.tif" data-region="chr17:4,047,904-4,047,964" data-mode="genotype">HG004 there</button></div>
+<p>HG002 is heterozygous there, C and T (the mix of blue and yellow); both parents are C, the reference.</p>
+<p>Both comparisons, each with its picture of TP53, are also an example workflow, to run again on files of your own:</p>
+<div class="tryrow"><button class="do" type="button" data-workflow="/data/examples/workflows/family.workflow.json">Open the workflow “A family”</button></div>
+
+<h2>4 · Crossovers</h2>
+<p>Each parent passes on one of their two copies of chromosome 17, but cut and joined where their two copies crossed over in the egg or sperm. Where a parent’s calls are phased – their variants put on one copy or the other – the child’s genotypes show which copy the child received at each site, and a change from one copy to the other along a phase set is a crossover. The picture shows variants from the parent’s second copy lighter, so a crossover is where the colour changes. HG003’s and HG004’s benchmarks aren’t phased, so the comparison says that it can’t see crossovers in them; with phased parents, it lists them, with where each happened.</p>
+
+<h2>5 · The numbers, in Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.compare import compare_trio
+
+EX = "/data/examples/"
+errors = []
+with (
+    GpxilFile(EX + "HG002_chr17.gpxil.tif") as son,
+    GpxilFile(EX + "HG003_chr17.noref.gpxil.tif") as father,
+    GpxilFile(EX + "HG004_chr17.noref.gpxil.tif") as mother,
+):
+    t = compare_trio(son, father, mother, errors=errors)["total"]
+print(f"from the father {t['from_father']:,}, from the mother {t['from_mother']:,}, from both {t['from_both']:,}")
+for e in errors[:5]:
+    print(f"{e['position']:,}: son {e['child']}, father {e['father']}, mother {e['mother']}", "(new)" if e["new"] else "")</code></pre>
+
+<h2>6 · On your own computer</h2>
+<p>For whole genomes, compare on your own computer: two genomes take a few seconds a chromosome. Make the parents’ files from Genome in a Bottle’s benchmarks as HG002’s were, without the reference plane:</p>
+<pre class="code"><code>gpxil encode GRCh38.gpxil.tif -v HG003_GRCh38_1_22_v4.2.1_benchmark.vcf.gz \
+    --callable HG003_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.bed --no-ref -o HG003.noref.gpxil.tif
+gpxil compare HG002.gpxil.tif --father HG003.noref.gpxil.tif --mother HG004.noref.gpxil.tif --json > trio.json</code></pre>
+<p><a href="#h-tool-compare">Compare two genomes</a> and <a href="#h-tool-trio">A child and both parents</a> say exactly what is counted.</p>
+<!--CITE: gpxiltools giab grch38-->

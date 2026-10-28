@@ -4,7 +4,8 @@ The tab runs its tools as command lines (``run``), so that what it does is
 exactly what the terminal and the packages do. A few things need answers
 rather than files, and those are here: what a file is (``inspect``), a check
 against the gpxil specification (``validate``), the counts of ``gpxil stats``
-(``stats``) and the palettes (``palettes``).
+(``stats``), genomes compared by ``gpxil compare`` (``compare``) and the
+palettes (``palettes``).
 
 Every function takes and returns plain JSON-like values, because the page
 calls them through the web worker that runs Python.
@@ -218,6 +219,68 @@ def stats(path: str, regions: Optional[List[str]] = None, reference: Optional[st
     parsed = [cli_region(r) for r in (regions or []) if str(r).strip()]
     with GpxilFile(path, reference=reference or None) as g:
         return count(g, parsed or None)
+
+
+def compare(
+    a: str,
+    b: Optional[str] = None,
+    father: Optional[str] = None,
+    mother: Optional[str] = None,
+    regions: Optional[List[str]] = None,
+    out: Optional[str] = None,
+    draw: Optional[str] = None,
+    width: Optional[int] = None,
+    scale: int = 1,
+    gap: int = 50,
+    all_calls: bool = False,
+    reference: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Genomes compared, as ``gpxil compare --json`` gives it: two (``a``, and ``b`` as the truth), or a child (``a``)
+    with both parents; regions as the command takes them (none: every contig all have). With ``out``, a picture of
+    ``draw`` (or the first region) is saved there too, and described under ``"picture"``: its size and its key, each
+    class with its colour."""
+    import sys
+
+    from gpxiltools.compare import compare_pair, compare_trio, picture
+    from gpxiltools.container import GpxilFile
+
+    trio = bool(father or mother)
+    if trio and not (father and mother):
+        raise ValueError("a trio needs both the father's and the mother's file")
+    parsed = [cli_region(r) for r in (regions or []) if str(r).strip()]
+    kw = {"gap": int(gap), "all_calls": bool(all_calls)}
+    files = []
+    try:
+        for path in [a, father, mother] if trio else [a, b]:
+            files.append(GpxilFile(path, reference=reference or None))
+        res = compare_trio(*files, parsed or None, **kw) if trio else compare_pair(*files, parsed or None, **kw)
+        if out:
+            first = res["regions"][0]
+            name, start, end = cli_region(draw) if draw and str(draw).strip() else (first["contig"], first["start"] - 1, first["end"])
+            pic = picture(files, name, start, end, bases_per_row=int(width) if width else None, **kw).scaled(int(scale or 1))
+            if out.lower().endswith((".tif", ".tiff")):
+                pic.save_tiff(out)
+            else:
+                pic.save_png(out)
+            h, w = pic.shape
+
+            def hexa(code: int) -> str:  # (the colour of a code; the reference, faded, as its four bases)
+                return "#%02x%02x%02x" % tuple(int(x) for x in pic.rgb[code])
+
+            print(f"wrote {out}: {w} x {h} px, {pic.title}", file=sys.stderr)
+            res["picture"] = {
+                "path": out,
+                "width": w,
+                "height": h,
+                "title": pic.title,
+                "bases_per_row": pic.bases_per_row,
+                "scale": int(scale or 1),
+                "key": [[label, [hexa(c) for c in ((1, 2, 4, 8) if i == 1 else (i,))]] for label, i in pic.legend],
+            }
+        return res
+    finally:
+        for g in files:
+            g.close()
 
 
 def cli_region(text: str):

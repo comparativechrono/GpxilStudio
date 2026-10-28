@@ -207,7 +207,9 @@
       this.refreshFiles();
       this.palSel.value = PALETTES[this.state.palette] ? this.state.palette : 'classic';
       const list = this.files();
-      const want = (this.state.path && this.fs.exists(this.state.path) && this.state.path) || (list.find((f) => /HG002/.test(f)) || list[0]);
+      // (the first time: HG002's chromosome 17 with all its planes, not the copies of his and his parents' without the
+      // reference plane, which come first in the list)
+      const want = (this.state.path && this.fs.exists(this.state.path) && this.state.path) || list.find((f) => f === '/data/examples/HG002_chr17.gpxil.tif') || list.find((f) => /HG002/.test(f)) || list[0];
       if (want) await this.open(want, { region: this.state.path === want ? this.state.region : null, mode: this.state.path === want ? this.state.mode : null }).catch(() => {});
       else this.showEmpty();
     }

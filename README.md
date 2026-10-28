@@ -44,17 +44,21 @@ The tools:
 |---|---|
 | Look inside and check | What's in a gpxil file (`gpxil info`) · Check a gpxil file (`gpxil validate`) · Count what a file holds (`gpxil stats`) |
 | Make gpxil files | Make a gpxil file (`gpxil encode`): a reference (FASTA, or a gpxil file such as a chromosome of GRCh38) and one person's VCF, with the regions called with confidence · Make a working copy (`gpxil subset`): some contigs and planes of a file, copied without decoding |
+| Compare genomes | Compare two genomes (`gpxil compare`): two sets of calls of one person, base by base, the second as the truth – the same, only written differently (as in a repeat), or different, with precision and recall · A child and both parents (`gpxil compare --father --mother`): Mendelian errors, candidate new mutations, where each of the child's variants came from, and crossovers where the parents are phased |
 | Pictures and print | Draw a region as a picture (`gpxil render`: PNG, or TIFF in RGB or CMYK) · Print it as a book (`gpxil book`) · The palettes |
 | Back to FASTA and VCF | Sequences as FASTA (`gpxil fasta`: the reference, either haplotype, or the genotype in IUPAC codes) · Variants as VCF (`gpxil vcf`) |
 | Genes as pictures | Genes, transcripts and proteins as pxil pictures (`gpxil2pxil`) · pxil pictures → FASTA (`pxil`) |
 
 The examples (`data/examples`) are the gpxil specification's worked example;
 chromosome 17 of HG002, the Genome in a Bottle benchmark genome, as a gpxil
-file; HG002's variants around TP53 as a VCF with its callable regions; and
-TP53's lines of the Ensembl GTF. Four example workflows run on them. The
-GRCh38 reference is there too, as `/data/grch38`: one gpxil file per
-chromosome, read from the [Gpxil browser](https://comparativechrono.github.io/Gpxil-browser/)
-a strip at a time.
+file; HG002's variants around TP53 as a VCF with its callable regions;
+chromosome 17 of HG002's father and mother, HG003 and HG004, and of HG002's
+newer benchmark (v5.0q), each without its reference plane, for comparing
+genomes; and TP53's lines of the Ensembl GTF. Five example workflows run on
+them. The GRCh38 reference is there too, as `/data/grch38`: one gpxil file
+per chromosome, read from the
+[Gpxil browser](https://comparativechrono.github.io/Gpxil-browser/) a strip at
+a time.
 
 ## Big files
 

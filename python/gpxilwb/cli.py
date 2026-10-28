@@ -22,7 +22,7 @@ PROGRAMS: Dict[str, str] = {
 
 # what each program is for, in a few words (for help and man in the terminal)
 ABOUT: Dict[str, str] = {
-    "gpxil": "gpxil genome pixel images: encode, info, validate, render, book, fasta, vcf, palettes",
+    "gpxil": "gpxil genome pixel images: encode, info, validate, stats, subset, compare, render, book, fasta, vcf, palettes",
     "gpxil2pxil": "pictures (pxil files) of genes, transcripts and proteins from a gpxil genome",
     "pxil": "pxil files (one sequence as a picture): print them as FASTA, or their metadata",
 }

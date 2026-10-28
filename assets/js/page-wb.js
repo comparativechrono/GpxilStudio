@@ -98,7 +98,7 @@
       hostname: CFG.hostname || 'studio',
       env: {},
       welcome:
-        `A Linux terminal (bash) in your browser, with gpxil (encode, info, validate, render, book, fasta, vcf), gpxil2pxil and pxil. Your files are in ~ (${HOME}), the examples in /data/examples, and the GRCh38 reference, a gpxil file for each chromosome read from the web as needed, in ${REF_DIR}. Try  gpxil info ${REF_DIR}/chr17.gpxil.tif . Type  help  to see what’s here, or  man NAME  to read about a command.` +
+        `A Linux terminal (bash) in your browser, with gpxil (encode, info, validate, stats, subset, compare, render, book, fasta, vcf), gpxil2pxil and pxil. Your files are in ~ (${HOME}), the examples in /data/examples, and the GRCh38 reference, a gpxil file for each chromosome read from the web as needed, in ${REF_DIR}. Try  gpxil info ${REF_DIR}/chr17.gpxil.tif . Type  help  to see what’s here, or  man NAME  to read about a command.` +
         (MG.user.name() === MG.user.DEFAULT ? ' To see your name in place of user, click “user” at the top of the page.' : '')
     });
     MG.app.nbApp = new MG.NotebookApp(document.getElementById('nbRoot'), { fs, dir: HOME + '/notebooks' });

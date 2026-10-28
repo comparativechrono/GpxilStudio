@@ -1,0 +1,59 @@
+<!-- id: h-tool-trio | title: A child and both parents (trio) | group: Tools | summary: gpxil compare --father --mother: Mendelian errors and candidate new mutations, where the child’s variants came from, and crossovers where the parents are phased | keys: trio family child son daughter father mother parents mendelian error errors inheritance inherited consistent inconsistent de novo new mutation mutations parent of origin crossover crossovers recombination phase phased haplotype transmitted hg002 hg003 hg004 ashkenazi pedigree -->
+<h1><!--ICON:pedigree-->A child and both parents (trio)</h1>
+<p class="lede">With <code>--father</code> and <code>--mother</code>, <code>gpxil compare</code> checks a child’s genome against both parents’, base by base: whether each of the child’s genotypes can be one allele from each parent (or a Mendelian error), which variants neither parent has (candidate new mutations), where each of the child’s variants came from, and, where the parents are phased, which of each parent’s two haplotypes the child received, and where that changes (crossovers).</p>
+<div class="tryrow"><button class="do" type="button" data-tool="trio" data-child="/data/examples/HG002_chr17.gpxil.tif" data-father="/data/examples/HG003_chr17.noref.gpxil.tif" data-mother="/data/examples/HG004_chr17.noref.gpxil.tif">Check HG002 against HG003 and HG004</button></div>
+
+<h2>What it finds</h2>
+<dl>
+  <dt>Mendelian errors</dt><dd>At each base called in all three, the child’s two alleles must be one from the father and one from the mother; where the child has one copy, as on a son’s X, it must come from either. Where it can’t, the stretch around the error, with every variant of the three near it, is spelled out first, as the three may only write the same thing differently (an insertion anchored at the other end of a repeat, say): if the child’s two sequences there can be one of the father’s and one of the mother’s, it isn’t an error. What is left are the <b>Mendelian errors</b>, counted by sites (runs of bases) and bases.</dd>
+  <dt>candidate new mutations</dt><dd>Errors where the child has an allele that neither parent has. In a family’s calls, most errors are mistakes in the calls; a few are mutations new in the child.</dd>
+  <dt>where each variant came from</dt><dd>Where the child has a variant and only one way of taking an allele from each parent fits, it came from the <b>father</b>, from the <b>mother</b>, or from <b>both</b> (a homozygous variant). Where both ways fit – the child and both parents heterozygous for it, say – it can’t be told.</dd>
+  <dt>crossovers</dt><dd>Where a parent’s calls are phased, the child’s genotype at a base where that parent is heterozygous often shows which of the parent’s two haplotypes the child received. Along a phase set, a change from one to the other is a crossover in that parent’s meiosis, or an error in the phasing or in the calls: so a change counts as a crossover only where at least three sites in a row back each side. With unphased parents, it says so.</dd>
+  <dt>calls outside the confident regions</dt><dd>As with two genomes, calls a file keeps outside its regions called with confidence aren’t compared, unless you tick <b>Also compare the calls outside…</b>. With them, a trio of benchmarks shows many more errors, nearly all where one of the three isn’t called with confidence.</dd>
+</dl>
+
+<h2>The form</h2>
+<dl>
+  <dt>The child, the father, the mother</dt><dd>Three gpxil files on the same reference, each with a sample. Any of them can be without its reference plane, as the parents in the examples are; one needs it to spell stretches out, or the reference is given.</dd>
+  <dt>Regions, Draw a region, the gap</dt><dd>As for <a href="#h-tool-compare">two genomes</a>.</dd>
+</dl>
+
+<h2>What it gives</h2>
+<p>A table, as <code>gpxil compare</code> prints it: the bases called in all three; the child’s variant bases, by where they came from; the Mendelian errors and how many are candidate new mutations; the stretches consistent once spelled out; and, for each parent, the crossovers. Then the first errors, with the three genotypes at each and whether it is a candidate new mutation, and the picture, with its key:</p>
+<table>
+<tr><th>Colour</th><th>The child’s bases</th></tr>
+<tr><td>the reference, faded</td><td>no variant</td></tr>
+<tr><td>blue (light blue: his haplotype 2)</td><td>a variant from the father</td></tr>
+<tr><td>pink (light pink: her haplotype 2)</td><td>a variant from the mother</td></tr>
+<tr><td>purple</td><td>a variant from both parents</td></tr>
+<tr><td>olive</td><td>a variant from either: it can’t be told</td></tr>
+<tr><td>teal</td><td>consistent, written differently</td></tr>
+<tr><td>red</td><td>a Mendelian error</td></tr>
+<tr><td>gold</td><td>a candidate new mutation</td></tr>
+<tr><td>grey</td><td>not called in all three</td></tr>
+</table>
+<p>The light colours appear only where that parent is phased, so a crossover shows as a change from dark to light along the chromosome. <b>Look at the first error in the Viewer</b> opens the child there.</p>
+
+<h2>HG002 and his parents</h2>
+<p>HG003 and HG004 are HG002’s father and mother, and Genome in a Bottle has benchmarked all three. On chromosome 17, 84.3 % is called with confidence in all three, and of HG002’s 106,558 variant bases there, 28,419 came from his father, 27,061 from his mother and 40,337 from both; for 10,716, it can’t be told. 23 sites are Mendelian errors, all inside the three benchmarks’ regions: 21 substitutions and a deleted base that HG002 has and neither parent has – candidate new mutations – and one artefact of version 0.1 of the specification, at 77,145,099 (<a href="#h-walk-trio">A family</a> says more). The parents’ benchmarks aren’t phased, so no crossovers can be seen.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil compare /data/examples/HG002_chr17.gpxil.tif \
+    --father /data/examples/HG003_chr17.noref.gpxil.tif --mother /data/examples/HG004_chr17.noref.gpxil.tif \
+    -o ~/results/HG002_trio_TP53.png --draw chr17:7,661,779-7,687,546 --width 256 --scale 2</code></pre>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.compare import compare_trio, format_compare
+
+errors = []
+with (
+    GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as child,
+    GpxilFile("/data/examples/HG003_chr17.noref.gpxil.tif") as father,
+    GpxilFile("/data/examples/HG004_chr17.noref.gpxil.tif") as mother,
+):
+    result = compare_trio(child, father, mother, errors=errors)
+print(format_compare(result))
+print(len(errors), "Mendelian errors:", [e["position"] for e in errors if e["new"]][:5], "...")</code></pre>
+<p><code>errors=[]</code> collects every Mendelian error (the result lists the first 20), each with where its site begins and ends and the three genotypes; <code>result["total"]["haplotypes"]</code> holds each phased parent’s crossovers.</p>
+<!--CITE: gpxiltools giab-->

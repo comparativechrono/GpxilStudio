@@ -230,6 +230,7 @@
     ['start', 'Start', 'route'],
     ['look', 'Look inside and check', 'eye'],
     ['make', 'Make gpxil files', 'genome'],
+    ['compare', 'Compare genomes', 'align'],
     ['picture', 'Pictures and print', 'image'],
     ['export', 'Back to FASTA and VCF', 'convert'],
     ['genes', 'Genes as pictures (pxil)', 'pixels']
@@ -451,6 +452,59 @@
         ['chart', 'Count what it holds', () => MG.app.useTool('stats', { input: v.out })],
         ['badgeCheck', 'Check it', () => MG.app.useTool('validate', { input: v.out })]
       ]
+    },
+
+    /* ---------------- Compare genomes ---------------- */
+    {
+      id: 'compare',
+      group: 'compare',
+      title: 'Compare two genomes',
+      pkg: 'gpxiltools',
+      what: 'Compare two gpxil files of one person base by base – two sets of calls, or two versions of a benchmark – with the second taken as the truth: what is the same, written differently or different, with precision and recall: gpxil compare.',
+      about:
+        'gpxil files on the same reference are aligned to it base for base, so two genomes are compared as two arrays, without matching VCF records. At each base called in both, the genotypes are compared as pairs of alleles in either order, so phasing isn’t compared. Where they differ, the bases near each other, and the whole of any repeat their insertions and deletions could move along, are spelled out as sequences: if both files spell the same, they only <b>write it differently</b> (an insertion anchored at the other end of a repeat, say). Each file’s substitutions, insertions and deletions are then <b>found</b> in the other, <b>missing</b> from it, or there with <b>another genotype</b>; with B as the truth, that gives precision, recall and F1. Calls a file keeps outside its regions called with confidence aren’t compared. A picture shows a region: the same in green, written differently in teal, only in A in red, only in B in blue.',
+      help: 'h-tool-compare',
+      fields: [
+        { key: 'a', type: 'file', label: 'A: the genome to check', kinds: ['gpxil'] },
+        { key: 'b', type: 'file', label: 'B: the one to check it against (the truth)', kinds: ['gpxil'] },
+        { key: 'regions', type: 'text', label: 'Regions (optional)', def: '', placeholder: 'every contig both have, whole', help: 'One or more regions, separated by spaces: a contig, or CONTIG:START-END counting from 1. Leave it empty for every contig the two have: a chromosome takes a few seconds on a computer, and longer here.' },
+        ...pictureFields((v) => v.a, (v) => `${stemOf(v.a)}_vs_${stemOf(v.b)}`),
+        Object.assign({}, REF_FIELD, { def: (v) => grch38For(v.a), show: (v) => needsRef(v.a) && needsRef(v.b), label: 'Their reference (both were written without one)', help: 'To spell out stretches where the two differ, and to draw the reference behind the picture, one of the files needs its reference plane, or the reference is given here: a FASTA file, or a gpxil file with its reference plane, such as a chromosome of GRCh38 from /data/grch38.' })
+      ],
+      check: (v) => checkCompare(v, [v.a, v.b]),
+      argv: (v) => ['gpxil', 'compare', v.a, v.b, ...compareArgs(v)],
+      outputs: (v) => (v.draw ? [v.out] : []),
+      call: { fn: 'gpxilwb.gui.compare', args: (v) => Object.assign({ a: v.a, b: v.b }, compareCall(v)) },
+      wf: { outputs: (v) => (v.draw ? [{ name: 'picture', label: 'picture', kinds: ['image'], path: v.out }] : []), summary: (res) => (res.result ? compareSummary(res.result) : '') },
+      python: (v) => comparePython(v, [['a', v.a], ['b', v.b]], 'compare_pair(a, b'),
+      render: (r, v, out) => renderCompare(r.result, out),
+      next: (res, v) => compareNext(res, v, v.a)
+    },
+    {
+      id: 'trio',
+      group: 'compare',
+      title: 'A child and both parents (trio)',
+      pkg: 'gpxiltools',
+      what: 'Check a child’s gpxil file against both parents’: Mendelian errors and candidate new mutations, where each of the child’s variants came from, and, with phased parents, the crossovers: gpxil compare --father --mother.',
+      about:
+        'At each base called in all three, the child’s two alleles must be one from each parent (or, with one copy, as on a son’s X, from either). Where they aren’t, the stretch around the error, with every variant of the three near it, is spelled out as sequences first, as the three may only write it differently; if it still isn’t one of the father’s and one of the mother’s, it is a <b>Mendelian error</b>, and a <b>candidate new mutation</b> if the child has an allele neither parent has. Where only one way of taking an allele from each parent fits, a variant came from the <b>father</b>, the <b>mother</b> or <b>both</b>; where both ways fit, it can’t be told. Where a parent’s calls are phased, the child’s genotype often shows which of that parent’s two haplotypes it received, and a change from one to the other along a phase set is a <b>crossover</b> (counted when at least three sites in a row back each side). Calls a file keeps outside its regions called with confidence aren’t compared.',
+      help: 'h-tool-trio',
+      fields: [
+        { key: 'child', type: 'file', label: 'The child', kinds: ['gpxil'] },
+        { key: 'father', type: 'file', label: 'The father', kinds: ['gpxil'] },
+        { key: 'mother', type: 'file', label: 'The mother', kinds: ['gpxil'] },
+        { key: 'regions', type: 'text', label: 'Regions (optional)', def: '', placeholder: 'every contig all three have, whole', help: 'One or more regions, separated by spaces: a contig, or CONTIG:START-END counting from 1. Leave it empty for every contig the three have: a chromosome takes a few seconds on a computer, and longer here.' },
+        ...pictureFields((v) => v.child, (v) => `${stemOf(v.child)}_trio`),
+        Object.assign({}, REF_FIELD, { def: (v) => grch38For(v.child), show: (v) => needsRef(v.child) && needsRef(v.father) && needsRef(v.mother), label: 'Their reference (all three were written without one)', help: 'To spell out the stretches around errors, and to draw the reference behind the picture, one of the files needs its reference plane, or the reference is given here: a FASTA file, or a gpxil file with its reference plane, such as a chromosome of GRCh38 from /data/grch38.' })
+      ],
+      check: (v) => checkCompare(v, [v.child, v.father, v.mother]),
+      argv: (v) => ['gpxil', 'compare', v.child, '--father', v.father, '--mother', v.mother, ...compareArgs(v)],
+      outputs: (v) => (v.draw ? [v.out] : []),
+      call: { fn: 'gpxilwb.gui.compare', args: (v) => Object.assign({ a: v.child, father: v.father, mother: v.mother }, compareCall(v)) },
+      wf: { outputs: (v) => (v.draw ? [{ name: 'picture', label: 'picture', kinds: ['image'], path: v.out }] : []), summary: (res) => (res.result ? compareSummary(res.result) : '') },
+      python: (v) => comparePython(v, [['child', v.child], ['father', v.father], ['mother', v.mother]], 'compare_trio(child, father, mother'),
+      render: (r, v, out) => renderCompare(r.result, out),
+      next: (res, v) => compareNext(res, v, v.child)
     },
 
     /* ---------------- Pictures and print ---------------- */
@@ -785,7 +839,8 @@
     ['pixels', 'See a person’s own version of a protein', ['gpxil2pxil', 'pxil-fasta'], 'h-walk-genes'],
     ['convert', 'Get sequences and variants back out', ['fasta', 'vcf'], 'h-walk-export'],
     ['print', 'Print a chromosome as a book', ['book'], 'h-walk-book'],
-    ['scissors', 'Work with a whole genome: a working copy, and its counts', ['subset', 'stats'], 'h-walk-big']
+    ['scissors', 'Work with a whole genome: a working copy, and its counts', ['subset', 'stats'], 'h-walk-big'],
+    ['pedigree', 'Compare genomes: two sets of calls, or a child with both parents', ['compare', 'trio'], 'h-walk-trio']
   ];
 
   /* ------------------------------------------------------------------ files for the pickers */
@@ -1652,6 +1707,222 @@
     out.appendChild(h('div.table-scroll', t));
   }
   MG.app.statsRows = statsRows;
+
+  /* ------------------------------------------------------------------ comparing genomes (gpxil compare) */
+  /** the fields of a comparison's picture (a region to draw: empty for none; its rows and pixels; where it is saved),
+      and how it compares (the calls outside the confident regions; the gap that makes a stretch) */
+  function pictureFields(fileOf, stemFn) {
+    const drawn = (v) => !!String(v.draw || '').trim();
+    return [
+      { key: 'draw', type: 'text', label: 'Draw a region (optional)', def: (v) => defaultRegion(fileOf(v)), placeholder: 'no picture', help: 'A region to draw, one pixel a base, as gpxil render does: a contig, or CONTIG:START-END counting from 1. Leave it empty for no picture.' },
+      { key: 'width', type: 'number', label: 'Bases per row of the picture', def: (v) => (regionBases(fileOf(v), v.draw) != null && regionBases(fileOf(v), v.draw) <= 200000 ? '256' : ''), min: 1, max: 100000, step: 1, placeholder: 'the file’s width (8,192)', show: drawn },
+      { key: 'scale', type: 'number', label: 'Pixels per base, each way', def: (v) => (regionBases(fileOf(v), v.draw) != null && regionBases(fileOf(v), v.draw) <= 50000 ? '2' : '1'), min: 1, max: 32, step: 1, show: drawn },
+      { key: 'out', type: 'path', label: 'Save the picture as', def: (v) => `~/results/${stemFn(v)}_${regionSlug(v.draw)}.png`, show: drawn },
+      { key: 'allCalls', type: 'check', label: 'Also compare the calls outside the regions called with confidence', def: false, help: 'A file made with a BED file of the regions called with confidence keeps the VCF’s calls outside them too, each on its own among bases not called. They are left out unless this is ticked.' },
+      { key: 'gap', type: 'number', label: 'Differences this many bases apart, or nearer, are one stretch', def: '50', min: 0, max: 10000, step: 1, help: 'Where the files differ, bases this close together, with any repeat their insertions and deletions could move along, are spelled out together as sequences, to see whether the files only write the same thing differently.' }
+    ];
+  }
+  /** what is wrong with a comparison's choices ('' if nothing) */
+  function checkCompare(v, paths) {
+    for (const p of paths) {
+      const info = infoOf(p);
+      if (info && info.error) return `${base(p)} couldn’t be read: ${info.error}`;
+      if (info && !info.hasGt) return `${base(p)} has no sample: it holds a reference only, so there is nothing to compare.`;
+    }
+    for (const r of regionsOf(v.regions)) {
+      const bad = checkRegion(paths[0], r, 'region', 0);
+      if (bad) return bad;
+    }
+    const d = String(v.draw || '').trim();
+    if (d) {
+      const bad = checkRegion(paths[0], d, 'region', RENDER_MAX);
+      if (bad) return bad;
+      const n = regionBases(paths[0], d), s = Number(int(v.scale) || 1);
+      if (n != null && n * s * s > 64e6) return `At ${s} pixels a base that is a picture of ${fmt(n * s * s)} pixels: too big for the browser. Use fewer pixels per base, or a smaller region.`;
+      if (!/\.(png|tiff?)$/i.test(v.out || '')) return 'Save the picture with a name ending in .png (or .tif).';
+    }
+    if (String(v.gap == null ? '' : v.gap).trim() !== '' && !int(v.gap)) return 'Give the gap as a whole number of bases, such as 50.';
+    return '';
+  }
+  const drawOf = (v) => String(v.draw || '').trim();
+  const gapOf = (v) => (int(v.gap) ? Number(int(v.gap)) : 50);
+  /** gpxil compare's options, after its files */
+  function compareArgs(v) {
+    const d = drawOf(v);
+    return [
+      ...regionsOf(v.regions).flatMap((r) => ['--region', r.replace(/,/g, '')]),
+      ...optArgs(d, '-o', v.out, '--draw', d.replace(/,/g, '')),
+      ...optArgs(d && int(v.width), '--width', int(v.width)),
+      ...optArgs(d && int(v.scale) && int(v.scale) !== '1', '--scale', int(v.scale)),
+      ...optArgs(gapOf(v) !== 50, '--gap', String(gapOf(v))),
+      ...optArgs(v.allCalls, '--all-calls'),
+      ...refArgs(v)
+    ];
+  }
+  /** what gpxilwb.gui.compare is given, after its files */
+  function compareCall(v) {
+    const d = drawOf(v);
+    return { regions: regionsOf(v.regions), out: d ? v.out : null, draw: d || null, width: d && int(v.width) ? Number(int(v.width)) : null, scale: d ? Number(int(v.scale) || 1) : 1, gap: gapOf(v), all_calls: !!v.allCalls, reference: v.reference || null };
+  }
+  /** the same in Python: named, [[name, path], …], the files to open; head, the call without its closing bracket */
+  function comparePython(v, named, head) {
+    const trio = named.length === 3;
+    const regs = regionsOf(v.regions).map(parseRegion).filter(Boolean);
+    const d = parseRegion(drawOf(v));
+    const how = [...(gapOf(v) !== 50 ? [`gap=${gapOf(v)}`] : []), ...(v.allCalls ? ['all_calls=True'] : [])];
+    const args = [...(regs.length ? [`[${regs.map((r) => `(${pyq(r.contig)}, ${r.start}, ${r.end == null ? 'None' : r.end})`).join(', ')}]`] : []), ...how];
+    const save = /\.tiff?$/i.test(v.out || '') ? `save_tiff(${pyq(v.out)})` : `save_png(${pyq(v.out)})`;
+    return [
+      'from gpxiltools import GpxilFile',
+      `from gpxiltools.compare import ${trio ? 'compare_trio' : 'compare_pair'}, format_compare${d ? ', picture' : ''}`,
+      '',
+      'with (',
+      ...named.map(([n, p]) => `    GpxilFile(${pyq(p)}${refPy(v)}) as ${n},`),
+      '):',
+      `    result = ${head}${args.length ? ', ' + args.join(', ') : ''})${regs.length ? '   # (regions 0-based, the end not included)' : ''}`,
+      ...(d
+        ? [
+            `    pic = picture([${named.map(([n]) => n).join(', ')}], ${pyq(d.contig)}, ${d.start}, ${d.end == null ? 'None' : d.end}${int(v.width) ? `, bases_per_row=${int(v.width)}` : ''}${how.length ? ', ' + how.join(', ') : ''})`,
+            `    pic.scaled(${int(v.scale) || 1}).${save}`
+          ]
+        : []),
+      'print(format_compare(result))',
+      trio ? 'print(result["total"]["mendelian_errors"]["examples"])   # the numbers, to work with' : 'print(result["total"]["events"]["substitutions"])   # the numbers, to work with'
+    ].join('\n');
+  }
+  /** a share (0 to 1) as gpxil compare writes it: with two decimals, but never 100 % for not quite all */
+  function share(x) {
+    if (x == null) return '–';
+    if (x > 0.9999 && x < 1) return '> 99.99 %';
+    if (x > 0 && x < 0.0001) return '< 0.01 %';
+    return `${(100 * x).toFixed(2)} %`;
+  }
+  const count = (n, one, many) => `${fmt(n)} ${n === 1 ? one : many || one + 's'}`;
+  /** two genomes' counts, as rows [what, [lines]] (gpxiltools.compare._block_pair) */
+  function pairRows(d) {
+    const n = d.bases, c = d.called, v = d.variant_bases, st = d.stretches;
+    const rows = [
+      ['called', [`in both ${fmt(c.both)} (${pct(c.both, n)})`, `in A only ${fmt(c.a_only)} · in B only ${fmt(c.b_only)} · in neither ${fmt(c.neither)}`]],
+      [
+        'variant bases',
+        [
+          `${fmt(v.either)} called in both with a variant in either`,
+          `the same ${fmt(v.same + v.written_differently)} (${share(v.agreement)}), of them written differently ${fmt(v.written_differently)}`,
+          `only in A ${fmt(v.only_a)} · only in B ${fmt(v.only_b)} · another genotype ${fmt(v.other_genotype)}`,
+          ...(st.not_checked ? [`${count(st.not_checked, 'stretch', 'stretches')} not checked for being written differently (no reference)`] : [])
+        ]
+      ]
+    ];
+    for (const [k, label] of [['substitutions', 'substitutions'], ['indels', 'insertions and deletions'], ['complex', 'COMPLEX alleles']]) {
+      const e = d.events[k];
+      if (!(e.a.total || e.b.total)) continue;
+      rows.push([
+        label,
+        [
+          `A ${fmt(e.a.total)}: found in B ${fmt(e.a.found)} · not in B ${fmt(e.a.missing)} · another genotype ${fmt(e.a.other_genotype)}`,
+          `B ${fmt(e.b.total)}: found in A ${fmt(e.b.found)} · not in A ${fmt(e.b.missing)} · another genotype ${fmt(e.b.other_genotype)}`,
+          `precision ${share(e.precision)} · recall ${share(e.recall)} · F1 ${share(e.f1)} (B as the truth)`,
+          ...(e.a.not_compared || e.b.not_compared ? [`not compared, where the other didn’t call: A ${fmt(e.a.not_compared)} · B ${fmt(e.b.not_compared)}`] : [])
+        ]
+      ]);
+    }
+    return rows;
+  }
+  /** a child's and both parents' counts, as rows [what, [lines]] (gpxiltools.compare._block_trio) */
+  function trioRows(d) {
+    const me = d.mendelian_errors, wd = d.written_differently || {};
+    const rows = [
+      ['called', [`in all three ${fmt(d.all_called)} (${pct(d.all_called, d.bases)})`]],
+      ['the child’s variants', [count(d.child_variant_bases, 'base'), `from the father ${fmt(d.from_father)} · from the mother ${fmt(d.from_mother)} · from both ${fmt(d.from_both)}`, `from either, can’t be told ${fmt(d.origin_unknown)}`]],
+      ['Mendelian errors', [`${count(me.sites, 'site')} (${count(me.bases, 'base')}), ${fmt(me.new_mutation_sites)} of them candidate new mutations`]]
+    ];
+    if (wd.stretches) rows.push(['written differently', [`${count(wd.stretches, 'stretch', 'stretches')} (${count(wd.bases, 'base')}) consistent as sequences, not base by base`]]);
+    for (const p of ['father', 'mother']) {
+      const x = d.haplotypes[p];
+      if (!x) {
+        rows.push([`the ${p}’s haplotypes`, ['not phased, so which one the child received isn’t known']]);
+        continue;
+      }
+      const at = x.at.slice(0, 4).map(([, a, b]) => `${fmt(a)}–${fmt(b)}`).join(', ') + (x.at.length > 4 ? ', …' : '');
+      rows.push([`the ${p}’s haplotypes`, [`${count(x.crossovers, 'crossover')}${at ? ` (between ${at})` : ''}`, `${count(x.changes, 'change')} at ${count(x.sites, 'site')} in ${count(x.phase_sets, 'phase set')}`]]);
+    }
+    return rows;
+  }
+  /** in a few words, for a workflow's steps */
+  function compareSummary(res) {
+    const t = res.total;
+    if (!t) return '';
+    if (res.mode === 'trio') {
+      const me = t.mendelian_errors;
+      return `${count(me.sites, 'Mendelian error')}, ${fmt(me.new_mutation_sites)} of them candidate new mutations, in ${count(t.child_variant_bases, 'variant base')} of the child’s`;
+    }
+    const s = t.events.substitutions, i = t.events.indels;
+    return `${share(t.variant_bases.agreement)} of variant bases the same; substitutions: precision ${share(s.precision)}, recall ${share(s.recall)}; indels: ${share(i.precision)}, ${share(i.recall)}`;
+  }
+  /** a comparison's picture, read from the file it was saved in, with its key */
+  function pictureOf(pic) {
+    const img = h('img', { alt: `${pic.title}, compared: ${pic.key.map(([label]) => label).join('; ')}`, width: pic.width, height: pic.height });
+    MG.app.fs
+      .toBlob(pic.path)
+      .then((b) => (img.src = URL.createObjectURL(b)))
+      .catch(() => img.replaceWith(h('p', 'The picture couldn’t be read.')));
+    const key = h('ul.tl-cmpkey');
+    for (const [label, colours] of pic.key) key.appendChild(h('li', h('span.tl-cmpsw', ...[].concat(colours).map((c) => h('i', { style: { background: c } }))), h('span', label)));
+    return h('figure.tl-cmppic', h('div.tl-cmpimg', img), h('figcaption', h('b', pic.title), ` · ${fmt(pic.bases_per_row)} bases a row, ${count(pic.scale, 'pixel')} a base`), key);
+  }
+  /** the counts of gpxil compare, as it prints them: the files, a table of the regions, the counts of one region (or
+      of all of them), the first differences or Mendelian errors, and the picture */
+  function renderCompare(res, out) {
+    if (!res) return;
+    const trio = res.mode === 'trio';
+    const who = trio ? [['child', 'Child'], ['father', 'Father'], ['mother', 'Mother']] : [['a', 'A'], ['b', 'B (the truth)']];
+    const head = h('p.tl-statshead');
+    who.forEach(([k, label], i) => head.append(i ? ' · ' : '', `${label} `, h('b', res[k].file), res[k].sample ? ` (${res[k].sample})` : ''));
+    if (res.reference) head.append(` · ${res.reference}`);
+    out.appendChild(head);
+    const regs = res.regions || [];
+    if (regs.length > 1) {
+      const cols = trio ? ['Region', 'Bases', 'Called in all', 'Child’s variants', 'Errors', 'New'] : ['Region', 'Bases', 'Called in both', 'The same', 'Only A', 'Only B', 'Subs. P / R', 'Indels P / R'];
+      const t = h('table.tl-condtable.tl-statsregions', h('tr', ...cols.map((x) => h('th', x))));
+      for (const r of regs) {
+        const cells = trio
+          ? [pct(r.all_called, r.bases), fmt(r.child_variant_bases), fmt(r.mendelian_errors.sites), fmt(r.mendelian_errors.new_mutation_sites)]
+          : [pct(r.called.both, r.bases), share(r.variant_bases.agreement), fmt(r.variant_bases.only_a), fmt(r.variant_bases.only_b), `${share(r.events.substitutions.precision)} / ${share(r.events.substitutions.recall)}`, `${share(r.events.indels.precision)} / ${share(r.events.indels.recall)}`];
+        t.appendChild(h('tr', h('td', h('code', regionLabel(r))), h('td', fmt(r.bases)), ...cells.map((x) => h('td', x))));
+      }
+      out.appendChild(h('div.table-scroll', t));
+    }
+    const whole = regs.length === 1 ? regs[0] : res.total;
+    const t = h('table.tl-condtable.tl-stats', h('caption', regs.length === 1 ? `${regionLabel(regs[0])} · ${fmt(whole.bases)} bases` : `All ${regs.length} regions · ${fmt(whole.bases)} bases`));
+    for (const [k, lines] of trio ? trioRows(whole) : pairRows(whole)) t.appendChild(h('tr', h('th', { scope: 'row' }, k), h('td', ...lines.flatMap((x, i) => (i ? [h('br'), x] : [x])))));
+    out.appendChild(h('div.table-scroll', t));
+    const ex = (trio ? whole.mendelian_errors.examples : whole.examples) || [];
+    if (ex.length) {
+      const cols = trio ? ['Where', 'Child', 'Father', 'Mother', 'Candidate new mutation'] : ['Where', 'A', 'B'];
+      const et = h('table.tl-condtable.tl-cmpex', h('caption', trio ? `The first ${count(ex.length, 'Mendelian error')}` : `The first ${count(ex.length, 'stretch', 'stretches')} where they differ`), h('tr', ...cols.map((x) => h('th', x))));
+      for (const e of ex) {
+        const where = fmt(e.position) + (e.end && e.end > e.position ? `–${fmt(e.end)}` : '');
+        // (the genotypes as code; whether the child has an allele neither parent has, as words)
+        const cells = trio ? [e.child, e.father, e.mother] : [e.a, e.b];
+        et.appendChild(h('tr', h('td', where), ...cells.map((x) => h('td', h('code', x))), ...(trio ? [h('td', e.new ? 'yes' : 'no')] : [])));
+      }
+      out.appendChild(h('div.table-scroll', et));
+    }
+    if (res.picture) out.appendChild(pictureOf(res.picture));
+  }
+  /** what to do next: look at the first difference (or error) in the Viewer, and open the picture */
+  function compareNext(res, v, file) {
+    const r = res.result;
+    const out = [];
+    const trio = r && r.mode === 'trio';
+    const reg = r && (r.regions || []).find((x) => ((trio ? x.mendelian_errors.examples : x.examples) || []).length);
+    if (reg) {
+      const p = (trio ? reg.mendelian_errors.examples : reg.examples)[0].position;
+      out.push(['grid', trio ? 'Look at the first error in the Viewer' : 'Look at the first difference in the Viewer', () => MG.app.viewerOpen(file, { region: `${reg.contig}:${fmt(Math.max(1, p - 50))}-${fmt(p + 50)}`, mode: 'genotype' })]);
+    }
+    if (drawOf(v)) out.push(['image', 'Open the picture', () => MG.app.openFile(v.out)]);
+    return out;
+  }
 
   /** the findings of gpxil validate, as a verdict and a table */
   function renderFindings(res, x, out) {
