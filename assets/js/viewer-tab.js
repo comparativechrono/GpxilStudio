@@ -149,9 +149,10 @@
       this.stage = h('div.vw-stage', this.canvas);
       this.hoverEl = h('div.vw-hover', { 'aria-live': 'polite' }, 'Point at a pixel to see what the file holds there.');
       this.legendEl = h('div.vw-legend');
+      this.countsEl = h('div.vw-counts', { 'aria-live': 'polite' });
       this.cmdEl = h('div.vw-cmd');
       this.emptyEl = h('div.vw-empty');
-      R0.append(this.bar, this.infoEl, this.emptyEl, this.stage, this.hoverEl, this.legendEl, this.cmdEl);
+      R0.append(this.bar, this.infoEl, this.emptyEl, this.stage, this.hoverEl, this.legendEl, this.countsEl, this.cmdEl);
 
       const picker = h('input', { type: 'file', accept: '.tif,.tiff,.gpxil', hidden: true });
       R0.appendChild(picker);
@@ -255,6 +256,8 @@
     showEmpty(msg) {
       this.stage.hidden = true;
       this.legendEl.innerHTML = '';
+      this.countsEl.innerHTML = '';
+      this._countKey = null;
       this.cmdEl.innerHTML = '';
       this.infoEl.textContent = '';
       this.emptyEl.hidden = false;
@@ -507,6 +510,67 @@
       this.infoEl.innerHTML = `<b>${esc(d.contig.name)}:${fmt(d.start + 1)}-${fmt(d.end)}</b> · ${fmt(n)} bases · ${fmt(W)} bases a row, ${rows > 1 ? fmt(rows) + ' rows' : 'one row'} · ${scale} pixel${scale > 1 ? 's' : ''} a base${two ? ' (two rows for each row of bases: haplotype 1 above, 2 below)' : ''}${P._refFrom ? ` · the bases come from ${esc(P._refFrom)}` : ''}`;
       this.drawLegend(pal, refRgb, seen);
       this.drawCommand();
+      this.countView();
+    }
+    /* ---------------- the counts of the region in view: gpxil stats, made in the page (gpxil-stats.js) ---------------- */
+    async countView() {
+      const d = this.data;
+      if (!d || !MG.gpxilStats) return;
+      const key = `${this.state.path}|${d.contig.name}|${d.start}|${d.end}`;
+      if (this._countKey === key) return; // (the same bases: only the colours or the layout changed)
+      this._countKey = key;
+      const token = (this._countToken = (this._countToken || 0) + 1);
+      this.countsEl.innerHTML = '<p class="vw-note">Counting what this region holds…</p>';
+      const c = d.contig, f = this.file, P = d.planes;
+      try {
+        const get = async (p) => (P[p] && P[p].length === d.end - d.start ? P[p] : p in c.pages ? f.read(c, p, d.start, d.end) : null);
+        const gt = await get('gt');
+        let ref = 'ref' in c.pages ? await get('ref') : null;
+        let refPath = null;
+        if (!ref && (await this.refFor(c))) {
+          ref = P.ref && P._refFrom && P.ref.length === d.end - d.start ? P.ref : await this.refFile.read(c.name, 'ref', d.start, d.end);
+          refPath = this.refPath;
+        }
+        const [flags, gq, dp, ps] = await Promise.all(['flags', 'gq', 'dp', 'ps'].map(get));
+        const sidecar = gt ? await f.sidecar(c) : [];
+        const before = gt && d.start > 0 ? (await f.read(c, 'gt', d.start - 1, d.start))[0] : null;
+        const counts = await MG.gpxilStats.count({ length: c.length, start: d.start, end: d.end, ref, gt, flags, gq, dp, ps, sidecar, before, readGt: (a, b) => f.read(c, 'gt', a, b) });
+        if (token !== this._countToken) return;
+        this.counts = counts;
+        this.showCounts(counts, d, refPath);
+      } catch (e) {
+        if (token !== this._countToken) return;
+        this._countKey = null;
+        this.countsEl.innerHTML = '';
+        this.countsEl.appendChild(h('p.vw-note', 'The counts couldn’t be made: ' + e.message));
+      }
+    }
+    showCounts(counts, d, refPath) {
+      const n = counts.bases;
+      const pct = (x) => (n ? `${((100 * x) / n).toFixed(1)}\u00a0%` : '–'); // (a space that doesn't break)
+      const parts = [];
+      if (counts.calls) {
+        const s = counts.substitutions, ins = counts.insertions, del = counts.deletions;
+        const nIns = ins.heterozygous + ins.homozygous, nDel = del.heterozygous + del.homozygous;
+        parts.push(`${pct(counts.calls.called)} called`);
+        parts.push(`${fmt(s.heterozygous)} heterozygous and ${fmt(s.homozygous)} homozygous substitution${s.homozygous === 1 ? '' : 's'}${s.ti_tv ? ` (Ti/Tv ${s.ti_tv.toFixed(2)})` : ''}`);
+        parts.push(`${fmt(nIns)} insertion${nIns === 1 ? '' : 's'}, ${fmt(nDel)} deletion${nDel === 1 ? '' : 's'}`);
+        if (counts.phasing.phase_sets) parts.push(`${((100 * counts.phasing.heterozygous_substitutions_phased) / Math.max(1, s.heterozygous)).toFixed(0)}\u00a0% of heterozygous substitutions phased`);
+      }
+      const r = counts.reference;
+      if (r) parts.push(`GC ${r.gc == null ? '–' : (100 * r.gc).toFixed(1) + '\u00a0%'}${r.N ? `, ${pct(r.N)} N` : ''}`);
+      this.countsEl.innerHTML = '';
+      const line = h('p.vw-countline', h('b', `In view, ${fmt(n)} bases: `), parts.join(' · '));
+      const more = h('details.vw-countmore', h('summary', 'All the counts'));
+      const t = h('table.tl-condtable.tl-stats');
+      for (const [k, v] of MG.app.statsRows ? MG.app.statsRows(counts) : []) t.appendChild(h('tr', h('th', { scope: 'row' }, k), h('td', v)));
+      more.appendChild(h('div.table-scroll', t));
+      const q = (x) => (/^[\w~@%+=:,./-]+$/.test(x) ? x : "'" + String(x).replace(/'/g, "'\\''") + "'");
+      const cmd = `gpxil stats ${q(this.fs.pretty(this.state.path))} ${d.contig.name}:${d.start + 1}-${d.end}${refPath ? ' --reference ' + q(this.fs.pretty(refPath)) : ''}`;
+      const pre = h('pre.code', { 'data-run': 'term' }, h('code', cmd));
+      more.append(h('p.vw-note', 'The same counts from the terminal (gpxil stats), or for any region or the whole file in the Tools tab:'), pre);
+      this.countsEl.append(line, more);
+      if (MG.app.decorateCode) MG.app.decorateCode(pre);
     }
     /** the key under the picture. For the reference, genotype and haplotypes views it lists the colours in view
         (seen: how many bases of each code were drawn): each base, each heterozygous pair present with how many bases

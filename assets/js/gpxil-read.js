@@ -13,7 +13,7 @@
   'use strict';
   const MG = window.MG;
 
-  const TAG = { ImageWidth: 256, ImageLength: 257, BitsPerSample: 258, Compression: 259, ImageDescription: 270, StripOffsets: 273, SamplesPerPixel: 277, RowsPerStrip: 278, StripByteCounts: 279, PageName: 285, Predictor: 317, TileWidth: 322, SampleFormat: 339 };
+  const TAG = { ImageWidth: 256, ImageLength: 257, BitsPerSample: 258, Compression: 259, ImageDescription: 270, StripOffsets: 273, SamplesPerPixel: 277, RowsPerStrip: 278, StripByteCounts: 279, PageName: 285, Predictor: 317, TileWidth: 322, SampleFormat: 339, Sidecar: 65400 };
   const TYPE_SIZE = { 1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 6: 1, 7: 1, 8: 2, 9: 4, 10: 8, 11: 4, 12: 8, 16: 8, 17: 8, 18: 8 };
   const PROBE = 16384; // bytes read at a directory: its tags and, as tifffile lays files out, their arrays
   const COMPRESSION = { 1: 'none', 5: 'LZW', 7: 'JPEG', 8: 'deflate', 32946: 'deflate', 34925: 'LZMA', 50000: 'Zstandard', 32773: 'PackBits' };
@@ -105,16 +105,21 @@
       this.offsets = [this.h.first];
       return this.h;
     }
-    /** the directory of page k, walking the chain of directories as far as it */
+    /** the directory of page k, walking the chain of directories as far as it. One walk at a time: two at once would
+        both add the directory after the last one known, and every page after it would be read as the one before */
     async _ifd(k) {
-      const h = await this._header();
-      while (this.offsets.length <= k) {
-        const at = this.offsets[this.offsets.length - 1];
-        if (!at) throw new Error(`there is no page ${k}`);
-        const d = await this._dir(at);
-        this.offsets.push(d.next);
-      }
-      return this.offsets[k];
+      await this._header();
+      const walk = (this._walking || Promise.resolve()).then(async () => {
+        while (this.offsets.length <= k) {
+          const at = this.offsets[this.offsets.length - 1];
+          if (!at) throw new Error(`there is no page ${k}`);
+          const d = await this._dir(at);
+          this.offsets.push(d.next);
+        }
+        return this.offsets[k];
+      });
+      this._walking = walk.catch(() => {});
+      return walk;
     }
     async _dir(at) {
       const h = this.h;
@@ -180,6 +185,12 @@
           description: async () => {
             const v = await values(TAG.ImageDescription);
             return v ? new TextDecoder().decode(Uint8Array.from(v.filter((x, i) => !(i === v.length - 1 && x === 0)))) : null;
+          },
+          /** the sidecar of a gt page (tag 65400, zlib-compressed text, spec section 7), as bytes, or null */
+          sidecarBytes: async () => {
+            const t = tags.get(TAG.Sidecar);
+            if (!t) return null;
+            return this.src.read(t.at, t.at + t.bytes);
           }
         };
         if (page.samples !== 1 || ![8, 16, 32].includes(page.bits)) throw new Error(`a page of ${page.bits}-bit × ${page.samples} samples can’t be read here`);
@@ -270,8 +281,32 @@
         if (!(plane in c.pages)) throw new Error(`${c.name} has no ${plane} plane`);
         const page = await f.page(Number(c.pages[plane]));
         return f.readPage(page, Math.max(0, start), Math.min(c.length, end));
+      },
+      /** a contig's sidecar (spec section 7): [{offset, hap, kind, data}], sorted as stored; [] if it has none */
+      async sidecar(contig) {
+        const c = typeof contig === 'string' ? this.contig(contig) : contig;
+        if (!c) throw new Error(`no contig ${contig}`);
+        if (!('gt' in c.pages)) return [];
+        if (!c._sidecar) {
+          c._sidecar = (async () => {
+            const page = await f.page(Number(c.pages.gt));
+            const raw = await page.sidecarBytes();
+            return raw ? parseSidecar(new TextDecoder().decode(await inflate(raw))) : [];
+          })();
+          c._sidecar.catch(() => (c._sidecar = null));
+        }
+        return c._sidecar;
       }
     };
+  }
+  function parseSidecar(text) {
+    const out = [];
+    for (const line of text.split('\n')) {
+      if (!line || line[0] === '#' || line.startsWith('offset\t')) continue;
+      const [off, hap, kind, ...rest] = line.split('\t');
+      out.push({ offset: Number(off), hap: Number(hap), kind, data: rest.join('\t') });
+    }
+    return out;
   }
 
   // ---- what the codes mean (spec section 5) ----

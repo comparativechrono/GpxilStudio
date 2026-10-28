@@ -28,6 +28,15 @@
 .vw-sw { display: inline-flex; align-items: center; gap: 5px; }
 .vw-sw i { display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0, 0, 0, 0.25); }
 .vw-note { color: var(--muted); font-size: 12.5px; }
+/* the counts of the region in view (gpxil stats, made in the page) */
+.vw-counts { margin: 8px 12px 0; max-width: 110ch; font-size: 13px; color: var(--ink-2); }
+.vw-counts:empty { display: none; }
+.vw-countline { margin: 0; font-variant-numeric: tabular-nums; }
+.vw-countline b { color: var(--ink); font-weight: 600; }
+.vw-countmore { margin-top: 4px; }
+.vw-countmore summary { cursor: pointer; color: var(--accent-2); font-size: 12.5px; width: max-content; }
+.vw-countmore .tl-stats { margin-top: 6px; }
+.vw-countmore pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12.5px; }
 .vw-cmd { margin: 10px 12px 24px; max-width: 110ch; }
 .vw-cmd p { margin: 6px 0; }
 .vw-cmd pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12.5px; }
@@ -44,5 +53,5 @@
   .vw-contig { max-width: 30vw; }
   .vw-nav { flex: 0 1 auto; }
   .vw-stage { margin: 4px 8px; max-width: calc(100% - 16px); }
-  .vw-info, .vw-hover, .vw-legend, .vw-cmd { margin-left: 8px; margin-right: 8px; }
+  .vw-info, .vw-hover, .vw-legend, .vw-counts, .vw-cmd { margin-left: 8px; margin-right: 8px; }
 }

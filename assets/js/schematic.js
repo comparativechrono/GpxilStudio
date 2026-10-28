@@ -50,7 +50,8 @@
     ['render', 'gpxiltools', 'gpxil render', 'M570 182 C620 160 640 84 684 74', 612, 128, 'end', true],
     ['book', 'gpxiltools', 'gpxil book', 'M572 195 L684 195', 628, 186, 'middle', true],
     ['gpxil2pxil', 'gpxil2pxil', 'gpxil2pxil', 'M570 208 C620 230 640 306 684 316', 612, 276, 'end', true],
-    ['info', 'gpxiltools', 'gpxil info · validate', 'M440 221 C430 285 540 285 530 221', 485, 300, 'middle', true]
+    ['info', 'gpxiltools', 'gpxil info · stats · validate', 'M440 221 C430 285 540 285 530 221', 485, 300, 'middle', true],
+    ['subset', 'gpxiltools', 'gpxil subset', 'M440 169 C430 105 540 105 530 169', 485, 96, 'middle', true]
   ];
   const TALL = [
     ['encode', 'gpxiltools', 'gpxil encode', 'M160 66 C175 110 200 150 210 183', 250, 128, 'middle', true],
@@ -61,7 +62,8 @@
     ['render', 'gpxiltools', 'gpxil render', 'M170 236 C140 300 100 330 92 374', 36, 312, 'start', true],
     ['book', 'gpxiltools', 'gpxil book', 'M250 236 L250 374', 256, 300, 'start', true],
     ['gpxil2pxil', 'gpxil2pxil', 'gpxil2pxil', 'M330 236 C360 300 400 330 408 374', 472, 330, 'end', true],
-    ['info', 'gpxiltools', 'gpxil info\nvalidate', 'M125 202 C88 198 88 222 125 218', 82, 206, 'end', true]
+    ['info', 'gpxiltools', 'gpxil info\nstats\nvalidate', 'M125 202 C88 198 88 222 125 218', 82, 200, 'end', true],
+    ['subset', 'gpxiltools', 'gpxil\nsubset', 'M375 202 C412 198 412 222 375 218', 418, 206, 'start', true]
   ];
   const ROUTES = { wide: WIDE, tall: TALL };
   /** the layout for a width: tall below 720 pixels, where the wide one's writing would be too small */
@@ -216,6 +218,7 @@
     ['gpxil', 'image'],
     ['gpxil', 'pdf'],
     ['gpxil', 'pxil'],
+    ['gpxil'],
     ['gpxil']
   ];
 

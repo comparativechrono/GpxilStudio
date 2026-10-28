@@ -1,4 +1,4 @@
-<!-- id: h-walk-look | title: Look inside a gpxil file, and check it | group: Walkthroughs | summary: What a file holds, its planes, its metadata, and a check against the specification | keys: look inside open info metadata json planes contigs sample reference check validate valid checksum digest md5 refget -->
+<!-- id: h-walk-look | title: Look inside a gpxil file, and check it | group: Walkthroughs | summary: What a file holds, its planes, its metadata, its counts, and a check against the specification | keys: look inside open info metadata json planes contigs sample reference stats counts check validate valid checksum digest md5 refget -->
 <h1><!--ICON:eye-->Look inside a gpxil file, and check it</h1>
 <p class="lede">Someone has sent you a gpxil file, or you’ve made one. This walkthrough shows what it holds – its reference, its sample, its contigs and planes, its metadata – and how to check that it follows the gpxil specification. It uses HG002’s chromosome 17; with a file of your own, choose it instead.</p>
 
@@ -15,18 +15,23 @@
 <div class="tryrow"><button class="do" type="button" data-tool="info" data-input="/data/examples/HG002_chr17.gpxil.tif">What’s in HG002_chr17.gpxil.tif?</button></div>
 <p>Tick <b>All of its metadata, as JSON</b> to see everything the file says about itself: each contig’s checksums (<code>md5</code> and <code>refget</code>), the pages that hold its planes, how many bases were called with confidence, and the counts the encoder kept as it read the VCF, such as <code>conflicts</code> and <code>ref_mismatches</code> (both 0 here, as they should be). <a href="#h-gpxil">The gpxil format</a> describes every key.</p>
 
-<h2>4 · Check it</h2>
+<h2>4 · Count what it holds</h2>
+<p><b>Count what a file holds</b> runs <code>gpxil stats</code>: how much of each contig, or of a region, was called with confidence, and the person’s substitutions (with their ratio of transitions to transversions, Ti/Tv), insertions and deletions, how much is phased, and the quality and depth of the calls. HG002’s chromosome 17 is 86.9 % called, with 54,935 heterozygous and 34,713 homozygous substitutions and a Ti/Tv of 2.36. The Viewer counts the same for the region in view, under its key.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="stats" data-input="/data/examples/HG002_chr17.gpxil.tif" data-regions="chr17">Count HG002’s chromosome 17</button></div>
+
+<h2>5 · Check it</h2>
 <p><b>Check a gpxil file</b> runs <code>gpxil validate</code>. It checks the metadata against the specification’s JSON schema; that every contig has the pages its metadata names, of the right size and type; that every value of every plane is a code the specification allows; that the flags, phase sets and sidecar agree with each other; and, if you leave <b>Recompute the sequences’ checksums</b> ticked, that the reference plane’s bases give the MD5 and refget checksums in the metadata. That last check proves the bases are those of the reference the file names.</p>
 <div class="tryrow"><button class="do" type="button" data-tool="validate" data-input="/data/examples/HG002_chr17.gpxil.tif">Check HG002_chr17.gpxil.tif</button></div>
 <p>It should say <b>Valid</b>. An error means a reader can’t trust the file; a warning is worth reading but doesn’t make the file invalid. A file that isn’t gpxil at all, such as an ordinary TIFF picture, fails at once: its first page has no gpxil metadata.</p>
 
-<h2>5 · A file on the web</h2>
+<h2>6 · A file on the web</h2>
 <p>The files of the GRCh38 reference in <code>/data/grch38</code> are on the Gpxil browser’s web site. Looking inside one reads only its first page, so it is as quick as a file of your own. Checking its checksums reads every base, which for chromosome 1 means downloading 67 MB, so untick <b>Recompute the sequences’ checksums</b> for a quick check of a big file on the web.</p>
 <div class="tryrow"><button class="do" type="button" data-tool="info" data-input="/data/grch38/chr1.gpxil.tif">What’s in GRCh38’s chromosome 1?</button></div>
 
 <h2>The same in the terminal</h2>
 <pre class="code" data-run="term"><code>gpxil info /data/examples/HG002_chr17.gpxil.tif
 gpxil info --json /data/examples/HG002_chr17.gpxil.tif &gt; ~/results/HG002_chr17.metadata.json
+gpxil stats /data/examples/HG002_chr17.gpxil.tif
 gpxil validate /data/examples/HG002_chr17.gpxil.tif
 gpxil info /data/grch38/chr1.gpxil.tif
 gpxil validate /data/grch38/chrM.gpxil.tif</code></pre>

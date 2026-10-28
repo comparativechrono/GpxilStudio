@@ -199,6 +199,7 @@
     if (k === 'gpxil') {
       out.push(['grid', 'View', 'Look at this file’s planes as pixels (Viewer tab)', () => MG.app.viewerOpen(path)]);
       out.push(['info', 'What’s in it', 'Its contigs, planes and sample (gpxil info)', tool('info')]);
+      out.push(['chart', 'Count', 'Count what it holds: calls, variants, phasing, quality (gpxil stats)', tool('stats', { regions: '' })]);
       out.push(['badgeCheck', 'Check', 'Check it against the gpxil specification (gpxil validate)', tool('validate')]);
       out.push(['protein', 'Genes as pictures', 'Pictures of genes, transcripts and proteins from it (gpxil2pxil)', tool('gpxil2pxil')]);
       out.push(['wrench', 'More…', 'Everything the Tools tab can do with this file', () => MG.app.toolsFor(path)]);

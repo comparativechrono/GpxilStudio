@@ -82,7 +82,7 @@ for a in range(0, c.length, step):
     unknown += int(((h1 == C.HAP_UNKNOWN) &amp; (h2 == C.HAP_UNKNOWN)).sum())
 print(f"{het:,} heterozygous and {hom:,} homozygous substitutions")
 print(f"{unknown:,} of {c.length:,} bases not called ({unknown / c.length:.1%})")</code></pre>
-<p>HG002 has 54,935 heterozygous and 34,713 homozygous substitutions on chromosome 17, and 13.1 % of it wasn’t called with confidence by the benchmark: mostly centromeres, segmental duplications and other hard places.</p>
+<p>HG002 has 54,935 heterozygous and 34,713 homozygous substitutions on chromosome 17, and 13.1 % of it wasn’t called with confidence by the benchmark: mostly centromeres, segmental duplications and other hard places. <code>gpxil stats</code> makes these counts, and more – insertions, deletions, Ti/Tv, phasing, quality – in one go, in the same way (<a href="#h-tool-stats">Count what a file holds</a>).</p>
 
 <h2>6 · Compare the two haplotypes</h2>
 <p>Where do HG002’s two copies of TP53 differ from each other? Where their states differ. With phased calls (PHASED in <code>flags</code>), haplotype 1 is one parent’s copy throughout a phase set (the <code>ps</code> plane); HG002’s calls here aren’t phased, so it only says which bases are heterozygous. The sequences themselves come from <code>haplotype_sequence</code>, which applies the variants to the reference, insertions and deletions included.</p>

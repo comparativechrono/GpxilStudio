@@ -1,4 +1,4 @@
-<!-- id: h-viewer | title: The Viewer | group: The viewer | index: yes | summary: Any gpxil file as pixels: choose a file, a region and a view, move around, point at a base | keys: viewer view look see pixels region zoom pan move keyboard hover point base file add upload web grch38 save picture command render -->
+<!-- id: h-viewer | title: The Viewer | group: The viewer | index: yes | summary: Any gpxil file as pixels: choose a file, a region and a view, move around, point at a base | keys: viewer view look see pixels region zoom pan move keyboard hover point base counts count stats called substitutions file add upload web grch38 save picture command render -->
 <h1><!--ICON:grid-->The Viewer</h1>
 <p class="lede">The Viewer shows a gpxil file as it is: one pixel, or a square of pixels, for each base, in rows that read from left to right and from top to bottom like a page of text. It reads only the part of the file it shows, straight from the file, without Python, so a whole genome opens at once – even one on the web.</p>
 <div class="tryrow"><button class="do" type="button" data-viewer="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,661,779-7,687,546" data-mode="variants">Open HG002’s TP53</button></div>
@@ -22,6 +22,9 @@
 
 <h2>Pointing at a base</h2>
 <p>Point at a pixel, and the line under the picture says what the file holds there: the position, the reference’s base (and whether it is soft-masked), each haplotype’s state and the <code>gt</code> value they make, the flags, the genotype quality, the read depth and the phase set. At HG002’s <code>chr17:7,676,154</code>, for example: reference G, haplotype 1 C, haplotype 2 C (gt 34), flags VARIANT_SITE, GQ 254, DP 254. <a href="#h-codes">The codes</a> explains every value.</p>
+
+<h2>Counting what is in view</h2>
+<p>Under the key, the Viewer counts what the region in view holds, as <code>gpxil stats</code> does, and follows you as you move: how much of it was called, the person’s heterozygous and homozygous substitutions and their Ti/Tv, insertions and deletions, the share of heterozygous substitutions phased, and the GC content of the reference. <b>All the counts</b> adds the reference’s bases, the phase sets, genotype quality and read depth, and the <code>gpxil stats</code> command that gives the same numbers in the terminal. In HG002’s TP53: 96.2 % called, 3 heterozygous and 11 homozygous substitutions, 2 insertions and 6 deletions (<a href="#h-tool-stats">Count what a file holds</a>).</p>
 
 <h2>Keeping what you see</h2>
 <p>Under the picture is the <code>gpxil render</code> command that draws the same picture, pixel for pixel, as a file, ready to run in the terminal; <b>Save the picture</b> saves the view as it is, as a PNG in <code>~/results</code>. For the flags, quality, depth and phase-set views, which <code>gpxil render</code> doesn’t draw, there’s a Python cell instead, which reads the plane’s values for the region as a NumPy array: <b>Add to notebook</b> puts it in the open notebook.</p>

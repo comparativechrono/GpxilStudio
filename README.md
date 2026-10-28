@@ -32,7 +32,7 @@ One page, `index.html`, with the help on the left and five tabs on the right:
 
 | Tab | What it is for |
 |---|---|
-| **Viewer** | Any gpxil file – yours, an example, or a chromosome of GRCh38 – as pixels: the reference, the genotype, the two haplotypes, the variants by zygosity, and the flags, quality, depth and phase-set planes. Pointing at a pixel says what the file holds there. It reads only the strips it shows, so a whole genome opens at once, and it draws exactly what `gpxil render` draws, whose command it gives. |
+| **Viewer** | Any gpxil file – yours, an example, or a chromosome of GRCh38 – as pixels: the reference, the genotype, the two haplotypes, the variants by zygosity, and the flags, quality, depth and phase-set planes. Pointing at a pixel says what the file holds there, and under the picture it counts what the region holds, as `gpxil stats` does. It reads only the strips it shows, so a whole genome opens at once, and it draws exactly what `gpxil render` draws, whose command it gives. |
 | **Tools** | The packages behind forms: each tool runs one command, exactly as the terminal would, and shows that command, and the same work in Python. The first page is a map of the formats and the common tasks. **Workflows** chains the tools together, after the Galaxy-style workflows of the lab's other workbenches. |
 | **Files** | Your files and the examples: look at them (a gpxil file's contigs and planes, read in the page), edit, upload and download. |
 | **Notebook** | Python notebooks (`.ipynb`) with all the packages, starting with *gpxil in Python*, which works through a genome pixel by pixel. |
@@ -42,8 +42,8 @@ The tools:
 
 | Group | Tools |
 |---|---|
-| Look inside and check | What's in a gpxil file (`gpxil info`) · Check a gpxil file (`gpxil validate`) |
-| Make gpxil files | Make a gpxil file (`gpxil encode`): a reference (FASTA, or a gpxil file such as a chromosome of GRCh38) and one person's VCF, with the regions called with confidence |
+| Look inside and check | What's in a gpxil file (`gpxil info`) · Check a gpxil file (`gpxil validate`) · Count what a file holds (`gpxil stats`) |
+| Make gpxil files | Make a gpxil file (`gpxil encode`): a reference (FASTA, or a gpxil file such as a chromosome of GRCh38) and one person's VCF, with the regions called with confidence · Make a working copy (`gpxil subset`): some contigs and planes of a file, copied without decoding |
 | Pictures and print | Draw a region as a picture (`gpxil render`: PNG, or TIFF in RGB or CMYK) · Print it as a book (`gpxil book`) · The palettes |
 | Back to FASTA and VCF | Sequences as FASTA (`gpxil fasta`: the reference, either haplotype, or the genotype in IUPAC codes) · Variants as VCF (`gpxil vcf`) |
 | Genes as pictures | Genes, transcripts and proteins as pxil pictures (`gpxil2pxil`) · pxil pictures → FASTA (`pxil`) |
@@ -81,8 +81,10 @@ most, so nothing big is ever copied whole:
 
 `gpxiltools` 0.3.0 was made for this: it reads files on web servers with
 range requests, takes a gpxil file as the reference (reading only the contigs
-it needs), and runs without imagecodecs, which Pyodide doesn't have. The
-experiments behind the design are in
+it needs), and runs without imagecodecs, which Pyodide doesn't have. 0.4.0
+adds working copies of some contigs (`gpxil subset`, which copies their strips
+without decoding them) and the counts of what a file holds (`gpxil stats`, a
+piece at a time). The experiments behind the design are in
 [Gpxil-scratchpad](https://github.com/comparativechrono/Gpxil-scratchpad)
 (`experiments/01-browser-python`): the 809 MB whole genome opened in 72 MB of
 Python memory.
@@ -126,8 +128,8 @@ python3 build/make_page.py              # build/template.html + build/help/*.htm
 
 - `assets/js/` – the framework (from the lab's Bioinformatics and Pedigree
   workbenches: the help, the shell, the notebook, the editor, the file system
-  and the Python worker), and the studio's own parts: `gpxil-read.js` and
-  `viewer-tab.js` (the Viewer), `tools.js` (the tools), `workflows.js`,
+  and the Python worker), and the studio's own parts: `gpxil-read.js`,
+  `gpxil-stats.js` and `viewer-tab.js` (the Viewer), `tools.js` (the tools), `workflows.js`,
   `schematic.js` (the map of the formats), `page-wb.js` (the files, the
   examples and the reference) and `py-worker.js` (Python, with the lazy files).
 - `python/gpxilwb/` – the studio's own Python: it runs the programs by name for

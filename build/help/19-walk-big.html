@@ -1,4 +1,4 @@
-<!-- id: h-walk-big | title: A whole genome without running out of memory | group: Walkthroughs | summary: Regions and strips, a chromosome a piece at a time, files without the reference that borrow it, and the whole genome on your own computer | keys: memory big large whole genome chromosome chunks pieces strips lazy region reference borrow no-ref noref download curl sha256 out of memory crash slow -->
+<!-- id: h-walk-big | title: A whole genome without running out of memory | group: Walkthroughs | summary: Regions and strips, a chromosome a piece at a time, files without the reference that borrow it, working copies and their counts, and the whole genome on your own computer | keys: memory big large whole genome chromosome chunks pieces strips lazy region reference borrow no-ref noref subset working copy stats counts download curl sha256 out of memory crash slow -->
 <h1><!--ICON:memory-->A whole genome without running out of memory</h1>
 <p class="lede">A human genome is 3.1 billion bases. As one byte a base, a single plane of it is 3.1 GB in memory, more than Python in a browser can use, although the file that holds it is under 1 GB. Yet the studio opens a whole genome at once, because it never reads more of a file than it needs. This walkthrough shows how, and how to write your own code the same way.</p>
 
@@ -23,7 +23,7 @@ for a in range(0, c.length, step):
 gc = np.array(gc)
 print(f"{c.length:,} bases in {gc.size} pieces, {np.isnan(gc).sum()} of them all N")
 print(f"GC from {np.nanmin(gc):.1%} to {np.nanmax(gc):.1%}, highest in megabase {np.nanargmax(gc) + 1}")</code></pre>
-<p>Chromosome 21’s first five megabases are all N – the short arm, which GRCh38 doesn’t spell out – and its GC content runs from 34.6 % to 53.0 %, highest near the end of its long arm. A loop over all the chromosomes of a genome works the same way, contig by contig: <code>for c in g:</code>.</p>
+<p>Chromosome 21’s first five megabases are all N – the short arm, which GRCh38 doesn’t spell out – and its GC content runs from 34.6 % to 53.0 %, highest near the end of its long arm. A loop over all the chromosomes of a genome works the same way, contig by contig: <code>for c in g:</code>. <code>gpxil stats</code> goes through a file like this to count what it holds (section 4).</p>
 
 <h2>3 · Files without the reference, which borrow it</h2>
 <p>A person’s genome as a gpxil file is mostly their reference: the same bases for everyone. Written without the reference plane (<code>gpxil encode --no-ref</code>), it is a small fraction of the size, and names its reference by checksums. Open it with the reference, and gpxiltools reads just the region you ask for from the reference, after checking that its checksums match. The Viewer does the same by itself for a file made on GRCh38.</p>
@@ -39,20 +39,30 @@ with GpxilFile("/home/user/genomes/HG002_TP53.noref.gpxil.tif", reference="/data
     print(c.planes, "plus the borrowed reference:", c.has("ref"))
     print(haplotype_sequence(c, 1, 7_676_100, 7_676_200).decode())</code></pre>
 
-<h2>4 · What uses memory, and what doesn’t</h2>
+<h2>4 · A working copy, and what it holds</h2>
+<p>To work on part of a big file, make a working copy of it: <code>gpxil subset</code> copies the contigs you choose, and the planes you choose, into a new file. It copies the pages’ strips as they are stored, without decoding them, so it takes little memory and little time, even from a whole genome or a file on the web. Leaving out the reference plane makes the copy about a hundred times smaller: HG002’s chromosome 17 goes from 24.6 MB to 1.9 MB, and the Viewer borrows the reference from GRCh38 as before.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="subset" data-input="/data/examples/HG002_chr17.gpxil.tif" data-no-ref>Copy HG002’s chromosome 17 without its reference</button></div>
+<pre class="code" data-run="term"><code>gpxil subset /data/examples/HG002_chr17.gpxil.tif chr17 --no-ref -o ~/genomes/HG002_chr17.noref.gpxil.tif
+gpxil stats ~/genomes/HG002_chr17.noref.gpxil.tif</code></pre>
+<p><code>gpxil stats</code> then counts what the copy holds, a piece at a time: 86.9 % of chromosome 17 called, 54,935 heterozygous and 34,713 homozygous substitutions, and the insertions, deletions, phasing, quality and depth (<a href="#h-tool-stats">Count what a file holds</a>). Without the reference plane it counts all but the reference’s bases and Ti/Tv; give it <code>--reference /data/grch38/chr17.gpxil.tif</code> for those. The Viewer counts the same for the region in view, under its key.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="stats" data-input="/data/examples/HG002_chr17.gpxil.tif" data-regions="chr17">Count HG002’s chromosome 17</button></div>
+
+<h2>5 · What uses memory, and what doesn’t</h2>
 <ul>
-  <li><b>Doesn’t:</b> opening a file, its metadata, the Viewer, the Files tab, reading a region, a loop over pieces, <code>gpxil info</code>, <code>gpxil vcf</code> and <code>gpxil fasta</code> (which write as they go), <code>gpxil validate</code> (which checks a piece at a time).</li>
-  <li><b>Does:</b> <code>gpxil encode</code>, which holds each contig’s planes whole while it works: about 6 bytes a base with the planes <code>gt</code> and <code>flags</code>, so half a gigabyte for chromosome 17 and about 1.5 GB for chromosome 1, more than a browser tab may have. In the browser, encode one chromosome at a time (<b>Only these contigs</b>, or <code>--contigs</code>), and the biggest chromosomes, or a whole genome, on your own computer (section 5). Also a whole plane read at once (<code>c.read("gt")</code> on chromosome 1 is 249 MB), and big pictures, which is why the tools stop at 25 million bases a picture in the browser.</li>
+  <li><b>Doesn’t:</b> opening a file, its metadata, the Viewer, the Files tab, reading a region, a loop over pieces, <code>gpxil info</code>, <code>gpxil vcf</code> and <code>gpxil fasta</code> (which write as they go), <code>gpxil validate</code> and <code>gpxil stats</code> (which read a piece at a time), <code>gpxil subset</code> (which copies a strip at a time).</li>
+  <li><b>Does:</b> <code>gpxil encode</code>, which holds each contig’s planes whole while it works: about 6 bytes a base with the planes <code>gt</code> and <code>flags</code>, so half a gigabyte for chromosome 17 and about 1.5 GB for chromosome 1, more than a browser tab may have. In the browser, encode one chromosome at a time (<b>Only these contigs</b>, or <code>--contigs</code>), and the biggest chromosomes, or a whole genome, on your own computer (section 6). Also a whole plane read at once (<code>c.read("gt")</code> on chromosome 1 is 249 MB), and big pictures, which is why the tools stop at 25 million bases a picture in the browser.</li>
   <li>Keep arrays small: <code>uint8</code> as they come, not converted to 64-bit numbers. <code>del</code> big arrays you’ve finished with, and if Python gets slow or stops with a <i>MemoryError</i>, restart it (the Notebook’s <b>Restart</b>, or the Python pill in the Tools tab): your files are safe, only Python’s variables are lost.</li>
 </ul>
 
-<h2>5 · The whole genome on your own computer</h2>
+<h2>6 · The whole genome on your own computer</h2>
 <p>On your own computer, memory is less tight and the files can be local. The Gpxil browser offers the whole of GRCh38 as one gpxil file, 848.5 MB, which every command here can use as a reference or read like any other:</p>
 <pre class="code"><code>curl -LO https://github.com/comparativechrono/Gpxil-browser/releases/download/grch38-ensembl116/GRCh38.gpxil.tif
 curl -LO https://github.com/comparativechrono/Gpxil-browser/releases/download/grch38-ensembl116/GRCh38.gpxil.tif.sha256
 sha256sum -c GRCh38.gpxil.tif.sha256          # on a Mac: shasum -a 256 -c GRCh38.gpxil.tif.sha256
 gpxil info GRCh38.gpxil.tif
-gpxil encode GRCh38.gpxil.tif -v my.vcf.gz --callable my.bed --no-ref -o my.gpxil.tif</code></pre>
+gpxil encode GRCh38.gpxil.tif -v my.vcf.gz --callable my.bed --no-ref -o my.gpxil.tif
+gpxil stats my.gpxil.tif --reference GRCh38.gpxil.tif
+gpxil subset my.gpxil.tif chr17 -o my_chr17.gpxil.tif   # a working copy to add to the studio</code></pre>
 <p>(<code>curl -C - -LO …</code> carries on with a download that was interrupted.) <a href="#h-own-computer">On your own computer</a> says how to install the programs there.</p>
 
 <h2>The limits in the browser</h2>

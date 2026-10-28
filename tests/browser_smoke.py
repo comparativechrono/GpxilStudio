@@ -81,6 +81,36 @@ async (opts) => {
     check(val('region') === 'chr17:7661779-7687546' && val('mode') === 'variants' && val('width') === '256', 'Tools: Draw a region suggests TP53, the variants and narrow rows for HG002');
     let res = await runTool();
     check(document.querySelector('.tl-done.ok') && MG.app.fs.exists('/home/user/results/HG002_chr17_chr17_7661779-7687546_variants.png') && !/DeprecationWarning/.test(res), 'Tools: Draw a region writes the picture');
+    // the Viewer counts the region in view as gpxil stats does: TP53; regions that begin or end inside deletions
+    // (on both haplotypes, or one) and at insertions; 3 Mb, more than the Viewer reads for pointing at bases
+    const differ = (a, b, path = '') => {
+      if (a === b) return [];
+      if (a && b && typeof a === 'object' && typeof b === 'object') return [...new Set([...Object.keys(a), ...Object.keys(b)])].flatMap((k) => differ(a[k], b[k], path + '.' + k));
+      return [`${path}: page ${JSON.stringify(a)}, gpxil stats ${JSON.stringify(b)}`];
+    };
+    const countRegions = ['chr17:7661779-7687546', 'chr17:7645770-7700000', 'chr17:7600001-7645770', 'chr17:7629000-7629380', 'chr17:7620120-7620200', 'chr17:7600001-7620120', 'chr17:40000001-43000000'];
+    const countDiffs = [];
+    for (const region of countRegions) {
+      await MG.app.viewerOpen('/data/examples/HG002_chr17.gpxil.tif', { region, mode: 'genotype' });
+      await wait(() => V.data && `${V.data.contig.name}:${V.data.start + 1}-${V.data.end}` === region && V.counts && V._countKey.endsWith(`|${V.data.start}|${V.data.end}`) && !/Counting/.test(V.countsEl.textContent), 120000);
+      const py = await MG.app.pyCall('gpxilwb.gui.stats', { path: '/data/examples/HG002_chr17.gpxil.tif', regions: [region] });
+      const { contig, start, end, ...want } = py.result.regions[0];
+      countDiffs.push(...differ(V.counts, want).map((x) => region + ' ' + x));
+    }
+    check(!countDiffs.length && /In view, 3,000,000 bases: 92\.7\s% called/.test(V.countsEl.textContent), `Viewer: the counts of the region in view are gpxil stats’, on ${countRegions.length} regions${countDiffs.length ? ': ' + countDiffs.slice(0, 3).join('; ') : ''}`);
+    await MG.app.useTool('stats', { input: '/data/examples/HG002_chr17.gpxil.tif' });
+    await wait(() => val('regions'), 20000);
+    res = await runTool();
+    check(val('regions') === 'chr17:7661779-7687546' && /3 heterozygous, 11 homozygous; Ti\/Tv 6\.00/.test(res) && /970 \(3\.8\s%\)/.test(res), 'Tools: Count what a file holds, for TP53');
+    await MG.app.useTool('subset', { input: '/data/examples/HG002_chr17.gpxil.tif', noRef: true });
+    await sleep(300);
+    check(val('out') === '~/genomes/HG002_chr17.noref.gpxil.tif', 'Tools: Make a working copy suggests a name');
+    res = await runTool();
+    const copy = MG.app.fs.get('/home/user/genomes/HG002_chr17.noref.gpxil.tif');
+    check(document.querySelector('.tl-done.ok') && copy && copy.size < 3e6 && /strips copied as stored/.test(res), `Tools: a working copy without the reference plane (${copy ? (copy.size / 1e6).toFixed(1) : '?'} MB)`);
+    await MG.app.useTool('validate', { input: '/home/user/genomes/HG002_chr17.noref.gpxil.tif' });
+    await runTool();
+    check(document.querySelector('.tl-verdict.ok'), 'Tools: … and it is valid');
     await MG.app.useTool('validate', { input: '/data/examples/HG002_chr17.gpxil.tif' });
     await runTool();
     check(document.querySelector('.tl-verdict.ok'), 'Tools: HG002’s file is valid, checksums and all');
@@ -116,7 +146,7 @@ async (opts) => {
     check(JSON.stringify(names) === JSON.stringify(['>ENSP00000269305', '>ENSP00000269305_HG002-hap1', '>ENSP00000269305_HG002-hap2']), `Tools: … each with a name of its own (${names.join(' ')})`);
     MG.app.tools.go({ page: 'start' });
     await wait(() => document.querySelector('.pw-map svg'));
-    check(document.querySelectorAll('.tl-task').length === 6 && fits(), 'Tools: the map and the common tasks');
+    check(document.querySelectorAll('.tl-task').length === 7 && fits(), 'Tools: the map and the common tasks');
 
     // the Files tab: a gpxil file's contigs and planes, read in the page
     await MG.app.editFile('/data/examples/HG002_chr17.gpxil.tif');
@@ -132,6 +162,7 @@ async (opts) => {
     const T = MG.app.term;
     const run = async (cmd) => { const n0 = T.outEl.children.length; await T.type(cmd, true); await sleep(150); await wait(() => !T.busy, 300000); return Array.from(T.outEl.children).slice(n0).map((e) => e.textContent).join('\n'); };
     check(/106,992/.test(await run('gpxil info /data/examples/HG002_chr17.gpxil.tif')), 'Terminal: gpxil info');
+    check(/3 heterozygous, 11 homozygous/.test(await run('gpxil stats /data/examples/HG002_chr17.gpxil.tif chr17:7,661,779-7,687,546')), 'Terminal: gpxil stats');
     check(/^>chr17:7676101-7676160_hap1\n/m.test(await run('gpxil fasta /data/examples/HG002_chr17.gpxil.tif --which 1 --region chr17:7676101-7676160')), 'Terminal: gpxil fasta, a haplotype');
     check(/7676154\t\.\tG\tC/.test(await run('gpxil vcf /data/examples/HG002_chr17.gpxil.tif --region chr17:7676101-7676200 --no-nocall-blocks | grep -v "^#"')), 'Terminal: gpxil vcf, piped to grep: P72R');
     check(/\* TP53-201 +ENST00000269305/.test(await run("gpxil2pxil /data/examples/HG002_chr17.gpxil.tif TP53 -a /data/examples/TP53.gtf --list | grep -F '*'")), 'Terminal: gpxil2pxil --list, the canonical transcript marked');

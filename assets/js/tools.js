@@ -169,6 +169,30 @@
     return '';
   }
 
+  /** regions given as text, separated by spaces */
+  const regionsOf = (text) => String(text || '').trim().split(/\s+/).filter(Boolean);
+  /** contig names given as text, separated by spaces or commas */
+  const contigsOf = (text) => String(text || '').split(/[\s,]+/).filter(Boolean);
+  /** what gpxil subset is asked for: planes (null: all of each contig's; '': nothing), dropRef (--no-ref), noRef (the
+      copy will be without its reference plane), reference (to put it back from). Planes a file doesn't have are left
+      out of the list, as the choices are for any file */
+  function subsetPlanes(v) {
+    const info = infoOf(v.input);
+    const chosen = contigsOf(v.contigs);
+    const contigs = info && info.contigs ? info.contigs.filter((c) => !chosen.length || chosen.some((n) => contigOf(info, n) === c)) : null;
+    const have = contigs ? new Set(contigs.flatMap((c) => c.planes)) : null;
+    const reference = needsRef(v.input) && v.reference ? v.reference : '';
+    const dropRef = !needsRef(v.input) && !!v.noRef && v.planes !== 'ref';
+    let want = v.planes ? v.planes.split(',') : null;
+    if (want && have) want = want.filter((p) => (p === 'ref' ? have.has('ref') || !!reference : have.has(p)));
+    if (reference) {
+      want = want || [...(have || [])];
+      if (!want.includes('ref')) want.unshift('ref');
+    }
+    if (dropRef && want) want = want.filter((p) => p !== 'ref');
+    return { planes: want === null ? null : want.join(','), dropRef, noRef: dropRef || (needsRef(v.input) && !reference), reference };
+  }
+
   /* ------------------------------------------------------------------ choices the tools share */
   const PALETTES = [
     ['classic', 'classic: A red, C blue, G green, T yellow'],
@@ -254,6 +278,48 @@
       python: (v) => ['from gpxiltools.validate import validate', '', `report = validate(${pyq(v.input)}, check_digests=${v.digests ? 'True' : 'False'})`, 'print("valid" if report.ok else "not valid")', 'for e in report.errors:', '    print("error:", e)', 'for w in report.warnings:', '    print("warning:", w)'].join('\n'),
       render: (r, v, out) => renderFindings(r.result, v, out)
     },
+    {
+      id: 'stats',
+      group: 'look',
+      title: 'Count what a file holds',
+      pkg: 'gpxiltools',
+      what: 'Count what a gpxil file holds, for every contig or for regions: bases called, substitutions and Ti/Tv, insertions, deletions, phasing, quality and depth: gpxil stats.',
+      about:
+        'Counted from the planes, a piece at a time, so a whole genome takes little memory. A base is <b>called</b> where every haplotype is known, and <b>not called</b> where neither is. A <b>substitution</b> is homozygous where every haplotype carries the same other base, and heterozygous otherwise; each base carried counts towards <b>Ti/Tv</b>, the transitions (A↔G, C↔T) over the transversions, about 2 for a human genome. A run of deleted bases on a haplotype is one <b>deletion</b>, and homozygous if the other haplotype has the same run; an <b>insertion</b> likewise. <b>Phasing</b> is the share of heterozygous substitutions phased, and the phase sets with their N50. Genotype quality and read depth are given as quartiles. The Viewer counts the same for the region in view.',
+      help: 'h-tool-stats',
+      fields: [
+        { key: 'input', type: 'file', label: 'The gpxil file', kinds: ['gpxil'] },
+        { key: 'regions', type: 'text', label: 'Regions (optional)', def: (v) => defaultRegion(v.input), placeholder: 'every contig, whole', help: 'One or more regions, separated by spaces: a contig, or CONTIG:START-END counting from 1. Leave it empty for every contig: a whole chromosome takes seconds.' },
+        REF_FIELD
+      ],
+      check: (v) => {
+        for (const r of regionsOf(v.regions)) {
+          const bad = checkRegion(v.input, r, 'region', 0);
+          if (bad) return bad;
+        }
+        return '';
+      },
+      argv: (v) => ['gpxil', 'stats', v.input, ...regionsOf(v.regions).map((r) => r.replace(/,/g, '')), ...refArgs(v)],
+      call: { fn: 'gpxilwb.gui.stats', args: (v) => ({ path: v.input, regions: regionsOf(v.regions), reference: v.reference || null }) },
+      wf: { outputs: () => [], summary: (res) => (res.result ? statsSummary(res.result.total) : '') },
+      python: (v) => {
+        const regs = regionsOf(v.regions).map(parseRegion).filter(Boolean);
+        return [
+          'from gpxiltools import GpxilFile',
+          'from gpxiltools.stats import format_stats, stats',
+          '',
+          `with GpxilFile(${pyq(v.input)}${refPy(v)}) as g:`,
+          `    counts = stats(g${regs.length ? `, [${regs.map((r) => `(${pyq(r.contig)}, ${r.start}, ${r.end == null ? 'None' : r.end})`).join(', ')}]` : ''})   # (0-based regions, the end not included)`,
+          'print(format_stats(counts))',
+          'print(counts["total"]["substitutions"])   # the numbers, to work with'
+        ].join('\n');
+      },
+      render: (r, v, out) => renderStats(r.result, out),
+      next: (res, v) => {
+        const first = regionsOf(v.regions)[0];
+        return [['grid', 'Look at it in the Viewer', () => MG.app.viewerOpen(v.input, first ? { region: first } : {})]];
+      }
+    },
 
     /* ---------------- Make gpxil files ---------------- */
     {
@@ -325,6 +391,65 @@
         ['grid', 'Look at it in the Viewer', () => MG.app.viewerOpen(v.out)],
         ['badgeCheck', 'Check it', () => MG.app.useTool('validate', { input: v.out })],
         ['pixels', 'Pictures of its genes', () => MG.app.useTool('gpxil2pxil', { input: v.out })]
+      ]
+    },
+    {
+      id: 'subset',
+      group: 'make',
+      title: 'Make a working copy (subset)',
+      pkg: 'gpxiltools',
+      what: 'Copy some contigs of a gpxil file, and if you like only some of its planes, into a new and smaller file, without encoding it again: gpxil subset.',
+      about:
+        'A whole genome is about 850 MB as gpxil; one of its chromosomes is a few per cent of that, and a file without its reference plane is about a hundred times smaller again. Each contig of a gpxil file stands on its own – its pages and its entry in the metadata – so gpxil subset copies the pages of the contigs you choose as they are stored, strip by strip, without decoding them: it is quick, needs little memory, and works as well on a file you added to this browser or one on the web. Without its reference plane, a contig keeps the checksums of its reference, so a tool can be given the reference again (or this tool can put it back). The copy records the file it came from.',
+      help: 'h-tool-subset',
+      fields: [
+        { key: 'input', type: 'file', label: 'The gpxil file', kinds: ['gpxil'] },
+        { key: 'contigs', type: 'text', label: 'Contigs (optional)', def: '', placeholder: 'all of them; or e.g. chr17, or chr17 chr21', help: 'The contigs to copy, by name, separated by spaces or commas. Leave it empty for all of them.' },
+        { key: 'planes', type: 'select', label: 'Planes', def: '', options: [['', 'all the planes it has'], ['ref,gt,flags,ps', 'leave out genotype quality and read depth (gq, dp)'], ['ref,gt,flags', 'the reference, the genotype and the flags only'], ['ref', 'the reference only, without the sample']] },
+        { key: 'noRef', type: 'check', label: 'Leave out the reference plane (a much smaller file)', def: false, show: (v) => !needsRef(v.input) && v.planes !== 'ref', help: 'Like gpxil encode --no-ref: the contigs keep the checksums of their reference, and anything that reads their bases is given the reference too (each tool has a field for it).' },
+        Object.assign({}, REF_FIELD, { def: '', label: 'Put its reference plane back, from (optional)', none: 'nothing: copy it without one', help: 'This file was written without its reference plane. Choose the reference – a FASTA file, or a gpxil file with its reference plane, such as a chromosome of GRCh38 from /data/grch38 – to write it into the copy; gpxil checks that it is the same.' }),
+        { key: 'compression', type: 'select', label: 'Compression', def: '', options: [['', 'as it is: its strips are copied without decoding'], ['deflate', 'deflate'], ['none', 'none (a large file)']], help: 'Choosing one encodes the strips again, which takes longer. In the browser gpxil writes deflate or nothing; on your own computer also Zstandard, LZW, LZMA and PackBits.' },
+        { key: 'out', type: 'path', label: 'Save as', def: (v) => `~/genomes/${stemOf(v.input).replace(/\.noref$/, '')}${contigsOf(v.contigs).length ? '_' + contigsOf(v.contigs).slice(0, 3).join('-') : ''}${subsetPlanes(v).noRef ? '.noref' : ''}.gpxil.tif` }
+      ],
+      check: (v) => {
+        const info = infoOf(v.input);
+        if (info && info.error) return `${base(v.input)} couldn’t be read: ${info.error}`;
+        if (info) {
+          const missingC = contigsOf(v.contigs).filter((x) => !contigOf(info, x));
+          if (missingC.length) return `${base(v.input)} has no contig ${missingC.join(', ')}: it has ${info.contigs.slice(0, 6).map((c) => c.name).join(', ')}${info.contigs.length > 6 ? ' …' : ''}.`;
+          if (/^ref$/.test(v.planes) && needsRef(v.input) && !v.reference) return `${base(v.input)} has no reference plane to copy: choose the reference to put it back from.`;
+          if (subsetPlanes(v).planes === '') return 'Those choices leave nothing to copy.';
+        }
+        if (!/\.gpxil\.tiff?$/i.test(v.out || '')) return 'Save it with a name ending in .gpxil.tif.';
+        if (expand(v.out) === expand(v.input)) return 'Save the copy under another name: it can’t replace the file it is copied from.';
+        return '';
+      },
+      argv: (v) => {
+        const p = subsetPlanes(v);
+        return [
+          'gpxil', 'subset', v.input, ...contigsOf(v.contigs), '-o', v.out,
+          ...optArgs(p.planes, '--planes', p.planes),
+          ...optArgs(p.dropRef && !p.planes, '--no-ref'),
+          ...optArgs(p.reference, '--reference', p.reference),
+          ...optArgs(v.compression, '--compression', v.compression)
+        ];
+      },
+      outputs: (v) => [v.out],
+      wf: { outputs: (v) => [{ name: 'gpxil', label: 'gpxil file', kinds: ['gpxil'], path: v.out }], summary: (res) => ((res.stderr || '').match(/wrote [^:]+: ([^\n]+)/) || [])[1] || '' },
+      python: (v) => {
+        const p = subsetPlanes(v);
+        const cs = contigsOf(v.contigs);
+        const args = [`${pyq(v.input)}, ${pyq(v.out)}, ${cs.length ? JSON.stringify(cs) : 'None'}`];
+        if (p.planes) args.push(`planes=${JSON.stringify(p.planes.split(','))}`);
+        if (p.dropRef && !p.planes) args.push('include_ref=False');
+        if (p.reference) args.push(`reference=${pyq(p.reference)}`);
+        if (v.compression) args.push(`compression=${pyq(v.compression)}`);
+        return ['from gpxiltools.subset import subset', '', `summary = subset(${args.join(', ')})`, 'print(summary)'].join('\n');
+      },
+      next: (res, v) => [
+        ['grid', 'Look at it in the Viewer', () => MG.app.viewerOpen(v.out)],
+        ['chart', 'Count what it holds', () => MG.app.useTool('stats', { input: v.out })],
+        ['badgeCheck', 'Check it', () => MG.app.useTool('validate', { input: v.out })]
       ]
     },
 
@@ -654,12 +779,13 @@
 
   /* the common tasks, on the first page: [icon, what you want, [tool ids in order], a walkthrough] */
   const TASKS = [
-    ['eye', 'Look inside a gpxil file, and check it', ['info', 'validate'], 'h-walk-look'],
+    ['eye', 'Look inside a gpxil file, and check it', ['info', 'stats', 'validate'], 'h-walk-look'],
     ['genome', 'Turn someone’s VCF into a gpxil file', ['encode', 'validate'], 'h-walk-encode'],
     ['image', 'Draw a gene, a region or a chromosome', ['render', 'palettes'], 'h-walk-render'],
     ['pixels', 'See a person’s own version of a protein', ['gpxil2pxil', 'pxil-fasta'], 'h-walk-genes'],
     ['convert', 'Get sequences and variants back out', ['fasta', 'vcf'], 'h-walk-export'],
-    ['print', 'Print a chromosome as a book', ['book'], 'h-walk-book']
+    ['print', 'Print a chromosome as a book', ['book'], 'h-walk-book'],
+    ['scissors', 'Work with a whole genome: a working copy, and its counts', ['subset', 'stats'], 'h-walk-big']
   ];
 
   /* ------------------------------------------------------------------ files for the pickers */
@@ -1459,6 +1585,73 @@
     }
     return box;
   }
+
+  /* the counts of gpxil stats (gpxilwb.gui.stats, as gpxiltools.stats.stats gives them), as gpxil stats prints them
+     (gpxiltools.stats.format_stats): a table of the regions, and the counts of one region, or of all of them */
+  const pct = (n, d) => (n == null || !d ? '–' : `${((100 * n) / d).toFixed(1)}\u00a0%`); // (a space that doesn't break)
+  const span = (n) => (n == null ? '–' : n >= 1e6 ? `${(n / 1e6).toFixed(1)} Mb` : n >= 1e3 ? `${(n / 1e3).toFixed(1)} kb` : `${n} bp`);
+  /** one region's counts as rows [what, the numbers] (gpxiltools.stats._block) */
+  function statsRows(d) {
+    const n = d.bases;
+    const rows = [];
+    const r = d.reference;
+    if (r) {
+      const acgt = ['A', 'C', 'G', 'T'].map((b) => `${b} ${pct(r[b], n)}`).join(', ');
+      rows.push(['reference', `${acgt}${r.gc != null ? ` (GC ${(100 * r.gc).toFixed(1)}\u00a0%)` : ''}; N ${pct(r.N, n)}${r.gaps ? `; gaps ${fmt(r.gaps)}` : ''}${r.ambiguous ? `; other codes ${fmt(r.ambiguous)}` : ''}; soft-masked ${pct(r.soft_masked, n)}`]);
+    }
+    const c = d.calls;
+    if (!c) {
+      rows.push(['sample', 'none: the file holds the reference only']);
+      return rows;
+    }
+    rows.push(['called', `${fmt(c.called)} bases (${pct(c.called, n)}); not called ${fmt(c.not_called)} (${pct(c.not_called, n)})${c.partly_called ? `; partly called ${fmt(c.partly_called)}` : ''}`]);
+    if (c.one_copy) rows.push(['one copy', `${fmt(c.one_copy)} bases`]);
+    const s = d.substitutions;
+    rows.push(['substitutions', `${fmt(s.heterozygous)} heterozygous, ${fmt(s.homozygous)} homozygous${s.ti_tv ? `; Ti/Tv ${s.ti_tv.toFixed(2)}` : ''}`]);
+    for (const k of ['insertions', 'deletions']) rows.push([k, `${fmt(d[k].heterozygous)} heterozygous, ${fmt(d[k].homozygous)} homozygous; ${fmt(d[k].bases)} bases`]);
+    if (d.complex.heterozygous || d.complex.homozygous) rows.push(['complex', `${fmt(d.complex.heterozygous)} heterozygous, ${fmt(d.complex.homozygous)} homozygous`]);
+    const p = d.phasing;
+    if (p.phase_sets) {
+      const sets = `${fmt(p.phase_sets)} phase set${p.phase_sets === 1 ? '' : 's'}${p.phase_sets > 1 ? `, N50 ${span(p.n50)}, largest ${span(p.largest)}` : ` over ${span(p.largest)}`}`;
+      rows.push(['phasing', `${pct(p.heterozygous_substitutions_phased, s.heterozygous)} of heterozygous substitutions phased; ${sets}`]);
+    } else rows.push(['phasing', 'none']);
+    for (const [k, name] of [['gq', 'genotype quality'], ['dp', 'read depth']]) {
+      const q = d[k];
+      if (q) rows.push([name, q.bases ? `median ${q.median}, quartiles ${q.q1}–${q.q3}, mean ${q.mean}; ${fmt(q.bases)} bases with a value` : 'no values']);
+    }
+    if (c.filtered) rows.push(['filtered', `${fmt(c.filtered)} bases`]);
+    return rows;
+  }
+  const regionLabel = (r) => `${r.contig}:${fmt(r.start)}-${fmt(r.end)}`;
+  /** in a few words, for a workflow's steps */
+  function statsSummary(d) {
+    if (!d) return '';
+    if (!d.calls) return `the reference only${d.reference && d.reference.gc != null ? `; GC ${(100 * d.reference.gc).toFixed(1)}\u00a0%` : ''}`;
+    const s = d.substitutions;
+    return `${fmt(s.heterozygous)} heterozygous and ${fmt(s.homozygous)} homozygous substitutions${s.ti_tv ? ` (Ti/Tv ${s.ti_tv.toFixed(2)})` : ''}; ${pct(d.calls.called, d.bases)} called`;
+  }
+  function renderStats(res, out) {
+    if (!res) return;
+    const regs = res.regions || [];
+    out.appendChild(h('p.tl-statshead', h('b', res.file), res.sample ? ` · sample ${res.sample}` : '', res.reference ? ` · ${res.reference}` : ''));
+    if (regs.length > 1) {
+      const t = h('table.tl-condtable.tl-statsregions', h('tr', ...['Region', 'Bases', 'Called', 'Het. subs', 'Hom. subs', 'Ins.', 'Del.', 'Ti/Tv', 'Phased'].map((x) => h('th', x))));
+      for (const r of regs) {
+        const c = r.calls, s = r.substitutions;
+        const tr = h('tr', h('td', h('code', regionLabel(r))), h('td', fmt(r.bases)));
+        if (!c) tr.appendChild(h('td', { colspan: 7 }, 'reference only'));
+        else
+          [pct(c.called, r.bases), fmt(s.heterozygous), fmt(s.homozygous), fmt(r.insertions.heterozygous + r.insertions.homozygous), fmt(r.deletions.heterozygous + r.deletions.homozygous), s.ti_tv ? s.ti_tv.toFixed(2) : '–', r.phasing.fraction == null ? '–' : `${Math.round(100 * r.phasing.fraction)}\u00a0%`].forEach((x) => tr.appendChild(h('td', x)));
+        t.appendChild(tr);
+      }
+      out.appendChild(h('div.table-scroll', t));
+    }
+    const whole = regs.length === 1 ? regs[0] : res.total;
+    const t = h('table.tl-condtable.tl-stats', h('caption', regs.length === 1 ? `${regionLabel(regs[0])} · ${fmt(whole.bases)} bases` : `All ${regs.length} regions · ${fmt(whole.bases)} bases`));
+    for (const [k, val] of statsRows(whole)) t.appendChild(h('tr', h('th', { scope: 'row' }, k), h('td', val)));
+    out.appendChild(h('div.table-scroll', t));
+  }
+  MG.app.statsRows = statsRows;
 
   /** the findings of gpxil validate, as a verdict and a table */
   function renderFindings(res, x, out) {

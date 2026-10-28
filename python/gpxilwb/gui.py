@@ -3,8 +3,8 @@
 The tab runs its tools as command lines (``run``), so that what it does is
 exactly what the terminal and the packages do. A few things need answers
 rather than files, and those are here: what a file is (``inspect``), a check
-against the gpxil specification (``validate``) and the palettes
-(``palettes``).
+against the gpxil specification (``validate``), the counts of ``gpxil stats``
+(``stats``) and the palettes (``palettes``).
 
 Every function takes and returns plain JSON-like values, because the page
 calls them through the web worker that runs Python.
@@ -207,6 +207,24 @@ def region(path: str, contig: str, start: int, end: int, planes: Optional[List[s
             if c.has(p):
                 out["planes"][p] = c.read(p, start, end).tolist()
         return out
+
+
+def stats(path: str, regions: Optional[List[str]] = None, reference: Optional[str] = None) -> Dict[str, Any]:
+    """What a gpxil file holds, counted, as ``gpxil stats --json`` gives it: for every contig, or for regions given as
+    the command takes them (``chr17`` or ``chr17:7,661,779-7,687,546``, 1-based)."""
+    from gpxiltools.container import GpxilFile
+    from gpxiltools.stats import stats as count
+
+    parsed = [cli_region(r) for r in (regions or []) if str(r).strip()]
+    with GpxilFile(path, reference=reference or None) as g:
+        return count(g, parsed or None)
+
+
+def cli_region(text: str):
+    """A region as ``gpxil`` reads it: (contig, start (0-based), end or None)."""
+    from gpxiltools.cli import _region
+
+    return _region(str(text))
 
 
 def palettes() -> List[Dict[str, Any]]:

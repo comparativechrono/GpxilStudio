@@ -1,0 +1,43 @@
+<!-- id: h-tool-stats | title: Count what a file holds | group: Tools | summary: gpxil stats: bases called, substitutions and Ti/Tv, insertions, deletions, phasing, quality and depth, for every contig or for regions | keys: stats statistics count counts summary called not called heterozygous homozygous substitutions snv snp transitions transversions ti tv titv insertions deletions indels complex phased phasing phase sets n50 quality depth gq dp gc content n soft-masked region regions json -->
+<h1><!--ICON:chart-->Count what a file holds</h1>
+<p class="lede"><code>gpxil stats</code> counts what a gpxil file holds, for every contig or for the regions you give: how much of the genome was called, the person’s substitutions, insertions and deletions, how much is phased, and the quality and depth of the calls. It reads the planes a piece at a time, so a whole chromosome takes little memory and about ten seconds here (a few on your own computer), and the counts of regions add up to those of the whole.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="stats" data-input="/data/examples/HG002_chr17.gpxil.tif">Count HG002’s TP53</button></div>
+
+<h2>What it counts</h2>
+<dl>
+  <dt>reference</dt><dd>The reference’s bases: A, C, G and T, with GC content (C and G over all four), N, gaps and soft-masked (repeat) bases.</dd>
+  <dt>called</dt><dd>Bases where every haplotype is known; <b>not called</b>, where neither is (UNKNOWN, as outside the regions called with confidence); <b>partly called</b>, where one is and one isn’t. A base with one copy (haplotype 2 ABSENT, as on chrX of a man) counts its one haplotype.</dd>
+  <dt>substitutions</dt><dd>Bases where a haplotype carries another base and none is unknown: <b>homozygous</b> where every haplotype carries the same one, <b>heterozygous</b> otherwise. Each base carried is a <b>transition</b> (A↔G, C↔T) or a <b>transversion</b>; their ratio, Ti/Tv, is about 2 for a whole human genome, and much lower in a call set with many errors.</dd>
+  <dt>insertions, deletions</dt><dd>A run of deleted bases on a haplotype is one deletion, homozygous when the other haplotype has the same run (or there is one copy); an insertion after a base likewise, by its inserted bases. Each comes with the bases inserted or deleted. An event belongs to the region it starts in, with all its bases.</dd>
+  <dt>complex</dt><dd>Complex variants (COMPLEX), such as inversions, by their entries in the sidecar.</dd>
+  <dt>phasing</dt><dd>The share of heterozygous substitutions that are phased, and the phase sets: how many, and their N50 and largest span, from their first to their last phased base.</dd>
+  <dt>genotype quality, read depth</dt><dd>The median, quartiles and mean of the <code>gq</code> and <code>dp</code> planes, over the bases that have a value.</dd>
+  <dt>filtered</dt><dd>Bases covered by a call that didn’t pass its filters.</dd>
+</dl>
+<p>A substitution is counted once at its base: a site where the two haplotypes carry two different other bases is one heterozygous substitution, with two bases towards Ti/Tv. Two neighbouring deletions on the same haplotype are one run, so one deletion. So the counts can differ slightly from those of tools that count VCF records.</p>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>Any gpxil file. One without a sample has only its reference counted.</dd>
+  <dt>Regions</dt><dd>One or more regions, separated by spaces: a contig, or CONTIG:START-END counting from 1. Leave it empty for every contig. With several, a table compares them, and the counts of all of them together follow.</dd>
+  <dt>Its reference</dt><dd>Only for a file written without its reference plane: the reference to count its bases and work out Ti/Tv with. Without it, the rest is counted.</dd>
+</dl>
+<p>The Viewer counts the same for the region in view, under its key (<a href="#h-viewer">The Viewer</a>).</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil stats /data/examples/HG002_chr17.gpxil.tif chr17:7,661,779-7,687,546
+gpxil stats /data/examples/HG002_chr17.gpxil.tif chr17:1-20,000,000 chr17:20,000,001-40,000,000
+gpxil stats /data/examples/HG002_chr17.gpxil.tif --json | head -30</code></pre>
+<p>In TP53, HG002 has 3 heterozygous and 11 homozygous substitutions, one heterozygous and one homozygous insertion, and six deletions; 970 bases weren’t called. <code>--json</code> gives every number to programs, with the same names as in Python.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.stats import format_stats, stats
+
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    counts = stats(g, [("chr17", 7_661_778, 7_687_546)])   # (0-based, the end not included)
+print(format_stats(counts))
+tp53 = counts["regions"][0]
+print(tp53["substitutions"], tp53["calls"]["not_called"])</code></pre>
+<p><code>stats(g)</code> counts every contig; <code>counts["total"]</code> holds all the regions together. <code>region_tally</code> counts one region and returns a tally that adds to others with <code>+</code>.</p>
+<!--CITE: gpxiltools giab-->

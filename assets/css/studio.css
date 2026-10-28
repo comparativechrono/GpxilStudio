@@ -198,6 +198,12 @@ textarea.tl-input { font: 13px var(--mono); resize: vertical; }
   .help-page table td:first-child { min-width: 5.5em; }
 }
 .help-xscroll { overflow-x: auto; }
+/* the counts of gpxil stats (tools.js renderStats; the Viewer's counts) */
+.tl-statshead { margin: 10px 0 6px; }
+.tl-statsregions td, .tl-statsregions th { white-space: nowrap; }
+.tl-statsregions td:not(:first-child), .tl-statsregions th:not(:first-child) { text-align: right; }
+table.tl-stats caption { text-align: left; font-weight: 600; color: var(--ink); padding: 10px 0 4px; }
+table.tl-stats th { text-align: left; vertical-align: top; white-space: nowrap; font-weight: 600; color: var(--ink-2); padding-right: 14px; }
 /* the palettes page: each palette's colours as swatches, which wrap on a phone */
 .help-page dd.help-chips { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 0.4em; }
 

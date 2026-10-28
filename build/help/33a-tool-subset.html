@@ -1,0 +1,42 @@
+<!-- id: h-tool-subset | title: Make a working copy (subset) | group: Tools | summary: gpxil subset: some contigs, and some planes, of a gpxil file in a new and smaller file, copied without being decoded | keys: subset working copy copy extract chromosome contig contigs planes smaller small no-ref noref reference plane drop leave out compression whole genome big file web url memory -->
+<h1><!--ICON:scissors-->Make a working copy (subset)</h1>
+<p class="lede"><code>gpxil subset</code> copies some contigs of a gpxil file, and if you like only some of its planes, into a new file: a working copy, such as one chromosome out of a whole genome. Each contig of a gpxil file stands on its own – its pages and its entry in the metadata – so nothing needs encoding again: the pages’ strips are copied as they are stored, without being decoded. It is quick, needs little memory, and works as well on a file you added to this browser, or one on the web.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="subset" data-input="/data/examples/HG002_chr17.gpxil.tif" data-no-ref>Copy HG002’s chromosome 17 without its reference</button></div>
+
+<h2>What it is for</h2>
+<ul>
+  <li><b>One chromosome out of a whole genome.</b> A person’s whole genome is about 850 MB as gpxil; chromosome 17 is 25 MB of it. Make the copy on your own computer and add it here (<a href="#h-own-computer">On your own computer</a>), or add the whole genome here: the copy reads only the pages it copies.</li>
+  <li><b>A smaller file.</b> The reference plane is most of a file: without it, HG002’s chromosome 17 goes from 24.6 MB to 1.9 MB. The contigs keep the checksums of their reference, so any tool can be given it again (each tool has a field for it, and the Viewer borrows GRCh38’s from the Gpxil browser). Leaving out genotype quality and read depth (<code>gq</code>, <code>dp</code>) saves a little more.</li>
+  <li><b>The reference put back.</b> A file written without its reference plane gets it again from a reference you give, which is checked against the checksums.</li>
+  <li><b>Another compression.</b> A file made elsewhere with Zstandard, which the browser can’t read, encoded again with deflate (on a computer with the imagecodecs package).</li>
+</ul>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>Any gpxil file: yours, an example, or a chromosome of GRCh38.</dd>
+  <dt>Contigs</dt><dd>The contigs to copy, by name, separated by spaces or commas (<code>chr17</code>, or <code>chr17 chr21</code>); <code>17</code> finds <code>chr17</code> too. Empty: all of them. The copy keeps them in the file’s order.</dd>
+  <dt>Planes</dt><dd>All the planes each contig has, or some of them: without genotype quality and read depth; the reference, genotype and flags only; or the reference only, without the sample. A plane a file doesn’t have is left out.</dd>
+  <dt>Leave out the reference plane</dt><dd>As <code>gpxil encode --no-ref</code>: a file about a hundred times smaller.</dd>
+  <dt>Put its reference plane back, from</dt><dd>Only for a file written without one: a FASTA file, or a gpxil file with its reference plane, such as a chromosome of GRCh38 from <code>/data/grch38</code>.</dd>
+  <dt>Compression</dt><dd>As it is (the default), so that the strips are copied without decoding, or encoded again.</dd>
+  <dt>Save as</dt><dd>A file name ending in <code>.gpxil.tif</code>, in <code>~/genomes</code> unless you choose otherwise.</dd>
+</dl>
+<p>It won’t cut a contig: a file of part of a chromosome (TP53, say) needs the specification to say how its coordinates relate to the reference’s, which version 0.1 doesn’t. For a region, <a href="#h-tool-render">gpxil render</a>, <a href="#h-tool-fasta">fasta</a>, <a href="#h-tool-vcf">vcf</a> and <a href="#h-tool-stats">stats</a> take one. Nor will it leave out the phase sets (<code>ps</code>) of a contig with more than one, because its phased calls would then read as one phase set.</p>
+
+<h2>What it writes</h2>
+<p>A gpxil file with the contigs and planes chosen, each contig with its entry in the metadata – its checksums, how it was encoded, how many records – and a record, <code>subset</code>, of the file it came from. It says how many contigs, bases and megabytes it wrote, and whether the strips were copied as stored. <a href="#h-tool-validate">Check it</a>, look at it in the Viewer, or <a href="#h-tool-stats">count what it holds</a>.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil subset /data/examples/HG002_chr17.gpxil.tif chr17 --no-ref -o ~/genomes/HG002_chr17.noref.gpxil.tif
+gpxil subset ~/genomes/HG002_chr17.noref.gpxil.tif --planes ref,gt,flags --reference /data/grch38/chr17.gpxil.tif -o ~/genomes/HG002_chr17.three-planes.gpxil.tif
+gpxil info ~/genomes/HG002_chr17.three-planes.gpxil.tif</code></pre>
+<p>On your own computer, chromosome 17 out of a whole genome: <code>gpxil subset HG002.gpxil.tif chr17 -o HG002_chr17.gpxil.tif</code>. The input can be a URL too, and then only the pages copied are downloaded.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools.subset import subset
+
+summary = subset("/data/examples/HG002_chr17.gpxil.tif", "/home/user/genomes/HG002_chr17.noq.gpxil.tif",
+                 ["chr17"], planes=["ref", "gt", "flags", "ps"])
+print(summary)</code></pre>
+<p><code>GpxilWriter.copy_contig</code> does the copying, a contig at a time, for your own programs.</p>
+<!--CITE: gpxiltools gpxil-->

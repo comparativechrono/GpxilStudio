@@ -47,6 +47,12 @@ const CASES = [
   ['vcf', { input: HG, region: TP53, nocall: false }],
   ['vcf', { input: HG, region: 'chr17:7661779-7670000 chr17:7676000-7677000' }],
   ['vcf', { input: EX + 'worked-example.gpxil.tif', region: '' }],
+  ['stats', { input: HG }],
+  ['stats', { input: HG, regions: 'chr17:7661779-7670000 chr17:7,676,000-7,677,000' }],
+  ['stats', { input: EX + 'worked-example.gpxil.tif', regions: '' }],
+  ['subset', { input: HG, noRef: true }],
+  ['subset', { input: HG, contigs: '17', planes: 'ref,gt,flags', compression: 'deflate', out: '~/genomes/hg002-three-planes.gpxil.tif' }],
+  ['subset', { input: EX + 'worked-example.gpxil.tif', planes: 'ref', compression: 'none', out: '~/genomes/we-reference.gpxil.tif' }],
   // the VCF of TP53 encoded again, with the gpxil file itself as the reference
   ['encode', { reference: HG, vcf: R + 'HG002_chr17_chr17_7661779-7687546.vcf', contigs: 'chr17', out: '~/genomes/round-trip.gpxil.tif' }],
   // on GRCh38 from /data/grch38, without the reference plane; and drawn with the reference given

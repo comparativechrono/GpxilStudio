@@ -70,7 +70,7 @@
 <p>Python and the tools run inside this web page. Your files are kept in this browser, on this computer, and are never sent anywhere. The only things the studio reads from the web are Python itself, when it first starts, and the GRCh38 reference and the gene files, which come from the Gpxil browser’s site. <a href="#h-privacy">Privacy</a> has the details, and <a href="#h-files">Your files</a> explains how to keep copies.</p></div>
 <div class="help-topics">
 <section><h2><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M7.5 6H15a3.5 3.5 0 0 1 0 7H9a3.5 3.5 0 0 0 0 7h7.5"/></svg><a href="#h-walks">Walkthroughs</a></h2><ul>
-<li><a href="#h-walk-look">Look inside a gpxil file, and check it<small>What a file holds, its planes, its metadata, and a check against the specification</small></a></li>
+<li><a href="#h-walk-look">Look inside a gpxil file, and check it<small>What a file holds, its planes, its metadata, its counts, and a check against the specification</small></a></li>
 <li><a href="#h-walk-encode">Turn someone’s VCF into a gpxil file<small>A person’s variants and a reference become a gpxil file: with GRCh38 from the web, without the reference plane, and from a FASTA file</small></a></li>
 <li><a href="#h-walk-render">Draw a gene, a region or a chromosome<small>Pictures for the screen or for print, in four views, with rows of any width or a Hilbert curve</small></a></li>
 <li><a href="#h-walk-genes">See a person’s own version of a protein<small>TP53’s gene, transcript and protein from each of HG002’s haplotypes, as pxil pictures, and their sequences back as FASTA</small></a></li>
@@ -78,7 +78,7 @@
 <li><a href="#h-walk-book">Print a chromosome as a book<small>A PDF with one printed dot per base, page after page, in CMYK for a printer or RGB for the screen</small></a></li>
 <li><a href="#h-walk-workflow">Do the same steps again: workflows<small>Run an example workflow, run it on another file, change it, and make one from the tools you’ve run</small></a></li>
 <li><a href="#h-walk-python">Work with a gpxil file pixel by pixel, in Python<small>Planes as NumPy arrays: read a region, decode the codes, find variants, count, compare haplotypes, draw, and write files of your own</small></a></li>
-<li><a href="#h-walk-big">A whole genome without running out of memory<small>Regions and strips, a chromosome a piece at a time, files without the reference that borrow it, and the whole genome on your own computer</small></a></li>
+<li><a href="#h-walk-big">A whole genome without running out of memory<small>Regions and strips, a chromosome a piece at a time, files without the reference that borrow it, working copies and their counts, and the whole genome on your own computer</small></a></li>
 </ul></section>
 <section><h2><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><a href="#h-viewer">The viewer</a></h2><ul>
 <li><a href="#h-viewer-views">The views and their colours<small>What each of the Viewer’s views shows, and what its colours mean</small></a></li>
@@ -87,7 +87,9 @@
 <li><a href="#h-workflows">Workflows<small>Tools chained together: the editor, inputs and steps, running, the run’s folder, and the workflow file</small></a></li>
 <li><a href="#h-tool-info">What’s in a gpxil file<small>gpxil info: a file’s reference, sample, contigs and planes, or all its metadata as JSON</small></a></li>
 <li><a href="#h-tool-validate">Check a gpxil file<small>gpxil validate: a file against the specification, its codes, its sidecar and its checksums</small></a></li>
+<li><a href="#h-tool-stats">Count what a file holds<small>gpxil stats: bases called, substitutions and Ti/Tv, insertions, deletions, phasing, quality and depth, for every contig or for regions</small></a></li>
 <li><a href="#h-tool-encode">Make a gpxil file (encode)<small>gpxil encode: a reference, and one person’s VCF, as a gpxil file</small></a></li>
+<li><a href="#h-tool-subset">Make a working copy (subset)<small>gpxil subset: some contigs, and some planes, of a gpxil file in a new and smaller file, copied without being decoded</small></a></li>
 <li><a href="#h-tool-render">Draw a region as a picture<small>gpxil render: a region in four views, as PNG for the screen or TIFF (RGB or CMYK) for print</small></a></li>
 <li><a href="#h-tool-book">Print it as a book (PDF)<small>gpxil book: a PDF to print with one dot per base, in CMYK or RGB</small></a></li>
 <li><a href="#h-tool-palettes">The palettes<small>gpxil palettes: the colours of A, C, G, T and N in each palette, for the screen and in ink</small></a></li>
@@ -253,7 +255,7 @@ gpxil validate ~/genomes/worked-example.gpxil.tif</code></pre>
 <h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M7.5 6H15a3.5 3.5 0 0 1 0 7H9a3.5 3.5 0 0 0 0 7h7.5"/></svg>Walkthroughs</h1>
 <p class="lede">Each walkthrough takes you through one job from beginning to end, with a button for every step. They use the examples – HG002’s chromosome 17, his variants around TP53, the GRCh38 reference and the specification’s worked example – so you can follow one through before you try it with files of your own.</p>
 <ul class="help-grouplist">
-<li><a href="#h-walk-look">Look inside a gpxil file, and check it<small>What a file holds, its planes, its metadata, and a check against the specification</small></a></li>
+<li><a href="#h-walk-look">Look inside a gpxil file, and check it<small>What a file holds, its planes, its metadata, its counts, and a check against the specification</small></a></li>
 <li><a href="#h-walk-encode">Turn someone’s VCF into a gpxil file<small>A person’s variants and a reference become a gpxil file: with GRCh38 from the web, without the reference plane, and from a FASTA file</small></a></li>
 <li><a href="#h-walk-render">Draw a gene, a region or a chromosome<small>Pictures for the screen or for print, in four views, with rows of any width or a Hilbert curve</small></a></li>
 <li><a href="#h-walk-genes">See a person’s own version of a protein<small>TP53’s gene, transcript and protein from each of HG002’s haplotypes, as pxil pictures, and their sequences back as FASTA</small></a></li>
@@ -261,12 +263,12 @@ gpxil validate ~/genomes/worked-example.gpxil.tif</code></pre>
 <li><a href="#h-walk-book">Print a chromosome as a book<small>A PDF with one printed dot per base, page after page, in CMYK for a printer or RGB for the screen</small></a></li>
 <li><a href="#h-walk-workflow">Do the same steps again: workflows<small>Run an example workflow, run it on another file, change it, and make one from the tools you’ve run</small></a></li>
 <li><a href="#h-walk-python">Work with a gpxil file pixel by pixel, in Python<small>Planes as NumPy arrays: read a region, decode the codes, find variants, count, compare haplotypes, draw, and write files of your own</small></a></li>
-<li><a href="#h-walk-big">A whole genome without running out of memory<small>Regions and strips, a chromosome a piece at a time, files without the reference that borrow it, and the whole genome on your own computer</small></a></li>
+<li><a href="#h-walk-big">A whole genome without running out of memory<small>Regions and strips, a chromosome a piece at a time, files without the reference that borrow it, working copies and their counts, and the whole genome on your own computer</small></a></li>
 </ul>
 <p>You’ll also find most of these jobs on the first page of the Tools tab, under <b>Common tasks</b>, each with its tools in the order you need them.</p>
 <div class="tryrow"><button class="do" type="button" data-tool="start">Open the Tools tab’s first page</button></div>
 </article>
-<article class="help-page" id="h-walk-look" data-title="Look inside a gpxil file, and check it" data-group="Walkthroughs" data-group-page="h-walks" data-keys="look inside open info metadata json planes contigs sample reference check validate valid checksum digest md5 refget" hidden>
+<article class="help-page" id="h-walk-look" data-title="Look inside a gpxil file, and check it" data-group="Walkthroughs" data-group-page="h-walks" data-keys="look inside open info metadata json planes contigs sample reference stats counts check validate valid checksum digest md5 refget" hidden>
 <h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Look inside a gpxil file, and check it</h1>
 <p class="lede">Someone has sent you a gpxil file, or you’ve made one. This walkthrough shows what it holds – its reference, its sample, its contigs and planes, its metadata – and how to check that it follows the gpxil specification. It uses HG002’s chromosome 17; with a file of your own, choose it instead.</p>
 
@@ -283,18 +285,23 @@ gpxil validate ~/genomes/worked-example.gpxil.tif</code></pre>
 <div class="tryrow"><button class="do" type="button" data-tool="info" data-input="/data/examples/HG002_chr17.gpxil.tif">What’s in HG002_chr17.gpxil.tif?</button></div>
 <p>Tick <b>All of its metadata, as JSON</b> to see everything the file says about itself: each contig’s checksums (<code>md5</code> and <code>refget</code>), the pages that hold its planes, how many bases were called with confidence, and the counts the encoder kept as it read the VCF, such as <code>conflicts</code> and <code>ref_mismatches</code> (both 0 here, as they should be). <a href="#h-gpxil">The gpxil format</a> describes every key.</p>
 
-<h2>4 · Check it</h2>
+<h2>4 · Count what it holds</h2>
+<p><b>Count what a file holds</b> runs <code>gpxil stats</code>: how much of each contig, or of a region, was called with confidence, and the person’s substitutions (with their ratio of transitions to transversions, Ti/Tv), insertions and deletions, how much is phased, and the quality and depth of the calls. HG002’s chromosome 17 is 86.9 % called, with 54,935 heterozygous and 34,713 homozygous substitutions and a Ti/Tv of 2.36. The Viewer counts the same for the region in view, under its key.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="stats" data-input="/data/examples/HG002_chr17.gpxil.tif" data-regions="chr17">Count HG002’s chromosome 17</button></div>
+
+<h2>5 · Check it</h2>
 <p><b>Check a gpxil file</b> runs <code>gpxil validate</code>. It checks the metadata against the specification’s JSON schema; that every contig has the pages its metadata names, of the right size and type; that every value of every plane is a code the specification allows; that the flags, phase sets and sidecar agree with each other; and, if you leave <b>Recompute the sequences’ checksums</b> ticked, that the reference plane’s bases give the MD5 and refget checksums in the metadata. That last check proves the bases are those of the reference the file names.</p>
 <div class="tryrow"><button class="do" type="button" data-tool="validate" data-input="/data/examples/HG002_chr17.gpxil.tif">Check HG002_chr17.gpxil.tif</button></div>
 <p>It should say <b>Valid</b>. An error means a reader can’t trust the file; a warning is worth reading but doesn’t make the file invalid. A file that isn’t gpxil at all, such as an ordinary TIFF picture, fails at once: its first page has no gpxil metadata.</p>
 
-<h2>5 · A file on the web</h2>
+<h2>6 · A file on the web</h2>
 <p>The files of the GRCh38 reference in <code>/data/grch38</code> are on the Gpxil browser’s web site. Looking inside one reads only its first page, so it is as quick as a file of your own. Checking its checksums reads every base, which for chromosome 1 means downloading 67 MB, so untick <b>Recompute the sequences’ checksums</b> for a quick check of a big file on the web.</p>
 <div class="tryrow"><button class="do" type="button" data-tool="info" data-input="/data/grch38/chr1.gpxil.tif">What’s in GRCh38’s chromosome 1?</button></div>
 
 <h2>The same in the terminal</h2>
 <pre class="code" data-run="term"><code>gpxil info /data/examples/HG002_chr17.gpxil.tif
 gpxil info --json /data/examples/HG002_chr17.gpxil.tif &gt; ~/results/HG002_chr17.metadata.json
+gpxil stats /data/examples/HG002_chr17.gpxil.tif
 gpxil validate /data/examples/HG002_chr17.gpxil.tif
 gpxil info /data/grch38/chr1.gpxil.tif
 gpxil validate /data/grch38/chrM.gpxil.tif</code></pre>
@@ -822,7 +829,7 @@ for a in range(0, c.length, step):
     unknown += int(((h1 == C.HAP_UNKNOWN) &amp; (h2 == C.HAP_UNKNOWN)).sum())
 print(f"{het:,} heterozygous and {hom:,} homozygous substitutions")
 print(f"{unknown:,} of {c.length:,} bases not called ({unknown / c.length:.1%})")</code></pre>
-<p>HG002 has 54,935 heterozygous and 34,713 homozygous substitutions on chromosome 17, and 13.1 % of it wasn’t called with confidence by the benchmark: mostly centromeres, segmental duplications and other hard places.</p>
+<p>HG002 has 54,935 heterozygous and 34,713 homozygous substitutions on chromosome 17, and 13.1 % of it wasn’t called with confidence by the benchmark: mostly centromeres, segmental duplications and other hard places. <code>gpxil stats</code> makes these counts, and more – insertions, deletions, Ti/Tv, phasing, quality – in one go, in the same way (<a href="#h-tool-stats">Count what a file holds</a>).</p>
 
 <h2>6 · Compare the two haplotypes</h2>
 <p>Where do HG002’s two copies of TP53 differ from each other? Where their states differ. With phased calls (PHASED in <code>flags</code>), haplotype 1 is one parent’s copy throughout a phase set (the <code>ps</code> plane); HG002’s calls here aren’t phased, so it only says which bases are heterozygous. The sequences themselves come from <code>haplotype_sequence</code>, which applies the variants to the reference, insertions and deletions included.</p>
@@ -911,7 +918,7 @@ print(validate("/home/user/genomes/chrM_gc.gpxil.tif").ok, GpxilFile("/home/user
 <dd>Albrecht-Buehler G (2009) Outline of a genome navigation system based on the properties of GA-sequences and their flanks. <i>PLoS ONE</i> 4(3): e4701. <a href="https://doi.org/10.1371/journal.pone.0004701" target="_blank" rel="noopener">doi:10.1371/journal.pone.0004701</a></dd>
 </dl>
 </article>
-<article class="help-page" id="h-walk-big" data-title="A whole genome without running out of memory" data-group="Walkthroughs" data-group-page="h-walks" data-keys="memory big large whole genome chromosome chunks pieces strips lazy region reference borrow no-ref noref download curl sha256 out of memory crash slow" hidden>
+<article class="help-page" id="h-walk-big" data-title="A whole genome without running out of memory" data-group="Walkthroughs" data-group-page="h-walks" data-keys="memory big large whole genome chromosome chunks pieces strips lazy region reference borrow no-ref noref subset working copy stats counts download curl sha256 out of memory crash slow" hidden>
 <h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="6" width="14" height="12" rx="1"/><path d="M9 6V3M12 6V3M15 6V3M9 21v-3M12 21v-3M15 21v-3M2 10h3M2 14h3M19 10h3M19 14h3"/><rect x="9" y="10" width="6" height="4"/></svg>A whole genome without running out of memory</h1>
 <p class="lede">A human genome is 3.1 billion bases. As one byte a base, a single plane of it is 3.1 GB in memory, more than Python in a browser can use, although the file that holds it is under 1 GB. Yet the studio opens a whole genome at once, because it never reads more of a file than it needs. This walkthrough shows how, and how to write your own code the same way.</p>
 
@@ -936,7 +943,7 @@ for a in range(0, c.length, step):
 gc = np.array(gc)
 print(f"{c.length:,} bases in {gc.size} pieces, {np.isnan(gc).sum()} of them all N")
 print(f"GC from {np.nanmin(gc):.1%} to {np.nanmax(gc):.1%}, highest in megabase {np.nanargmax(gc) + 1}")</code></pre>
-<p>Chromosome 21’s first five megabases are all N – the short arm, which GRCh38 doesn’t spell out – and its GC content runs from 34.6 % to 53.0 %, highest near the end of its long arm. A loop over all the chromosomes of a genome works the same way, contig by contig: <code>for c in g:</code>.</p>
+<p>Chromosome 21’s first five megabases are all N – the short arm, which GRCh38 doesn’t spell out – and its GC content runs from 34.6 % to 53.0 %, highest near the end of its long arm. A loop over all the chromosomes of a genome works the same way, contig by contig: <code>for c in g:</code>. <code>gpxil stats</code> goes through a file like this to count what it holds (section 4).</p>
 
 <h2>3 · Files without the reference, which borrow it</h2>
 <p>A person’s genome as a gpxil file is mostly their reference: the same bases for everyone. Written without the reference plane (<code>gpxil encode --no-ref</code>), it is a small fraction of the size, and names its reference by checksums. Open it with the reference, and gpxiltools reads just the region you ask for from the reference, after checking that its checksums match. The Viewer does the same by itself for a file made on GRCh38.</p>
@@ -952,20 +959,30 @@ with GpxilFile("/home/user/genomes/HG002_TP53.noref.gpxil.tif", reference="/data
     print(c.planes, "plus the borrowed reference:", c.has("ref"))
     print(haplotype_sequence(c, 1, 7_676_100, 7_676_200).decode())</code></pre>
 
-<h2>4 · What uses memory, and what doesn’t</h2>
+<h2>4 · A working copy, and what it holds</h2>
+<p>To work on part of a big file, make a working copy of it: <code>gpxil subset</code> copies the contigs you choose, and the planes you choose, into a new file. It copies the pages’ strips as they are stored, without decoding them, so it takes little memory and little time, even from a whole genome or a file on the web. Leaving out the reference plane makes the copy about a hundred times smaller: HG002’s chromosome 17 goes from 24.6 MB to 1.9 MB, and the Viewer borrows the reference from GRCh38 as before.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="subset" data-input="/data/examples/HG002_chr17.gpxil.tif" data-no-ref>Copy HG002’s chromosome 17 without its reference</button></div>
+<pre class="code" data-run="term"><code>gpxil subset /data/examples/HG002_chr17.gpxil.tif chr17 --no-ref -o ~/genomes/HG002_chr17.noref.gpxil.tif
+gpxil stats ~/genomes/HG002_chr17.noref.gpxil.tif</code></pre>
+<p><code>gpxil stats</code> then counts what the copy holds, a piece at a time: 86.9 % of chromosome 17 called, 54,935 heterozygous and 34,713 homozygous substitutions, and the insertions, deletions, phasing, quality and depth (<a href="#h-tool-stats">Count what a file holds</a>). Without the reference plane it counts all but the reference’s bases and Ti/Tv; give it <code>--reference /data/grch38/chr17.gpxil.tif</code> for those. The Viewer counts the same for the region in view, under its key.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="stats" data-input="/data/examples/HG002_chr17.gpxil.tif" data-regions="chr17">Count HG002’s chromosome 17</button></div>
+
+<h2>5 · What uses memory, and what doesn’t</h2>
 <ul>
-  <li><b>Doesn’t:</b> opening a file, its metadata, the Viewer, the Files tab, reading a region, a loop over pieces, <code>gpxil info</code>, <code>gpxil vcf</code> and <code>gpxil fasta</code> (which write as they go), <code>gpxil validate</code> (which checks a piece at a time).</li>
-  <li><b>Does:</b> <code>gpxil encode</code>, which holds each contig’s planes whole while it works: about 6 bytes a base with the planes <code>gt</code> and <code>flags</code>, so half a gigabyte for chromosome 17 and about 1.5 GB for chromosome 1, more than a browser tab may have. In the browser, encode one chromosome at a time (<b>Only these contigs</b>, or <code>--contigs</code>), and the biggest chromosomes, or a whole genome, on your own computer (section 5). Also a whole plane read at once (<code>c.read("gt")</code> on chromosome 1 is 249 MB), and big pictures, which is why the tools stop at 25 million bases a picture in the browser.</li>
+  <li><b>Doesn’t:</b> opening a file, its metadata, the Viewer, the Files tab, reading a region, a loop over pieces, <code>gpxil info</code>, <code>gpxil vcf</code> and <code>gpxil fasta</code> (which write as they go), <code>gpxil validate</code> and <code>gpxil stats</code> (which read a piece at a time), <code>gpxil subset</code> (which copies a strip at a time).</li>
+  <li><b>Does:</b> <code>gpxil encode</code>, which holds each contig’s planes whole while it works: about 6 bytes a base with the planes <code>gt</code> and <code>flags</code>, so half a gigabyte for chromosome 17 and about 1.5 GB for chromosome 1, more than a browser tab may have. In the browser, encode one chromosome at a time (<b>Only these contigs</b>, or <code>--contigs</code>), and the biggest chromosomes, or a whole genome, on your own computer (section 6). Also a whole plane read at once (<code>c.read("gt")</code> on chromosome 1 is 249 MB), and big pictures, which is why the tools stop at 25 million bases a picture in the browser.</li>
   <li>Keep arrays small: <code>uint8</code> as they come, not converted to 64-bit numbers. <code>del</code> big arrays you’ve finished with, and if Python gets slow or stops with a <i>MemoryError</i>, restart it (the Notebook’s <b>Restart</b>, or the Python pill in the Tools tab): your files are safe, only Python’s variables are lost.</li>
 </ul>
 
-<h2>5 · The whole genome on your own computer</h2>
+<h2>6 · The whole genome on your own computer</h2>
 <p>On your own computer, memory is less tight and the files can be local. The Gpxil browser offers the whole of GRCh38 as one gpxil file, 848.5 MB, which every command here can use as a reference or read like any other:</p>
 <pre class="code"><code>curl -LO https://github.com/comparativechrono/Gpxil-browser/releases/download/grch38-ensembl116/GRCh38.gpxil.tif
 curl -LO https://github.com/comparativechrono/Gpxil-browser/releases/download/grch38-ensembl116/GRCh38.gpxil.tif.sha256
 sha256sum -c GRCh38.gpxil.tif.sha256          # on a Mac: shasum -a 256 -c GRCh38.gpxil.tif.sha256
 gpxil info GRCh38.gpxil.tif
-gpxil encode GRCh38.gpxil.tif -v my.vcf.gz --callable my.bed --no-ref -o my.gpxil.tif</code></pre>
+gpxil encode GRCh38.gpxil.tif -v my.vcf.gz --callable my.bed --no-ref -o my.gpxil.tif
+gpxil stats my.gpxil.tif --reference GRCh38.gpxil.tif
+gpxil subset my.gpxil.tif chr17 -o my_chr17.gpxil.tif   # a working copy to add to the studio</code></pre>
 <p>(<code>curl -C - -LO …</code> carries on with a download that was interrupted.) <a href="#h-own-computer">On your own computer</a> says how to install the programs there.</p>
 
 <h2>The limits in the browser</h2>
@@ -990,7 +1007,7 @@ gpxil encode GRCh38.gpxil.tif -v my.vcf.gz --callable my.bed --no-ref -o my.gpxi
 <dd>Schneider VA, Graves-Lindsay T, Howe K, Bouk N, Chen HC, Kitts PA, et al. (2017) Evaluation of GRCh38 and de novo haploid genome assemblies demonstrates the enduring quality of the reference assembly. <i>Genome Research</i> 27(5): 849–864. <a href="https://doi.org/10.1101/gr.213611.116" target="_blank" rel="noopener">doi:10.1101/gr.213611.116</a></dd>
 </dl>
 </article>
-<article class="help-page" id="h-viewer" data-title="The Viewer" data-group="The viewer" data-group-page="h-viewer" data-keys="viewer view look see pixels region zoom pan move keyboard hover point base file add upload web grch38 save picture command render" hidden>
+<article class="help-page" id="h-viewer" data-title="The Viewer" data-group="The viewer" data-group-page="h-viewer" data-keys="viewer view look see pixels region zoom pan move keyboard hover point base counts count stats called substitutions file add upload web grch38 save picture command render" hidden>
 <h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>The Viewer</h1>
 <p class="lede">The Viewer shows a gpxil file as it is: one pixel, or a square of pixels, for each base, in rows that read from left to right and from top to bottom like a page of text. It reads only the part of the file it shows, straight from the file, without Python, so a whole genome opens at once – even one on the web.</p>
 <div class="tryrow"><button class="do" type="button" data-viewer="/data/examples/HG002_chr17.gpxil.tif" data-region="chr17:7,661,779-7,687,546" data-mode="variants">Open HG002’s TP53</button></div>
@@ -1014,6 +1031,9 @@ gpxil encode GRCh38.gpxil.tif -v my.vcf.gz --callable my.bed --no-ref -o my.gpxi
 
 <h2>Pointing at a base</h2>
 <p>Point at a pixel, and the line under the picture says what the file holds there: the position, the reference’s base (and whether it is soft-masked), each haplotype’s state and the <code>gt</code> value they make, the flags, the genotype quality, the read depth and the phase set. At HG002’s <code>chr17:7,676,154</code>, for example: reference G, haplotype 1 C, haplotype 2 C (gt 34), flags VARIANT_SITE, GQ 254, DP 254. <a href="#h-codes">The codes</a> explains every value.</p>
+
+<h2>Counting what is in view</h2>
+<p>Under the key, the Viewer counts what the region in view holds, as <code>gpxil stats</code> does, and follows you as you move: how much of it was called, the person’s heterozygous and homozygous substitutions and their Ti/Tv, insertions and deletions, the share of heterozygous substitutions phased, and the GC content of the reference. <b>All the counts</b> adds the reference’s bases, the phase sets, genotype quality and read depth, and the <code>gpxil stats</code> command that gives the same numbers in the terminal. In HG002’s TP53: 96.2 % called, 3 heterozygous and 11 homozygous substitutions, 2 insertions and 6 deletions (<a href="#h-tool-stats">Count what a file holds</a>).</p>
 
 <h2>Keeping what you see</h2>
 <p>Under the picture is the <code>gpxil render</code> command that draws the same picture, pixel for pixel, as a file, ready to run in the terminal; <b>Save the picture</b> saves the view as it is, as a PNG in <code>~/results</code>. For the flags, quality, depth and phase-set views, which <code>gpxil render</code> doesn’t draw, there’s a Python cell instead, which reads the plane’s values for the region as a NumPy array: <b>Add to notebook</b> puts it in the open notebook.</p>
@@ -1102,8 +1122,8 @@ viewer /data/grch38/chr21.gpxil.tif chr21:30,000,001-30,500,000 --plane=ref</cod
 <p>The first page has the map of the formats and the tools between them: click an arrow to open its tool, or a box to see what you can do with that kind of file. Under the map, <b>Common tasks</b> lists the jobs most people come for, each with its tools in order and a walkthrough. <b>All tools</b> (on a narrow screen) or the list on the left has every tool, by group:</p>
 <table>
 <tr><th>Group</th><th>Tools</th></tr>
-<tr><td>Look inside and check</td><td><a href="#h-tool-info">What’s in a gpxil file</a> · <a href="#h-tool-validate">Check a gpxil file</a></td></tr>
-<tr><td>Make gpxil files</td><td><a href="#h-tool-encode">Make a gpxil file (encode)</a></td></tr>
+<tr><td>Look inside and check</td><td><a href="#h-tool-info">What’s in a gpxil file</a> · <a href="#h-tool-validate">Check a gpxil file</a> · <a href="#h-tool-stats">Count what a file holds</a></td></tr>
+<tr><td>Make gpxil files</td><td><a href="#h-tool-encode">Make a gpxil file (encode)</a> · <a href="#h-tool-subset">Make a working copy (subset)</a></td></tr>
 <tr><td>Pictures and print</td><td><a href="#h-tool-render">Draw a region as a picture</a> · <a href="#h-tool-book">Print it as a book (PDF)</a> · <a href="#h-tool-palettes">The palettes</a></td></tr>
 <tr><td>Back to FASTA and VCF</td><td><a href="#h-tool-fasta">Sequences as FASTA</a> · <a href="#h-tool-vcf">Variants as VCF</a></td></tr>
 <tr><td>Genes as pictures (pxil)</td><td><a href="#h-tool-gpxil2pxil">Genes, transcripts and proteins as pxil pictures</a> · <a href="#h-tool-pxil-fasta">pxil pictures → FASTA</a></td></tr>
@@ -1134,7 +1154,9 @@ viewer /data/grch38/chr21.gpxil.tif chr21:30,000,001-30,500,000 --plane=ref</cod
 <li><a href="#h-workflows">Workflows<small>Tools chained together: the editor, inputs and steps, running, the run’s folder, and the workflow file</small></a></li>
 <li><a href="#h-tool-info">What’s in a gpxil file<small>gpxil info: a file’s reference, sample, contigs and planes, or all its metadata as JSON</small></a></li>
 <li><a href="#h-tool-validate">Check a gpxil file<small>gpxil validate: a file against the specification, its codes, its sidecar and its checksums</small></a></li>
+<li><a href="#h-tool-stats">Count what a file holds<small>gpxil stats: bases called, substitutions and Ti/Tv, insertions, deletions, phasing, quality and depth, for every contig or for regions</small></a></li>
 <li><a href="#h-tool-encode">Make a gpxil file (encode)<small>gpxil encode: a reference, and one person’s VCF, as a gpxil file</small></a></li>
+<li><a href="#h-tool-subset">Make a working copy (subset)<small>gpxil subset: some contigs, and some planes, of a gpxil file in a new and smaller file, copied without being decoded</small></a></li>
 <li><a href="#h-tool-render">Draw a region as a picture<small>gpxil render: a region in four views, as PNG for the screen or TIFF (RGB or CMYK) for print</small></a></li>
 <li><a href="#h-tool-book">Print it as a book (PDF)<small>gpxil book: a PDF to print with one dot per base, in CMYK or RGB</small></a></li>
 <li><a href="#h-tool-palettes">The palettes<small>gpxil palettes: the colours of A, C, G, T and N in each palette, for the screen and in ink</small></a></li>
@@ -1273,6 +1295,60 @@ for w in report.warnings:
 <dd>Yates AD, Adams J, Chaturvedi S, Davies RM, Laird M, Leinonen R, et al. (2021) Refget: standardized access to reference sequences. <i>Bioinformatics</i> 38(1): 299–300. <a href="https://doi.org/10.1093/bioinformatics/btab524" target="_blank" rel="noopener">doi:10.1093/bioinformatics/btab524</a></dd>
 </dl>
 </article>
+<article class="help-page" id="h-tool-stats" data-title="Count what a file holds" data-group="Tools" data-group-page="h-tools" data-keys="stats statistics count counts summary called not called heterozygous homozygous substitutions snv snp transitions transversions ti tv titv insertions deletions indels complex phased phasing phase sets n50 quality depth gq dp gc content n soft-masked region regions json" hidden>
+<h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 20V4M4 20h16"/><path d="M8 16l4-5 3 3 5-7"/></svg>Count what a file holds</h1>
+<p class="lede"><code>gpxil stats</code> counts what a gpxil file holds, for every contig or for the regions you give: how much of the genome was called, the person’s substitutions, insertions and deletions, how much is phased, and the quality and depth of the calls. It reads the planes a piece at a time, so a whole chromosome takes little memory and about ten seconds here (a few on your own computer), and the counts of regions add up to those of the whole.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="stats" data-input="/data/examples/HG002_chr17.gpxil.tif">Count HG002’s TP53</button></div>
+
+<h2>What it counts</h2>
+<dl>
+  <dt>reference</dt><dd>The reference’s bases: A, C, G and T, with GC content (C and G over all four), N, gaps and soft-masked (repeat) bases.</dd>
+  <dt>called</dt><dd>Bases where every haplotype is known; <b>not called</b>, where neither is (UNKNOWN, as outside the regions called with confidence); <b>partly called</b>, where one is and one isn’t. A base with one copy (haplotype 2 ABSENT, as on chrX of a man) counts its one haplotype.</dd>
+  <dt>substitutions</dt><dd>Bases where a haplotype carries another base and none is unknown: <b>homozygous</b> where every haplotype carries the same one, <b>heterozygous</b> otherwise. Each base carried is a <b>transition</b> (A↔G, C↔T) or a <b>transversion</b>; their ratio, Ti/Tv, is about 2 for a whole human genome, and much lower in a call set with many errors.</dd>
+  <dt>insertions, deletions</dt><dd>A run of deleted bases on a haplotype is one deletion, homozygous when the other haplotype has the same run (or there is one copy); an insertion after a base likewise, by its inserted bases. Each comes with the bases inserted or deleted. An event belongs to the region it starts in, with all its bases.</dd>
+  <dt>complex</dt><dd>Complex variants (COMPLEX), such as inversions, by their entries in the sidecar.</dd>
+  <dt>phasing</dt><dd>The share of heterozygous substitutions that are phased, and the phase sets: how many, and their N50 and largest span, from their first to their last phased base.</dd>
+  <dt>genotype quality, read depth</dt><dd>The median, quartiles and mean of the <code>gq</code> and <code>dp</code> planes, over the bases that have a value.</dd>
+  <dt>filtered</dt><dd>Bases covered by a call that didn’t pass its filters.</dd>
+</dl>
+<p>A substitution is counted once at its base: a site where the two haplotypes carry two different other bases is one heterozygous substitution, with two bases towards Ti/Tv. Two neighbouring deletions on the same haplotype are one run, so one deletion. So the counts can differ slightly from those of tools that count VCF records.</p>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>Any gpxil file. One without a sample has only its reference counted.</dd>
+  <dt>Regions</dt><dd>One or more regions, separated by spaces: a contig, or CONTIG:START-END counting from 1. Leave it empty for every contig. With several, a table compares them, and the counts of all of them together follow.</dd>
+  <dt>Its reference</dt><dd>Only for a file written without its reference plane: the reference to count its bases and work out Ti/Tv with. Without it, the rest is counted.</dd>
+</dl>
+<p>The Viewer counts the same for the region in view, under its key (<a href="#h-viewer">The Viewer</a>).</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil stats /data/examples/HG002_chr17.gpxil.tif chr17:7,661,779-7,687,546
+gpxil stats /data/examples/HG002_chr17.gpxil.tif chr17:1-20,000,000 chr17:20,000,001-40,000,000
+gpxil stats /data/examples/HG002_chr17.gpxil.tif --json | head -30</code></pre>
+<p>In TP53, HG002 has 3 heterozygous and 11 homozygous substitutions, one heterozygous and one homozygous insertion, and six deletions; 970 bases weren’t called. <code>--json</code> gives every number to programs, with the same names as in Python.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.stats import format_stats, stats
+
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    counts = stats(g, [("chr17", 7_661_778, 7_687_546)])   # (0-based, the end not included)
+print(format_stats(counts))
+tp53 = counts["regions"][0]
+print(tp53["substitutions"], tp53["calls"]["not_called"])</code></pre>
+<p><code>stats(g)</code> counts every contig; <code>counts["total"]</code> holds all the regions together. <code>region_tally</code> counts one region and returns a tally that adds to others with <code>+</code>.</p>
+<h2 data-anchor="cite">References</h2>
+<p>If you use these programs in your work, cite the papers below, and give the versions you used (<a href="#h-versions">Versions, and how to cite</a>):</p>
+<dl class="cite-list">
+<dt>gpxiltools (the gpxil command, and the Python package)</dt>
+<dd>Chronomic Medicine Group, University of Cambridge (2026) gpxiltools: read, write, render and check gpxil files (Python). <a href="https://github.com/comparativechrono/Gpxil-tools" target="_blank" rel="noopener">github.com/comparativechrono/Gpxil-tools</a></dd>
+<dt>Genome in a Bottle: HG002 and its benchmark</dt>
+<dd class="cite-note">The example HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from the v4.2.1 benchmark.</dd>
+<dd>Zook JM, Catoe D, McDaniel J, Vang L, Spies N, Sidow A, et al. (2016) Extensive sequencing of seven human genomes to characterize benchmark reference materials. <i>Scientific Data</i> 3: 160025. <a href="https://doi.org/10.1038/sdata.2016.25" target="_blank" rel="noopener">doi:10.1038/sdata.2016.25</a></dd>
+<dd>Wagner J, Olson ND, Harris L, Khan Z, Farek J, Mahmoud M, et al. (2022) Benchmarking challenging small variants with linked and long reads. <i>Cell Genomics</i> 2(5): 100128. <a href="https://doi.org/10.1016/j.xgen.2022.100128" target="_blank" rel="noopener">doi:10.1016/j.xgen.2022.100128</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) small-variant benchmark v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38</a></dd>
+</dl>
+</article>
 <article class="help-page" id="h-tool-encode" data-title="Make a gpxil file (encode)" data-group="Tools" data-group-page="h-tools" data-keys="encode make create convert vcf fasta reference gpxil sample callable bed planes no-ref sex haploid width compression palette contigs" hidden>
 <h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 6h16M4 12h16M4 18h16"/><path d="M8 4v4M14 10v4M11 16v4"/></svg>Make a gpxil file (encode)</h1>
 <p class="lede"><code>gpxil encode</code> turns a reference genome, and one person’s variants from a VCF, into a gpxil file. Every base of the reference becomes a pixel of the <code>ref</code> plane, and every call in the VCF is written base by base into the <code>gt</code> and <code>flags</code> planes, as the specification sets out, so that any two programs that follow it make the same planes from the same VCF.</p>
@@ -1334,6 +1410,58 @@ print(summary)</code></pre>
 <dd>Yates AD, Adams J, Chaturvedi S, Davies RM, Laird M, Leinonen R, et al. (2021) Refget: standardized access to reference sequences. <i>Bioinformatics</i> 38(1): 299–300. <a href="https://doi.org/10.1093/bioinformatics/btab524" target="_blank" rel="noopener">doi:10.1093/bioinformatics/btab524</a></dd>
 <dt>IUPAC nucleotide codes</dt>
 <dd>Cornish-Bowden A (1985) Nomenclature for incompletely specified bases in nucleic acid sequences: recommendations 1984. <i>Nucleic Acids Research</i> 13(9): 3021–3030. <a href="https://doi.org/10.1093/nar/13.9.3021" target="_blank" rel="noopener">doi:10.1093/nar/13.9.3021</a></dd>
+</dl>
+</article>
+<article class="help-page" id="h-tool-subset" data-title="Make a working copy (subset)" data-group="Tools" data-group-page="h-tools" data-keys="subset working copy copy extract chromosome contig contigs planes smaller small no-ref noref reference plane drop leave out compression whole genome big file web url memory" hidden>
+<h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.1 8.1L20 20M8.1 15.9L20 4M14 12l-2 0"/></svg>Make a working copy (subset)</h1>
+<p class="lede"><code>gpxil subset</code> copies some contigs of a gpxil file, and if you like only some of its planes, into a new file: a working copy, such as one chromosome out of a whole genome. Each contig of a gpxil file stands on its own – its pages and its entry in the metadata – so nothing needs encoding again: the pages’ strips are copied as they are stored, without being decoded. It is quick, needs little memory, and works as well on a file you added to this browser, or one on the web.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="subset" data-input="/data/examples/HG002_chr17.gpxil.tif" data-no-ref>Copy HG002’s chromosome 17 without its reference</button></div>
+
+<h2>What it is for</h2>
+<ul>
+  <li><b>One chromosome out of a whole genome.</b> A person’s whole genome is about 850 MB as gpxil; chromosome 17 is 25 MB of it. Make the copy on your own computer and add it here (<a href="#h-own-computer">On your own computer</a>), or add the whole genome here: the copy reads only the pages it copies.</li>
+  <li><b>A smaller file.</b> The reference plane is most of a file: without it, HG002’s chromosome 17 goes from 24.6 MB to 1.9 MB. The contigs keep the checksums of their reference, so any tool can be given it again (each tool has a field for it, and the Viewer borrows GRCh38’s from the Gpxil browser). Leaving out genotype quality and read depth (<code>gq</code>, <code>dp</code>) saves a little more.</li>
+  <li><b>The reference put back.</b> A file written without its reference plane gets it again from a reference you give, which is checked against the checksums.</li>
+  <li><b>Another compression.</b> A file made elsewhere with Zstandard, which the browser can’t read, encoded again with deflate (on a computer with the imagecodecs package).</li>
+</ul>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>Any gpxil file: yours, an example, or a chromosome of GRCh38.</dd>
+  <dt>Contigs</dt><dd>The contigs to copy, by name, separated by spaces or commas (<code>chr17</code>, or <code>chr17 chr21</code>); <code>17</code> finds <code>chr17</code> too. Empty: all of them. The copy keeps them in the file’s order.</dd>
+  <dt>Planes</dt><dd>All the planes each contig has, or some of them: without genotype quality and read depth; the reference, genotype and flags only; or the reference only, without the sample. A plane a file doesn’t have is left out.</dd>
+  <dt>Leave out the reference plane</dt><dd>As <code>gpxil encode --no-ref</code>: a file about a hundred times smaller.</dd>
+  <dt>Put its reference plane back, from</dt><dd>Only for a file written without one: a FASTA file, or a gpxil file with its reference plane, such as a chromosome of GRCh38 from <code>/data/grch38</code>.</dd>
+  <dt>Compression</dt><dd>As it is (the default), so that the strips are copied without decoding, or encoded again.</dd>
+  <dt>Save as</dt><dd>A file name ending in <code>.gpxil.tif</code>, in <code>~/genomes</code> unless you choose otherwise.</dd>
+</dl>
+<p>It won’t cut a contig: a file of part of a chromosome (TP53, say) needs the specification to say how its coordinates relate to the reference’s, which version 0.1 doesn’t. For a region, <a href="#h-tool-render">gpxil render</a>, <a href="#h-tool-fasta">fasta</a>, <a href="#h-tool-vcf">vcf</a> and <a href="#h-tool-stats">stats</a> take one. Nor will it leave out the phase sets (<code>ps</code>) of a contig with more than one, because its phased calls would then read as one phase set.</p>
+
+<h2>What it writes</h2>
+<p>A gpxil file with the contigs and planes chosen, each contig with its entry in the metadata – its checksums, how it was encoded, how many records – and a record, <code>subset</code>, of the file it came from. It says how many contigs, bases and megabytes it wrote, and whether the strips were copied as stored. <a href="#h-tool-validate">Check it</a>, look at it in the Viewer, or <a href="#h-tool-stats">count what it holds</a>.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil subset /data/examples/HG002_chr17.gpxil.tif chr17 --no-ref -o ~/genomes/HG002_chr17.noref.gpxil.tif
+gpxil subset ~/genomes/HG002_chr17.noref.gpxil.tif --planes ref,gt,flags --reference /data/grch38/chr17.gpxil.tif -o ~/genomes/HG002_chr17.three-planes.gpxil.tif
+gpxil info ~/genomes/HG002_chr17.three-planes.gpxil.tif</code></pre>
+<p>On your own computer, chromosome 17 out of a whole genome: <code>gpxil subset HG002.gpxil.tif chr17 -o HG002_chr17.gpxil.tif</code>. The input can be a URL too, and then only the pages copied are downloaded.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools.subset import subset
+
+summary = subset("/data/examples/HG002_chr17.gpxil.tif", "/home/user/genomes/HG002_chr17.noq.gpxil.tif",
+                 ["chr17"], planes=["ref", "gt", "flags", "ps"])
+print(summary)</code></pre>
+<p><code>GpxilWriter.copy_contig</code> does the copying, a contig at a time, for your own programs.</p>
+<h2 data-anchor="cite">References</h2>
+<p>If you use these programs in your work, cite the papers below, and give the versions you used (<a href="#h-versions">Versions, and how to cite</a>):</p>
+<dl class="cite-list">
+<dt>gpxiltools (the gpxil command, and the Python package)</dt>
+<dd>Chronomic Medicine Group, University of Cambridge (2026) gpxiltools: read, write, render and check gpxil files (Python). <a href="https://github.com/comparativechrono/Gpxil-tools" target="_blank" rel="noopener">github.com/comparativechrono/Gpxil-tools</a></dd>
+<dt>gpxil, the format</dt>
+<dd class="cite-note">gpxil continues Albrecht-Buehler’s genome pixel images (GPxI) as a file format.</dd>
+<dd>Chronomic Medicine Group, University of Cambridge (2026) gpxil: Genome Pixel Image format, version 0.1 (draft specification). <a href="https://github.com/comparativechrono/Gpxil" target="_blank" rel="noopener">github.com/comparativechrono/Gpxil</a></dd>
+<dd>Albrecht-Buehler G (2009) Outline of a genome navigation system based on the properties of GA-sequences and their flanks. <i>PLoS ONE</i> 4(3): e4701. <a href="https://doi.org/10.1371/journal.pone.0004701" target="_blank" rel="noopener">doi:10.1371/journal.pone.0004701</a></dd>
 </dl>
 </article>
 <article class="help-page" id="h-tool-render" data-title="Draw a region as a picture" data-group="Tools" data-group-page="h-tools" data-keys="render draw picture png tiff cmyk rgb print region mode reference genotype haplotypes variants palette width scale hilbert layout dpi insertions" hidden>
@@ -2129,7 +2257,7 @@ print(pxil.read("/home/user/results/my-rna.pxil.png"))</code></pre>
 <dd>Yates AD, Austine-Orimoloye O, Azov AG, Barba M, Barnes I, Barrera-Enriquez VP, et al. (2026) Ensembl 2026. <i>Nucleic Acids Research</i> 54(D1): D1053–D1060. <a href="https://doi.org/10.1093/nar/gkaf1239" target="_blank" rel="noopener">doi:10.1093/nar/gkaf1239</a></dd>
 </dl>
 </article>
-<article class="help-page" id="h-memory" data-title="Big files and memory" data-group="gpxil and pxil" data-group-page="h-formats" data-keys="memory big large files lazy strips range requests web worker pyodide webassembly blob storage limits out of memory memoryerror crash restart encode chromosome whole genome 8 mb 4 mb 25 mb 50 mb 1 gb 2000 mb" hidden>
+<article class="help-page" id="h-memory" data-title="Big files and memory" data-group="gpxil and pxil" data-group-page="h-formats" data-keys="memory big large files lazy strips subset working copy range requests web worker pyodide webassembly blob storage limits out of memory memoryerror crash restart encode chromosome whole genome 8 mb 4 mb 25 mb 50 mb 1 gb 2000 mb" hidden>
 <h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="6" width="14" height="12" rx="1"/><path d="M9 6V3M12 6V3M15 6V3M9 21v-3M12 21v-3M15 21v-3M2 10h3M2 14h3M19 10h3M19 14h3"/><rect x="9" y="10" width="6" height="4"/></svg>Big files and memory</h1>
 <p class="lede">A gpxil file of a chromosome is tens of megabytes, and of a whole genome nearly a gigabyte, while a browser tab has a few gigabytes at most – and Python less. So the studio never copies a big file whole: everything reads just the part it needs. This page explains how, what the limits are, and how to stay within them. <a href="#h-walk-big">A whole genome without running out of memory</a> walks through it with examples.</p>
 
@@ -2147,6 +2275,9 @@ print(pxil.read("/home/user/results/my-rna.pxil.png"))</code></pre>
   <li><b>A big file that Python writes</b>, such as a new gpxil file, is handed to the browser to keep when the command ends, and Python’s copy is freed.</li>
 </ul>
 <p>gpxiltools reads only the strips of the region it is asked for, so <code>gpxil info</code> on chromosome 1 reads a few kilobytes, and a gene a few hundred. In the experiment that led to the studio, the whole genome as one file, 809 MB, opened in 72 MB of Python’s memory.</p>
+
+<h2>Working copies</h2>
+<p>To work on part of a big file, copy that part: <code>gpxil subset</code> makes a new gpxil file of the contigs you choose, and of the planes you choose, copying the pages’ strips as they are stored, so it takes about one strip of memory however big the file (<a href="#h-tool-subset">Make a working copy</a>). A chromosome of a whole genome is a few per cent of it, and without the reference plane a hundredth of that again. <code>gpxil stats</code> counts what a file holds a piece at a time in the same way (<a href="#h-tool-stats">Count what a file holds</a>).</p>
 
 <h2>What does take memory</h2>
 <table>
@@ -2340,6 +2471,8 @@ Image.fromarray(picture.scaled(2).to_rgb())</code></pre>
 <tr><td><code>gpxiltools.codes</code></td><td>The codes (<a href="#h-codes">The codes</a>): <code>hap1(gt)</code> and <code>hap2(gt)</code> split a genotype into its haplotypes; <code>haplotype_bases</code>, <code>genotype_iupac</code>, <code>dosage</code> (copies of A, C, G and T at each base, for sequence models), <code>ref_to_ascii</code>, <code>describe_gt_byte</code>; the constants <code>HAP_REF</code>, <code>HAP_DEL</code>, <code>HAP_UNKNOWN</code>, <code>FLAG_PHASED</code> and the rest.</td></tr>
 <tr><td><code>gpxiltools.encode</code></td><td><code>encode(reference, out, vcf=…, callable_bed=…, contigs=…, include_ref=…, planes=…, sex=…)</code>: what <code>gpxil encode</code> does</td></tr>
 <tr><td><code>gpxiltools.validate</code></td><td><code>validate(path)</code>: a report with <code>.ok</code>, <code>.errors</code> and <code>.warnings</code></td></tr>
+<tr><td><code>gpxiltools.stats</code></td><td><code>stats(g, regions=None)</code>: what <code>gpxil stats</code> counts, per region and in all, as plain data; <code>format_stats</code> makes the table of it; <code>region_tally(contig, start, end)</code> counts one region (<a href="#h-tool-stats">Count what a file holds</a>)</td></tr>
+<tr><td><code>gpxiltools.subset</code></td><td><code>subset(path, out, contigs, planes=…, include_ref=…, reference=…)</code>: what <code>gpxil subset</code> does; <code>GpxilWriter.copy_contig</code> copies one contig (<a href="#h-tool-subset">Make a working copy</a>)</td></tr>
 <tr><td><code>gpxiltools.render</code></td><td><code>render(contig, mode=…, palette=…, start=…, end=…, bases_per_row=…)</code>: a picture, with <code>.scaled(n)</code>, <code>.to_rgb()</code>, <code>.to_cmyk()</code>, <code>.save_png(…)</code> and <code>.save_tiff(…)</code>. <code>render_arrays</code> draws arrays you’ve made yourself.</td></tr>
 <tr><td><code>gpxiltools.layout</code></td><td><code>hilbert_image</code>, and <code>position_to_pixel</code> and <code>pixel_to_position</code> between a base and its pixel</td></tr>
 <tr><td><code>gpxiltools.book</code></td><td><code>make_book(g, out, contigs=…, mode=…, colorspace=…, layout=BookLayout(…), max_pages=…)</code>: what <code>gpxil book</code> does</td></tr>
@@ -2465,7 +2598,7 @@ for path in sorted(glob.glob("/data/examples/*.gpxil.tif") + glob.glob("/home/us
 <dd>Harris CR, Millman KJ, van der Walt SJ, Gommers R, Virtanen P, Cournapeau D, et al. (2020) Array programming with NumPy. <i>Nature</i> 585(7825): 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></dd>
 </dl>
 </article>
-<article class="help-page" id="h-terminal" data-title="The Terminal" data-group="Notebook and terminal" data-group-page="h-notebook" data-keys="terminal shell bash command line commands programs gpxil gpxil2pxil pxil encode info validate render book fasta vcf palettes viewer man help pipe grep cut loop script curl wget download open nano session ctrl c stop redirect binary" hidden>
+<article class="help-page" id="h-terminal" data-title="The Terminal" data-group="Notebook and terminal" data-group-page="h-notebook" data-keys="terminal shell stats subset bash command line commands programs gpxil gpxil2pxil pxil encode info validate render book fasta vcf palettes viewer man help pipe grep cut loop script curl wget download open nano session ctrl c stop redirect binary" hidden>
 <h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 17l6-5-6-5M12 19h8"/></svg>The Terminal</h1>
 <p class="lede">The Terminal tab is a Linux-style shell in your browser. <code>gpxil</code>, <code>gpxil2pxil</code> and <code>pxil</code> are commands in it, and they run exactly as they do on a computer where the packages have been installed with pip, with the same options and the same output. Every tool in the Tools tab shows its command, with a button to run it here.</p>
 <div class="tryrow"><button class="do" type="button" data-term-run="help">Show the commands</button> <button class="do" type="button" data-term-run="man gpxil">man gpxil</button></div>
@@ -2476,6 +2609,8 @@ for path in sorted(glob.glob("/data/examples/*.gpxil.tif") + glob.glob("/home/us
 <tr><td><code>gpxil encode</code></td><td>a reference (FASTA, or a gpxil file such as those in <code>/data/grch38</code>) and a person’s VCF → a gpxil file (<a href="#h-tool-encode">Make a gpxil file</a>)</td></tr>
 <tr><td><code>gpxil info</code></td><td>what a gpxil file holds; <code>--json</code> prints all its metadata</td></tr>
 <tr><td><code>gpxil validate</code></td><td>checks a file against the specification; it ends with status 1 if the file isn’t valid</td></tr>
+<tr><td><code>gpxil stats</code></td><td>counts what a file holds – bases called, substitutions and Ti/Tv, insertions, deletions, phasing, quality – for every contig or for regions; <code>--json</code> for programs</td></tr>
+<tr><td><code>gpxil subset</code></td><td>copies some contigs, and planes, into a new gpxil file: a working copy, made without decoding (<code>--no-ref</code> leaves out the reference plane)</td></tr>
 <tr><td><code>gpxil render</code></td><td>a contig or a region as a picture: PNG for the screen, TIFF in RGB or CMYK for print</td></tr>
 <tr><td><code>gpxil book</code></td><td>a PDF to print, one dot per base</td></tr>
 <tr><td><code>gpxil fasta</code></td><td>the reference’s sequence, one of the person’s haplotypes (<code>--which 1</code> or <code>2</code>), or their genotype in IUPAC letters (<code>--which iupac</code>), as FASTA</td></tr>
@@ -2547,8 +2682,11 @@ grep '>' ~/results/P72/TP53-proteins.fa</code></pre>
 <p>The GRCh38 reference that the studio reads a chromosome at a time from the Gpxil browser is also one file of the whole genome, about 850 MB. Download it once, and give it to <code>gpxil encode</code> as the reference for a whole genome’s VCF:</p>
 <pre class="code"><code>curl -LO https://github.com/comparativechrono/Gpxil-browser/releases/download/grch38-ensembl116/GRCh38.gpxil.tif
 gpxil encode GRCh38.gpxil.tif -v HG002.vcf.gz --callable HG002.callable.bed --sex XY --no-ref -o HG002.gpxil.tif
-gpxil render HG002.gpxil.tif chr21 --mode variants -o chr21.png --reference GRCh38.gpxil.tif</code></pre>
+gpxil render HG002.gpxil.tif chr21 --mode variants -o chr21.png --reference GRCh38.gpxil.tif
+gpxil stats HG002.gpxil.tif --reference GRCh38.gpxil.tif           # what it holds, chromosome by chromosome
+gpxil subset HG002.gpxil.tif chr17 chr21 -o HG002_17_21.gpxil.tif   # a working copy to add to the studio</code></pre>
 <p>Encoding holds a chromosome’s planes in memory while it works, about 6 bytes a base, so the largest, chromosome 1, needs about 1.5 GB. HG002’s whole genome took 12 minutes and at most 2 GB of memory on an ordinary computer, and made a file of 888 MB with the reference plane. The Gpxil browser’s <a href="https://comparativechrono.github.io/Gpxil-browser/" target="_blank" rel="noopener">downloads</a> also have each chromosome on its own, and a checksum to check the download with. Files without their reference plane (<code>--no-ref</code>) are a hundred times smaller; give the reference with <code>--reference</code> to the commands that need its bases (<a href="#h-reference">The GRCh38 reference</a>).</p>
+<p>To work on part of a whole genome here, make a working copy of the chromosomes you need with <code>gpxil subset</code>, which copies them without decoding, and add the copy with <b>Add a file…</b> in the Viewer or the Files tab (<a href="#h-tool-subset">Make a working copy</a>). The studio can also take the whole file and copy from it itself: it reads only the pages it copies.</p>
 
 <h2>The studio’s own copies</h2>
 <p>You can also download the exact copies of the packages that the studio runs, in one archive with tifffile and the studio’s own runner, <code>gpxilwb</code>. This is handy on a computer that can’t reach PyPI or GitHub. It needs NumPy, Pillow and jsonschema (<code>pip install numpy pillow jsonschema</code>), and imagecodecs only for files compressed with Zstandard or LZW.</p>
@@ -2577,13 +2715,13 @@ python3 serve.py 8000 --reference DIR      # the GRCh38 reference from a copy on
 <dd>Schneider VA, Graves-Lindsay T, Howe K, Bouk N, Chen HC, Kitts PA, et al. (2017) Evaluation of GRCh38 and de novo haploid genome assemblies demonstrates the enduring quality of the reference assembly. <i>Genome Research</i> 27(5): 849–864. <a href="https://doi.org/10.1101/gr.213611.116" target="_blank" rel="noopener">doi:10.1101/gr.213611.116</a></dd>
 </dl>
 </article>
-<article class="help-page" id="h-versions" data-title="Versions, and how to cite" data-group="Reference" data-group-page="h-versions" data-keys="versions version cite citation reference papers pypi release gpxiltools 0.3.1 gpxil2pxil 0.1.0 pxil 0.1.1 tifffile pyodide numpy pillow python github specification zook wagner genome in a bottle ensembl" hidden>
+<article class="help-page" id="h-versions" data-title="Versions, and how to cite" data-group="Reference" data-group-page="h-versions" data-keys="versions version cite citation reference papers pypi release gpxiltools 0.4.0 gpxil2pxil 0.1.0 pxil 0.1.1 tifffile pyodide numpy pillow python github specification zook wagner genome in a bottle ensembl" hidden>
 <h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg>Versions, and how to cite</h1>
-<p class="lede">These are the versions that this copy of the studio runs. When you report work done with it, say which versions you used. The files record them too: a gpxil file names the program that wrote it in its metadata (<code>"generator": "gpxiltools 0.3.1"</code>), with the version of the specification it follows, and a pxil file does the same.</p>
+<p class="lede">These are the versions that this copy of the studio runs. When you report work done with it, say which versions you used. The files record them too: a gpxil file names the program that wrote it in its metadata (<code>"generator": "gpxiltools 0.4.0"</code>), with the version of the specification it follows, and a pxil file does the same.</p>
 
 <table>
 <tr><th>Package</th><th>Version</th></tr>
-<tr><td>gpxiltools</td><td>0.3.1</td></tr>
+<tr><td>gpxiltools</td><td>0.4.0</td></tr>
 <tr><td>gpxil2pxil</td><td>0.1.0</td></tr>
 <tr><td>pxil</td><td>0.1.1</td></tr>
 <tr><td>tifffile (which gpxiltools reads and writes TIFF with)</td><td>2026.10.15</td></tr>
@@ -2593,7 +2731,7 @@ python3 serve.py 8000 --reference DIR      # the GRCh38 reference from a copy on
 
 <h2>The packages</h2>
 <ul>
-  <li><b>gpxiltools 0.3.1</b> reads gpxil files on web servers a piece at a time (with HTTP range requests), takes a gpxil file as the reference, such as a chromosome of GRCh38 from the Gpxil browser, writes VCF of chosen regions (<code>gpxil vcf --region</code>), and runs without imagecodecs, which Pyodide doesn’t have: all new in 0.3.0. 0.3.1 gives N, a base that isn’t known, a colour that no base or mix of bases has: near-black in the classic and Okabe–Ito palettes, where it was a grey that a heterozygous C/T base shared.</li>
+  <li><b>gpxiltools 0.4.0</b> reads gpxil files on web servers a piece at a time (with HTTP range requests), takes a gpxil file as the reference, such as a chromosome of GRCh38 from the Gpxil browser, writes VCF of chosen regions (<code>gpxil vcf --region</code>), and runs without imagecodecs, which Pyodide doesn’t have: all new in 0.3.0. 0.3.1 gives N, a base that isn’t known, a colour that no base or mix of bases has: near-black in the classic and Okabe–Ito palettes, where it was a grey that a heterozygous C/T base shared. 0.4.0 adds <code>gpxil subset</code>, working copies of some contigs and planes made without decoding, and <code>gpxil stats</code>, the counts of what a file holds.</li>
   <li><b>gpxil2pxil 0.1.0</b> is new: it makes pxil pictures of genes, transcripts and proteins from a gpxil genome, from the reference or from either of a person’s haplotypes, with the genes of Ensembl from the Gpxil browser’s files or from a GTF file, and says how a person’s protein differs from the reference’s.</li>
   <li><b>pxil 0.1.1</b> reads and writes pxil files, and has a command, <code>pxil</code>, that prints them as FASTA. 0.1.1 colours N near-black, as gpxiltools does.</li>
   <li><b>gpxilwb 1.0.0</b> is the studio’s own runner, which joins the page to the packages. You don’t need it anywhere else.</li>
@@ -2863,7 +3001,7 @@ python3 serve.py 8000 --reference DIR      # the GRCh38 reference from a copy on
 
 <script>window.WB_EXAMPLES = [{"p":"HG002_TP53.bed","s":1144},{"p":"HG002_TP53.vcf","s":147019},{"p":"HG002_chr17.gpxil.tif","s":24648591},{"p":"TP53.gtf","s":415424},{"p":"worked-example.fa","s":73},{"p":"worked-example.gpxil.tif","s":6889},{"p":"worked-example.vcf","s":330},{"p":"workflows/gene-pictures.workflow.json","s":1537},{"p":"workflows/pictures-and-print.workflow.json","s":2024},{"p":"workflows/round-trip.workflow.json","s":2189},{"p":"workflows/vcf-to-gpxil.workflow.json","s":2890}];
 window.WB_STARTERS = [{"p":"notebooks/gpxil-in-python.ipynb"}];
-window.WB_BUNDLE = {"archive":"gpxil-tools.zip","sha256":"bd16b121345074b8733b810c11cbc1d24d577b845e16fcdd7e05616bb295540b","bytes":355659,"packages":{"gpxiltools":"0.3.1","gpxil2pxil":"0.1.0","pxil":"0.1.1","tifffile":"2026.10.15","gpxilwb":"1.0.0"},"pyodide_packages":["numpy","pillow","jsonschema"]};
+window.WB_BUNDLE = {"archive":"gpxil-tools.zip","sha256":"8ed2f64a9bb47345724befef66c3a54d7799cf89fecbc8f4dbbf0ac480558e27","bytes":368989,"packages":{"gpxiltools":"0.4.0","gpxil2pxil":"0.1.0","pxil":"0.1.1","tifffile":"2026.10.15","gpxilwb":"1.0.0"},"pyodide_packages":["numpy","pillow","jsonschema"]};
 window.WB_REFERENCE = {"assembly":"GRCh38","source":"Ensembl release 116: Homo_sapiens.GRCh38.dna_sm.primary_assembly.fa.gz","genes_source":"Ensembl release 116: Homo_sapiens.GRCh38.116.gtf.gz (all transcripts)","base":"https://comparativechrono.github.io/Gpxil-browser/data/grch38/","files":[{"p":"chr1.gpxil.tif","u":"gpxil/chr1.gpxil.tif","s":66743472,"contigs":["chr1"]},{"p":"chr2.gpxil.tif","u":"gpxil/chr2.gpxil.tif","s":70505688,"contigs":["chr2"]},{"p":"chr3.gpxil.tif","u":"gpxil/chr3.gpxil.tif","s":57767884,"contigs":["chr3"]},{"p":"chr4.gpxil.tif","u":"gpxil/chr4.gpxil.tif","s":55527502,"contigs":["chr4"]},{"p":"chr5.gpxil.tif","u":"gpxil/chr5.gpxil.tif","s":52625604,"contigs":["chr5"]},{"p":"chr6.gpxil.tif","u":"gpxil/chr6.gpxil.tif","s":49821294,"contigs":["chr6"]},{"p":"chr7.gpxil.tif","u":"gpxil/chr7.gpxil.tif","s":45568084,"contigs":["chr7"]},{"p":"chr8.gpxil.tif","u":"gpxil/chr8.gpxil.tif","s":42130516,"contigs":["chr8"]},{"p":"chr9.gpxil.tif","u":"gpxil/chr9.gpxil.tif","s":35187824,"contigs":["chr9"]},{"p":"chr10.gpxil.tif","u":"gpxil/chr10.gpxil.tif","s":38569639,"contigs":["chr10"]},{"p":"chr11.gpxil.tif","u":"gpxil/chr11.gpxil.tif","s":38637833,"contigs":["chr11"]},{"p":"chr12.gpxil.tif","u":"gpxil/chr12.gpxil.tif","s":38299323,"contigs":["chr12"]},{"p":"chr13.gpxil.tif","u":"gpxil/chr13.gpxil.tif","s":28531071,"contigs":["chr13"]},{"p":"chr14.gpxil.tif","u":"gpxil/chr14.gpxil.tif","s":26098851,"contigs":["chr14"]},{"p":"chr15.gpxil.tif","u":"gpxil/chr15.gpxil.tif","s":24163955,"contigs":["chr15"]},{"p":"chr16.gpxil.tif","u":"gpxil/chr16.gpxil.tif","s":23165189,"contigs":["chr16"]},{"p":"chr17.gpxil.tif","u":"gpxil/chr17.gpxil.tif","s":22773525,"contigs":["chr17"]},{"p":"chr18.gpxil.tif","u":"gpxil/chr18.gpxil.tif","s":22265231,"contigs":["chr18"]},{"p":"chr19.gpxil.tif","u":"gpxil/chr19.gpxil.tif","s":15551213,"contigs":["chr19"]},{"p":"chr20.gpxil.tif","u":"gpxil/chr20.gpxil.tif","s":17998813,"contigs":["chr20"]},{"p":"chr21.gpxil.tif","u":"gpxil/chr21.gpxil.tif","s":11250873,"contigs":["chr21"]},{"p":"chr22.gpxil.tif","u":"gpxil/chr22.gpxil.tif","s":10739611,"contigs":["chr22"]},{"p":"chrX.gpxil.tif","u":"gpxil/chrX.gpxil.tif","s":44142282,"contigs":["chrX"]},{"p":"chrY.gpxil.tif","u":"gpxil/chrY.gpxil.tif","s":7342464,"contigs":["chrY"]},{"p":"chrM.gpxil.tif","u":"gpxil/chrM.gpxil.tif","s":7163,"contigs":["chrM"]},{"p":"unplaced.gpxil.tif","u":"gpxil/unplaced.gpxil.tif","s":3129299,"contigs":["KI270728.1","KI270727.1","KI270442.1","KI270729.1","GL000225.1","KI270743.1","GL000008.2","GL000009.2","KI270747.1","KI270722.1","GL000194.1","KI270742.1","GL000205.2","GL000195.1","KI270736.1","KI270733.1","GL000224.1","GL000219.1","KI270719.1","GL000216.2","KI270712.1","KI270706.1","KI270725.1","KI270744.1","KI270734.1","GL000213.1","GL000220.1","KI270715.1","GL000218.1","KI270749.1","KI270741.1","GL000221.1","KI270716.1","KI270731.1","KI270751.1","KI270750.1","KI270519.1","GL000214.1","KI270708.1","KI270730.1","KI270438.1","KI270737.1","KI270721.1","KI270738.1","KI270748.1","KI270435.1","GL000208.1","KI270538.1","KI270756.1","KI270739.1","KI270757.1","KI270709.1","KI270746.1","KI270753.1","KI270589.1","KI270726.1","KI270735.1","KI270711.1","KI270745.1","KI270714.1","KI270732.1","KI270713.1","KI270754.1","KI270710.1","KI270717.1","KI270724.1","KI270720.1","KI270723.1","KI270718.1","KI270317.1","KI270740.1","KI270755.1","KI270707.1","KI270579.1","KI270752.1","KI270512.1","KI270322.1","GL000226.1","KI270311.1","KI270366.1","KI270511.1","KI270448.1","KI270521.1","KI270581.1","KI270582.1","KI270515.1","KI270588.1","KI270591.1","KI270522.1","KI270507.1","KI270590.1","KI270584.1","KI270320.1","KI270382.1","KI270468.1","KI270467.1","KI270362.1","KI270517.1","KI270593.1","KI270528.1","KI270587.1","KI270364.1","KI270371.1","KI270333.1","KI270374.1","KI270411.1","KI270414.1","KI270510.1","KI270390.1","KI270375.1","KI270420.1","KI270509.1","KI270315.1","KI270302.1","KI270518.1","KI270530.1","KI270304.1","KI270418.1","KI270424.1","KI270417.1","KI270508.1","KI270303.1","KI270381.1","KI270529.1","KI270425.1","KI270396.1","KI270363.1","KI270386.1","KI270465.1","KI270383.1","KI270384.1","KI270330.1","KI270372.1","KI270548.1","KI270580.1","KI270387.1","KI270391.1","KI270305.1","KI270373.1","KI270422.1","KI270316.1","KI270340.1","KI270338.1","KI270583.1","KI270334.1","KI270429.1","KI270393.1","KI270516.1","KI270389.1","KI270466.1","KI270388.1","KI270544.1","KI270310.1","KI270412.1","KI270395.1","KI270376.1","KI270337.1","KI270335.1","KI270378.1","KI270379.1","KI270329.1","KI270419.1","KI270336.1","KI270312.1","KI270539.1","KI270385.1","KI270423.1","KI270392.1","KI270394.1"]}],"genes":{"index":"genes/index.json.gz","count":78941,"transcripts":646577}};</script>
 <script src="assets/js/config.js"></script>
 <script src="assets/js/core.js"></script>
@@ -2893,6 +3031,7 @@ window.WB_REFERENCE = {"assembly":"GRCh38","source":"Ensembl release 116: Homo_s
 <script src="assets/js/pysync.js"></script>
 <script src="assets/js/editor.js"></script>
 <script src="assets/js/gpxil-read.js"></script>
+<script src="assets/js/gpxil-stats.js"></script>
 <script src="assets/js/pxil-read.js"></script>
 <script src="assets/js/viewer-tab.js"></script>
 <script src="assets/js/schematic.js"></script>

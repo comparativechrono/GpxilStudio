@@ -1,4 +1,4 @@
-<!-- id: h-memory | title: Big files and memory | group: gpxil and pxil | summary: How the studio works with files of hundreds of megabytes in a browser tab, its limits, and how to write code that stays small | keys: memory big large files lazy strips range requests web worker pyodide webassembly blob storage limits out of memory memoryerror crash restart encode chromosome whole genome 8 mb 4 mb 25 mb 50 mb 1 gb 2000 mb -->
+<!-- id: h-memory | title: Big files and memory | group: gpxil and pxil | summary: How the studio works with files of hundreds of megabytes in a browser tab, its limits, and how to write code that stays small | keys: memory big large files lazy strips subset working copy range requests web worker pyodide webassembly blob storage limits out of memory memoryerror crash restart encode chromosome whole genome 8 mb 4 mb 25 mb 50 mb 1 gb 2000 mb -->
 <h1><!--ICON:memory-->Big files and memory</h1>
 <p class="lede">A gpxil file of a chromosome is tens of megabytes, and of a whole genome nearly a gigabyte, while a browser tab has a few gigabytes at most – and Python less. So the studio never copies a big file whole: everything reads just the part it needs. This page explains how, what the limits are, and how to stay within them. <a href="#h-walk-big">A whole genome without running out of memory</a> walks through it with examples.</p>
 
@@ -16,6 +16,9 @@
   <li><b>A big file that Python writes</b>, such as a new gpxil file, is handed to the browser to keep when the command ends, and Python’s copy is freed.</li>
 </ul>
 <p>gpxiltools reads only the strips of the region it is asked for, so <code>gpxil info</code> on chromosome 1 reads a few kilobytes, and a gene a few hundred. In the experiment that led to the studio, the whole genome as one file, 809 MB, opened in 72 MB of Python’s memory.</p>
+
+<h2>Working copies</h2>
+<p>To work on part of a big file, copy that part: <code>gpxil subset</code> makes a new gpxil file of the contigs you choose, and of the planes you choose, copying the pages’ strips as they are stored, so it takes about one strip of memory however big the file (<a href="#h-tool-subset">Make a working copy</a>). A chromosome of a whole genome is a few per cent of it, and without the reference plane a hundredth of that again. <code>gpxil stats</code> counts what a file holds a piece at a time in the same way (<a href="#h-tool-stats">Count what a file holds</a>).</p>
 
 <h2>What does take memory</h2>
 <table>
