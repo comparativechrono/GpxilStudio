@@ -35,7 +35,7 @@
 <p><b>Look at the first difference in the Viewer</b> opens A there.</p>
 
 <h2>HG002’s two benchmarks</h2>
-<p>Genome in a Bottle’s benchmarks of HG002 have been made twice: version 4.2.1 from short and linked reads, and version 5.0q from a whole assembly of his genome. The examples hold chromosome 17 of each. Compared in the regions both call with confidence (83.7 % of the chromosome), 113,164 bases have a variant in one or the other, and all but 8 are the same in both; 410 of them are only written differently. Precision and recall are over 99.99 % for substitutions, and 99.99 % and over 99.99 % for insertions and deletions. Of the three stretches that differ, two are substitutions only version 4.2.1 has; the third is two deletions that version 4.2.1 writes as overlapping, unphased calls, which version 0.1 of the specification puts on one haplotype (<a href="#h-walk-trio">A family</a> says more).</p>
+<p>Genome in a Bottle’s benchmarks of HG002 have been made twice: version 4.2.1 from short and linked reads, and version 5.0q from a whole assembly of his genome. The examples hold chromosome 17 of each. Compared in the regions both call with confidence (83.7 % of the chromosome), 113,164 bases have a variant in one or the other, and all but 4 are the same in both; 413 of them are only written differently. For substitutions, precision is over 99.99 % and recall 100 %; for insertions and deletions, both are 100 %. The two stretches that differ hold four substitutions only version 4.2.1 has (<a href="#h-walk-trio">A family</a> says more).</p>
 
 <h2>In the terminal</h2>
 <pre class="code" data-run="term"><code>gpxil compare /data/examples/HG002_chr17.gpxil.tif /data/examples/HG002_chr17_v5.0q.noref.gpxil.tif \

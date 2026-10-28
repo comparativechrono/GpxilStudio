@@ -256,7 +256,7 @@ async function examplesRun() {
       const [pair, trio] = ['compare', 'trio'].map((id) => rec.steps.find((e) => e.tool === id));
       const pics = [pair, trio].map((e) => e && e.outputs && e.outputs.picture).filter((p) => p && files.exists(p));
       // (the summaries' shares are written with spaces that don't break)
-      check(pair && /^> 99\.99 % of variant bases the same; substitutions: precision > 99\.99 %, recall > 99\.99 %/.test(pair.summary.replace(/\u00a0/g, ' ')) && trio && /^23 Mendelian errors, 23 of them candidate new mutations, in 106,558 variant bases of the child’s$/.test(trio.summary) && pics.length === 2, `${f}: HG002’s two benchmarks agree but for 8 variant bases, and he has 23 Mendelian errors; TP53 drawn twice (${pair && pair.summary} · ${trio && trio.summary})`);
+      check(pair && /^> 99\.99 % of variant bases the same; substitutions: precision > 99\.99 %, recall 100\.00 %; indels: 100\.00 %, 100\.00 %$/.test(pair.summary.replace(/\u00a0/g, ' ')) && trio && /^22 Mendelian errors, 22 of them candidate new mutations, in 106,558 variant bases of the child’s$/.test(trio.summary) && pics.length === 2, `${f}: HG002’s two benchmarks agree but for 4 variant bases, and he has 22 Mendelian errors; TP53 drawn twice (${pair && pair.summary} · ${trio && trio.summary})`);
     }
     fs.rmSync(files.tmp, { recursive: true, force: true });
   }

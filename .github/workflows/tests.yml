@@ -43,7 +43,19 @@ jobs:
           python3 -c "import hashlib, json; m = json.load(open('assets/py/gpxil-tools.json')); assert hashlib.sha256(open('assets/py/' + m['archive'], 'rb').read()).hexdigest() == m['sha256'], 'run python3 python/build_bundle.py'"
 
       - name: Syntax of every script
-        run: for f in assets/js/*.js; do node --check "$f" || exit 1; done
+        run: for f in assets/js/*.js assets/vendor/gpxil-read/*.js; do node --check "$f" || exit 1; done
+
+      - name: The gpxil reader is gpxiltools' at the commit its record names
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, urllib.request
+          d = "assets/vendor/gpxil-read/"
+          rec = json.load(open(d + "gpxil-read.source.json"))
+          here = hashlib.sha256(open(d + "gpxil-read.js", "rb").read()).hexdigest()
+          there = hashlib.sha256(urllib.request.urlopen(rec["url"]).read()).hexdigest()
+          print(rec["url"], there)
+          assert here == rec["sha256"] == there, "change the reader in Gpxil-tools, and copy it with js/copy_to.py"
+          PY
 
       - name: The workflow engine, and the example workflows run for real
         run: node tests/workflows/engine.js

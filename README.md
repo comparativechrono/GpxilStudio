@@ -65,10 +65,12 @@ a time.
 A whole genome is 850 MB as gpxil, and a browser tab has a few gigabytes at
 most, so nothing big is ever copied whole:
 
-- **The Viewer and the Files tab** read gpxil files in the page
-  (`assets/js/gpxil-read.js`): the TIFF's directories, then only the strips a
-  view needs, from the browser's storage or with HTTP range requests, inflated
-  with the browser's own `DecompressionStream`.
+- **The Viewer and the Files tab** read gpxil files in the page, with
+  gpxiltools' JavaScript reader (`assets/vendor/gpxil-read/`, a copy of
+  [Gpxil-tools' `js/gpxil-read.js`](https://github.com/comparativechrono/Gpxil-tools/tree/main/js),
+  which the Gpxil browser uses too): the TIFF's directories, then only the
+  strips a view needs, from the browser's storage or with HTTP range requests,
+  inflated with the browser's own `DecompressionStream`.
 - **Python** (Pyodide, in a web worker) sees every file of 8 MB or more
   (`lazyFileMB` in `assets/js/config.js`) as a file that is read a piece at a
   time: your files from the browser's storage (Emscripten's WORKERFS, which
@@ -132,8 +134,9 @@ python3 build/make_page.py              # build/template.html + build/help/*.htm
 
 - `assets/js/` – the framework (from the lab's Bioinformatics and Pedigree
   workbenches: the help, the shell, the notebook, the editor, the file system
-  and the Python worker), and the studio's own parts: `gpxil-read.js`,
-  `gpxil-stats.js` and `viewer-tab.js` (the Viewer), `tools.js` (the tools), `workflows.js`,
+  and the Python worker), and the studio's own parts: `gpxil-read.js` (the
+  shared reader, with a source for the page's files), `gpxil-stats.js` and
+  `viewer-tab.js` (the Viewer), `tools.js` (the tools), `workflows.js`,
   `schematic.js` (the map of the formats), `page-wb.js` (the files, the
   examples and the reference) and `py-worker.js` (Python, with the lazy files).
 - `python/gpxilwb/` – the studio's own Python: it runs the programs by name for
@@ -188,7 +191,7 @@ and its record, then run `python3 python/build_bundle.py` and
 ```
 index.html              the page (made by build/make_page.py)
 serve.py                a local server with range requests
-assets/js, assets/css   the page's code and styles; assets/vendor: CodeMirror, marked, DOMPurify, JSZip
+assets/js, assets/css   the page's code and styles; assets/vendor: CodeMirror, marked, DOMPurify, JSZip, gpxil-read
 assets/py               gpxil-tools.zip, the packages for the browser's Python, and what is in it
 python/                 gpxilwb, the wheels in vendor/, and build_bundle.py
 build/                  template.html, help/, citations.json, reference.json and the scripts that make the page

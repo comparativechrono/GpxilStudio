@@ -21,7 +21,7 @@
 <p>A plane is really a line of values, so any program can re-wrap it to another width without losing anything. A width equal to a repeat’s period lines the repeat up in columns. Other views, such as a book’s pages or a Hilbert curve, are made from the rows when they are drawn.</p>
 
 <h2>Pages: one picture for each plane</h2>
-<p>Every plane of every contig is one page of the TIFF file. The pages go contig by contig, in the order <code>ref</code>, <code>gt</code>, <code>flags</code>, <code>gq</code>, <code>dp</code>, <code>ps</code>, then planes of your own. Each page describes itself in JSON, such as <code>{"gpxil": "0.1", "contig": "chr17", "plane": "gt", "length": 83257441}</code>, and has a name for image viewers, such as <code>chr17 gt</code>. The first page also carries the metadata of the whole file.</p>
+<p>Every plane of every contig is one page of the TIFF file. The pages go contig by contig, in the order <code>ref</code>, <code>gt</code>, <code>flags</code>, <code>gq</code>, <code>dp</code>, <code>ps</code>, then planes of your own. Each page describes itself in JSON, such as <code>{"gpxil": "0.2", "contig": "chr17", "plane": "gt", "length": 83257441}</code>, and has a name for image viewers, such as <code>chr17 gt</code>. The first page also carries the metadata of the whole file.</p>
 <p>The <code>ref</code>, <code>gt</code> and <code>flags</code> pages are palette pictures with a colour map, so that an ordinary image viewer shows them in colour. The colours are only for looking: no reader takes values from them. The other pages are greyscale.</p>
 
 <h2>Strips: reading a region</h2>
@@ -36,7 +36,7 @@ offset	hap	kind	data
 <p>Programs built on libtiff, such as ImageMagick, warn about the unknown tag and otherwise ignore it.</p>
 
 <h2>The metadata</h2>
-<p>The first page’s description is a JSON object that says what the file holds. It must have <code>gpxil</code> (the version, <code>"0.1"</code>), <code>layout</code> (the default width), <code>contigs</code> and, in a file with a person, <code>sample</code>. Usually there too are <code>reference</code> (its name and source file), <code>planes</code> (their types and missing values), <code>palette</code>, <code>generator</code>, <code>created</code> and <code>summary</code>, the encoder’s totals. Each contig’s entry gives:</p>
+<p>The first page’s description is a JSON object that says what the file holds. It must have <code>gpxil</code> (the version of the specification whose rules made it, <code>"0.2"</code>; files made by gpxiltools 0.5 or earlier say <code>"0.1"</code>, and read the same), <code>layout</code> (the default width), <code>contigs</code> and, in a file with a person, <code>sample</code>. Usually there too are <code>reference</code> (its name and source file), <code>planes</code> (their types and missing values), <code>palette</code>, <code>generator</code>, <code>created</code> and <code>summary</code>, the encoder’s totals. Each contig’s entry gives:</p>
 <table>
 <tr><th>Key</th><th>What it holds</th></tr>
 <tr><td><code>name</code>, <code>length</code>, <code>width</code></td><td>the contig’s name, its number of bases, and its layout width</td></tr>

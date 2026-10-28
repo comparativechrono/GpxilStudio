@@ -86,7 +86,7 @@
         ['File', `${MG.humanSize(e && fs.size(e))}${e && e.remote ? ', on the Gpxil browser (read from the web, a piece at a time)' : ''}`],
         ['Reference', `${ref.name || '?'}${ref.source ? ' (' + ref.source + ')' : ''}`],
         ['Sample', s ? `${s.id}${s.source ? ', from ' + s.source : ''}${s.callable_regions ? '; callable regions ' + s.callable_regions : ''}` : 'none: reference only'],
-        ['Layout', `${(m.layout || {}).width || '?'} bases per row; written by ${m.generator || '?'}`]
+        ['Layout', `${(m.layout || {}).width || '?'} bases per row; written by ${m.generator || '?'}, as gpxil ${m.gpxil}`]
       ];
       const t = h('table.ed-gpxil-meta');
       for (const [k, v] of lines) t.appendChild(h('tr', h('th', k), h('td', v)));

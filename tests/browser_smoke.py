@@ -133,7 +133,7 @@ async (opts) => {
     const secs = (Date.now() - t0) / 1000;
     img = await shown();
     const errRows = document.querySelectorAll('table.tl-cmpex tr').length - 1;
-    check(document.querySelector('.tl-done.ok') && /23 sites \(24 bases\), 23 of them candidate new mutations/.test(res) && /from the father 28,419 · from the mother 27,061 · from both 40,337/.test(res) && errRows === 20 && img && document.querySelectorAll('.tl-cmpkey li').length === 9, `Tools: HG002 and his parents, all of chromosome 17 in ${secs.toFixed(0)} s: 23 Mendelian errors, the first ${errRows} listed`);
+    check(document.querySelector('.tl-done.ok') && /22 sites \(23 bases\), 22 of them candidate new mutations/.test(res) && /from the father 28,419 · from the mother 27,062 · from both 40,337/.test(res) && errRows === 20 && img && document.querySelectorAll('.tl-cmpkey li').length === 9, `Tools: HG002 and his parents, all of chromosome 17 in ${secs.toFixed(0)} s: 22 Mendelian errors, the first ${errRows} listed`);
     const look = Array.from(document.querySelectorAll('.tl-next button')).find((b) => /first error/.test(b.textContent));
     if (look) look.click();
     await wait(() => V.data && V.data.start === 3343220 && V.data.end === 3343321, 20000).catch(() => null);
