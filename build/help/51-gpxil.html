@@ -12,7 +12,7 @@
 <tr><td><code>flags</code></td><td>8-bit</td><td>whether the call here was phased, an insertion follows, the call was filtered, a call covers the base</td></tr>
 <tr><td><code>gq</code>, <code>dp</code></td><td>8-bit</td><td>the genotype quality and read depth of the call over the base, up to 254; 255 where there is none</td></tr>
 <tr><td><code>ps</code></td><td>32-bit</td><td>the phase set of a phased call; 0 where there is none</td></tr>
-<tr><td><code>x-…</code></td><td>8, 16 or 32 bits, or floating point</td><td>planes of your own, such as <code>x-methylation</code>; readers ignore those they don’t know</td></tr>
+<tr><td><code>x-…</code></td><td>8, 16 or 32 bits, or floating point</td><td>planes of your own, such as <code>x-methylation</code>; readers ignore those they don’t know. <a href="#h-tool-annotate">gpxil annotate</a> makes them from repeats, BED and bedGraph files, with what they hold in the metadata</td></tr>
 </table>
 <p>A file holds at most one person. One without a person is a reference – <code>ref</code> planes only, like the chromosomes of GRCh38 in <code>/data/grch38</code>. A file can also leave the <code>ref</code> plane out and name its reference by checksums instead (below). A contig with a <code>gt</code> plane always has a <code>flags</code> plane too. <a href="#h-codes">The codes</a> gives every value.</p>
 

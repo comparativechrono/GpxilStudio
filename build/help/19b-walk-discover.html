@@ -1,0 +1,72 @@
+<!-- id: h-walk-discover | title: Pure GA-sequences: looking for patterns | group: Walkthroughs | summary: Albrecht-Buehler’s pure GA-sequences on chromosome 17: found, stacked, traced to the Alu elements whose tails they began as, and HG002’s substitutions in them counted against what their sequence predicts | keys: ga-sequences pure ga sequences purine runs albrecht-buehler gpxi discovery patterns research alu poly(a) tails repeatmasker repeats stack stripes spectrum substitutions point mutations fewer isolated period units microsatellite chargaff strands skew hg002 v5.0q workflow -->
+<h1><!--ICON:search-->Pure GA-sequences: looking for patterns</h1>
+<p class="lede">Guenter Albrecht-Buehler drew genomes as pictures, a pixel a base, and in them found <b>pure GA-sequences</b>: stretches of more than 50 bases of nothing but A and G, thousands of them, where chance would give none. He saw Alu elements line up before those that begin with a run of A’s, and reported that they have many times fewer point mutations than the genome at large. This walkthrough follows his questions on chromosome 17 with the tools that look for patterns: find the GA-sequences, stack them, trace where they come from, and count a person’s substitutions in them.</p>
+
+<h2>1 · Find them</h2>
+<p>A pure GA-sequence is a run of A and G of 51 bases or more. On the other strand, the same stretch is a run of C and T, so look on both strands:</p>
+<div class="tryrow"><button class="do" type="button" data-tool="runs" data-input="/data/examples/HG002_chr17.gpxil.tif">Find chromosome 17’s pure GA-sequences</button></div>
+<pre class="code" data-run="term"><code>gpxil runs /data/examples/HG002_chr17.gpxil.tif --of AG --both-strands -o ~/results/HG002_chr17_AG_runs.bed</code></pre>
+<p>Chromosome 17 has 1,561: 739 on the + strand and 822 on the − strand, as many on each as Chargaff’s second rule expects of a genome’s two strands, 140,621 bases in all. Half are 71 bases long or less; the longest is 574. Albrecht-Buehler counted 19,139 in the whole human genome of 2008; GRCh38 has 45,681.</p>
+
+<h2>2 · Stack them</h2>
+<p>His picture of them stacks the GA-sequences one a row, lined up at their starts, each read on its own strand with the 400 bases before it, and sorts the rows by the run of A’s each begins with, longest first:</p>
+<div class="tryrow"><button class="do" type="button" data-tool="stack" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="~/results/HG002_chr17_AG_runs.bed" data-sort="run">Stack them, sorted by their poly(A)s</button></div>
+<pre class="code" data-run="term"><code>gpxil stack /data/examples/HG002_chr17.gpxil.tif ~/results/HG002_chr17_AG_runs.bed --sort run --labelled -o ~/results/GA-stack.png</code></pre>
+<p>Right of the anchor, the poly(A)s run down as a pink wedge (A, in a soft-masked repeat), longest at the top, turning into mixed A and G below. Left of it, in the top few hundred rows, the bases line up into vertical stripes reaching about 280 bases back, with an A-rich stripe halfway along: the body of an Alu element, whose two halves are joined by a run of A’s. Rows that start without a poly(A) show no stripes.</p>
+
+<h2>3 · Where they come from</h2>
+<p>An Alu element ends in a poly(A) tail. Give the genome RepeatMasker’s repeats as a plane of its own, and look at one of the GA-sequences in the Viewer:</p>
+<div class="tryrow"><button class="do" type="button" data-tool="annotate" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="/data/examples/rmsk_chr17.txt.gz">Add the repeats as a plane</button> <button class="do" type="button" data-viewer="~/genomes/HG002_chr17.repeats.gpxil.tif" data-region="chr17:6,792,801-6,793,400" data-plane="x-repeats">Then look at a GA-sequence</button></div>
+<pre class="code" data-run="term"><code>gpxil annotate /data/examples/HG002_chr17.gpxil.tif /data/examples/rmsk_chr17.txt.gz --plane x-repeats -o ~/genomes/HG002_chr17.repeats.gpxil.tif</code></pre>
+<p>The GA-sequence at chr17:6,793,028-6,793,302 begins in the tail of an AluJb element (red, a SINE) and runs on as a simple repeat of AGAA (violet): an Alu tail that has become a repeat of A and G. Switch <b>Show</b> to the reference’s bases to see it. To count how many begin where an Alu ends, on the same strand, take the GA-sequences and the repeats into Python:</p>
+<pre class="code" data-run="py"><code>import numpy as np
+from gpxiltools.features import read_features
+
+ga = read_features("/home/user/results/HG002_chr17_AG_runs.bed")
+alus = read_features("/data/examples/rmsk_chr17.txt.gz", match="^SINE/Alu/")
+# an Alu's 3' end on each strand: its end on +, its start on -
+ends = {s: np.sort([a.end if s == "+" else a.start for a in alus if a.strand == s]) for s in "+-"}
+
+def alu_tail(f, near=30):
+    five = f.start if f.strand == "+" else f.end      # (where the GA-sequence begins, on its strand)
+    e = ends[f.strand]
+    i = np.searchsorted(e, five - near)
+    return i < len(e) and e[i] <= five + near
+
+tails = sum(alu_tail(f) for f in ga)
+print(f"{tails:,} of {len(ga):,} pure GA-sequences ({100 * tails / len(ga):.0f} %) begin within 30 bases of an Alu's end")</code></pre>
+<p>704 of the 1,561 do, 45 %: many GA-sequences began as Alu elements’ poly(A) tails, which, with time, take up G’s and become repeats of A and G. <a href="#h-tool-stack">Stack features</a> shows chromosome 17’s Alu elements lined up at their ends by age, their tails pure A in the young and mixed in the old.</p>
+
+<h2>4 · Do they have fewer point mutations?</h2>
+<p>Albrecht-Buehler reported 160 times fewer point mutations in GA-sequences than in the genome at large, a figure his correction withdrew for “many”. HG002’s substitutions in them can be counted, and compared with what their sequence leads one to expect, context by context. Read contexts with a purine in the middle, so a GA-sequence is read on its own strand, and count only <b>isolated</b> substitutions, with no other variant within 20 bases: a repeat’s unit changed is often written as several substitutions side by side.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="spectrum" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="~/results/HG002_chr17_AG_runs.bed" data-isolated="20">In HG002’s v4.2.1 benchmark</button> <button class="do" type="button" data-tool="spectrum" data-input="/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif" data-features="~/results/HG002_chr17_AG_runs.bed" data-isolated="20" data-reference="/data/examples/HG002_chr17.gpxil.tif">In his v5.0q benchmark</button></div>
+<pre class="code" data-run="term"><code>gpxil spectrum /data/examples/HG002_chr17_v5.0q.noref.gpxil.tif ~/results/HG002_chr17_AG_runs.bed \
+    --reference /data/examples/HG002_chr17.gpxil.tif --centre purine --isolated 20</code></pre>
+<table>
+<tr><th></th><th>v4.2.1</th><th>v5.0q</th></tr>
+<tr><td>GA-sequence bases called with confidence</td><td>54,051 (38 %)</td><td>117,343 (83 %)</td></tr>
+<tr><td>isolated substitutions in them, observed / expected</td><td>28 / 36.5</td><td>92 / 78.4</td></tr>
+<tr><td>… the ratio (95 % interval; p)</td><td>0.77 (0.51–1.11; 0.18)</td><td>1.17 (0.95–1.44; 0.15)</td></tr>
+<tr><td>all substitutions, observed / expected</td><td>50 / 42.0</td><td>410 / 96.0</td></tr>
+<tr><td>isolated transitions / transversions (the background’s)</td><td>8.3 (2.4)</td><td>4.8 (2.4)</td></tr>
+<tr><td>insertions and deletions a kilobase (the background’s)</td><td>4.3 (0.21)</td><td>8.4 (0.36)</td></tr>
+</table>
+<p>Not many times fewer: in both benchmarks, the isolated substitutions are about what their contexts predict, and each ratio’s interval includes 1. The older benchmark leaves most GA-sequences out of the regions it calls with confidence; the newer, made from a whole assembly of his genome, keeps 83 % of their bases, and in them finds four times the substitutions their contexts predict when every one is counted – most of them clustered, changes of a repeat’s units. What GA-sequences do have is <b>20 to 23 times the insertions and deletions</b> of the rest of the chromosome, as repeats do, and substitutions that lean to transitions, A to G and G to A, which keep a GA-sequence pure.</p>
+
+<h2>5 · One up close</h2>
+<p>Wrap the GA-sequence of step 3 at its period, one unit a row, the reference beside HG002’s two haplotypes:</p>
+<div class="tryrow"><button class="do" type="button" data-tool="period" data-input="/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif" data-region="chr17:6,793,028-6,793,302" data-reference="/data/examples/HG002_chr17.gpxil.tif">Wrap it at its period</button> <button class="do" type="button" data-viewer="/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif" data-region="chr17:6,793,028-6,793,302" data-mode="variants">Its variants in the Viewer</button></div>
+<p>Its period is 4. Haplotype 1 is the reference but for three more units; haplotype 2 has 15 substituted bases in 13 units, and each of those units becomes one the repeat already has, AAAG becoming AGAG, AGAA becoming AGAG, as if copied from a neighbour – the way repeats change, by slippage and by copying their own units, rather than the way a protected sequence would.</p>
+
+<h2>6 · The whole of it, as a workflow</h2>
+<p>Finding them, stacking them, counting their substitutions (in the v4.2.1 benchmark) and adding the repeats are an example workflow, to run again on a genome of your own:</p>
+<div class="tryrow"><button class="do" type="button" data-workflow="/data/examples/workflows/ga-sequences.workflow.json">Open the workflow “Pure GA-sequences”</button></div>
+
+<h2>7 · The whole genome, on your own computer</h2>
+<p>With the Gpxil browser’s GRCh38 file and a person’s genome encoded on it, the same commands cover every chromosome:</p>
+<pre class="code"><code>gpxil runs GRCh38.gpxil.tif --of AG --both-strands -o GA.bed
+awk '$1 == "chr1"' GA.bed > GA.chr1.bed
+gpxil stack GRCh38.gpxil.tif GA.chr1.bed --sort run --labelled -o GA.chr1.png
+gpxil spectrum HG002.v5.0q.noref.gpxil.tif GA.bed --reference GRCh38.gpxil.tif --centre purine --isolated 20</code></pre>
+<p>Genome-wide, 37 % of GRCh38’s GA-sequences on the autosomes begin at an Alu’s end, 71 % of those that begin with a poly(A) of 15 or more; the older the Alu, the more often its tail is a GA-sequence; HG002’s isolated substitutions in them run at 0.90 and 1.11 times what their contexts predict in the two benchmarks, and the newest variants of 76,215 people in gnomAD at 1.00 times. Experiment 04 of the <a href="https://github.com/comparativechrono/Gpxil-scratchpad/tree/main/experiments/04-ga-sequences" target="_blank" rel="noopener">gpxil scratchpad</a> has it all, with the scripts.</p>
+<!--CITE: albrecht-buehler gpxiltools repeatmasker giab chargaff-->

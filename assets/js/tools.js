@@ -38,7 +38,7 @@
   const dirOf = (p) => MG.path.dirname(p);
   /** the name of a file without its kind's ending: HG002_chr17.gpxil.tif → HG002_chr17 */
   const stemOf = (p) =>
-    base(p).replace(/\.(gpxil\.tiff?|gpxil|pxil\.png|tiff?|png|pdf|vcf(\.b?gz)?|(fa|fasta|fna)(\.b?gz)?|bed(\.gz)?|gtf(\.gz)?|gff3?(\.gz)?|json|txt)$/i, '') || 'genome';
+    base(p).replace(/\.(gpxil\.tiff?|gpxil|pxil\.png|tiff?|png|pdf|vcf(\.b?gz)?|(fa|fasta|fna)(\.b?gz)?|bed(\.gz)?|gtf(\.gz)?|gff3?(\.gz)?|json|(txt|tsv|bedgraph|bdg)(\.gz)?|(fa|fasta|fna)\.out(\.gz)?)$/i, '') || 'genome';
   const joinPath = (dir, name) => expand(dir).replace(/\/+$/, '') + '/' + name;
   const KIND = () => MG.app.kindNames || {};
   const kindOf = (p) => MG.app.fileKind(p || '');
@@ -284,6 +284,78 @@
   const refArgs = (v) => optArgs(v.reference, '--reference', v.reference);
   const refPy = (v) => (v.reference ? `, reference=${pyq(v.reference)}` : '');
   const checkNeedsRef = (v) => (needsRef(v.input) && !v.reference ? `${base(v.input)} was written without its reference: choose the reference to read its bases with.` : '');
+  /* ------------------------------------------------------------------ looking for patterns: runs, stack, spectrum, annotate, skew, period */
+  /** the files of features these tools read: BED (and bedGraph), and RepeatMasker tables */
+  const FEATURES = ['bed', 'rmsk', 'bedgraph'];
+  const isRmsk = (p) => !!p && kindOf(p) === 'rmsk';
+  /** bases in IUPAC letters, as gpxil takes them */
+  const lettersOf = (x) => String(x == null ? '' : x).toUpperCase().replace(/\s+/g, '');
+  const IUPAC_SET = { A: 'A', C: 'C', G: 'G', T: 'T', U: 'T', R: 'AG', Y: 'CT', S: 'CG', W: 'AT', K: 'GT', M: 'AC', B: 'CGT', D: 'AGT', H: 'ACT', V: 'ACG', N: 'ACGT' };
+  const badLetters = (x) => !lettersOf(x) || /[^ACGTURYSWKMBDHVN]/.test(lettersOf(x));
+  /** a set of bases as gpxil names it: its letters in the order A, C, G, T (R and GA are AG) */
+  function setName(x) {
+    const got = new Set();
+    for (const ch of lettersOf(x)) for (const b of IUPAC_SET[ch] || '') got.add(b);
+    return ['A', 'C', 'G', 'T'].filter((b) => got.has(b)).join('');
+  }
+  /** choosing features by name and length: the fields, and the same for the command and for read_features */
+  const PICK_FIELDS = [
+    { key: 'match', type: 'text', label: 'Only features whose name matches (optional)', def: '', placeholder: 'e.g. ^SINE/Alu/', help: 'A regular expression, looked for anywhere in a feature’s name: a BED line’s fourth column, or a repeat’s class, family and name, such as SINE/Alu/AluSx (^SINE/Alu/ picks the Alu elements, /L1/ the L1s).' },
+    { key: 'minLength', type: 'number', label: 'Only features of at least this many bases (optional)', def: '', min: 0, step: 1, placeholder: 'any length' }
+  ];
+  const pickArgs = (v) => [...optArgs(String(v.match || '').trim(), '--match', String(v.match || '').trim()), ...optArgs(int(v.minLength) && int(v.minLength) !== '0', '--min-length', int(v.minLength))];
+  const pickPy = (v) => `${String(v.match || '').trim() ? `, match=${pyq(String(v.match).trim())}` : ''}${int(v.minLength) && int(v.minLength) !== '0' ? `, min_length=${int(v.minLength)}` : ''}`;
+  /** regions for the command (without the commas that group digits), and for Python (None: every contig) */
+  const regionArgs = (v) => regionsOf(v.regions).map((r) => r.replace(/,/g, ''));
+  const regionsPy = (v) => (regionArgs(v).length ? `[g.region_of(r) for r in ${JSON.stringify(regionArgs(v))}]` : 'None');
+  /** what is wrong with the regions of a form ('' if nothing): a chromosome that windows hold is all of them */
+  function checkRegions(v) {
+    for (const r of regionsOf(v.regions)) {
+      if (windowsNamed(infoOf(v.input), r).length > 1) continue;
+      const bad = checkRegion(v.input, r, 'region', 0);
+      if (bad) return bad;
+    }
+    return '';
+  }
+  /** the files that go with another: a stack's profile, a table of windows' map */
+  const profileOf = (out) => String(out || '').replace(/\.png$/i, '') + '_profile.tsv';
+  const pictureOf_ = (out) => String(out || '').replace(/\.(tsv|txt)$/i, '') + '.png';
+  const windowSlug = (w) => {
+    const n = Number(int(w) || 0);
+    return n && n % 1e6 === 0 ? `${n / 1e6}Mb` : n && n % 1e3 === 0 ? `${n / 1e3}kb` : `${n}bp`;
+  };
+  /** k-mers' lengths given as text (1,2,3,4), or null if they aren't 1 to 6 */
+  function kList(x) {
+    const parts = String(x || '').split(/[\s,]+/).filter(Boolean);
+    if (!parts.length || parts.some((p) => !/^[1-6]$/.test(p))) return null;
+    return [...new Set(parts.map(Number))].sort((a, b) => a - b);
+  }
+  const showList = (x) => String(x || '').split(/[\s,]+/).filter(Boolean);
+  /** a picture's or table's name from the genome and the features: HG002_chr17 and HG002_chr17_AG_runs.bed give
+      HG002_chr17_AG_runs, not HG002_chr17_HG002_chr17_AG_runs */
+  function bothStems(input, features) {
+    const a = stemOf(input), b = stemOf(features);
+    return b.startsWith(a + '_') ? b : `${a}_${b}`;
+  }
+  const planeSlug = (s) => String(s || '').replace(/[^A-Za-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'plane';
+  /** how a stack's rows are sorted, in gpxil stack's words (it writes them on the picture) */
+  function sortedBy(v) {
+    const words = {
+      file: 'as the features come',
+      position: 'by position',
+      length: 'by length, longest first',
+      score: isRmsk(v.features) ? "by divergence from the repeat's consensus, highest first" : 'by score, highest first',
+      name: 'by name',
+      run: `by the run of ${setName(v.runOf || 'A')} from the anchor, longest first`
+    }[v.sort || 'file'];
+    return words + (v.reverse ? ' (reversed)' : '');
+  }
+  /** a GA-sequence of chromosome 17 with a unit gained in HG002 (experiment 04): period's first region */
+  const GA17 = { contig: 'chr17', start: 6793027, end: 6793302 };
+  function periodRegion(p) {
+    const at = locateIn(infoOf(p), GA17);
+    return at.contig ? 'chr17:6,793,028-6,793,302' : '';
+  }
   const RENDER_MAX = 25e6; // bases a picture may have in the browser
   const TEXT_MAX = 50e6; // bases of FASTA or VCF in one go
 
@@ -293,6 +365,7 @@
     ['look', 'Look inside and check', 'eye'],
     ['make', 'Make gpxil files', 'genome'],
     ['compare', 'Compare genomes', 'align'],
+    ['discover', 'Look for patterns', 'search'],
     ['picture', 'Pictures and print', 'image'],
     ['export', 'Back to FASTA and VCF', 'convert'],
     ['genes', 'Genes as pictures (pxil)', 'pixels']
@@ -597,6 +670,456 @@
       python: (v) => comparePython(v, [['child', v.child], ['father', v.father], ['mother', v.mother]], 'compare_trio(child, father, mother'),
       render: (r, v, out) => renderCompare(r.result, out),
       next: (res, v) => compareNext(res, v, v.child)
+    },
+
+    /* ---------------- Look for patterns ---------------- */
+    {
+      id: 'runs',
+      group: 'discover',
+      title: 'Find runs of a composition',
+      pkg: 'gpxiltools',
+      what: 'The stretches of a genome made only of some bases – of A and G (Albrecht-Buehler’s pure GA-sequences), of C and T, of A and T, of one base – on one strand or both, as a BED file: gpxil runs.',
+      about:
+        'A run is as long as it can be: the bases either side of it are of other kinds, or there are none. The bases are given in IUPAC letters: <b>AG</b> (or R) for purines, <b>CT</b> (Y) for pyrimidines, <b>AT</b> (W), <b>A</b> for runs of one base, and so on; a base of the reference belongs if its own letter does (an R belongs to AG), soft masking aside. On <b>both strands</b>, the runs of the bases on the other strand are found too: a run of AG on the minus strand is a run of CT on this one, and is written with strand <code>-</code>. Albrecht-Buehler found tens of thousands of pure GA-sequences, runs of more than 50 bases of nothing but A and G, in mammalian genomes, where chance would give almost none; chromosome 17 has 1,561. The BED file goes on to the other tools of this group: stack them, count their substitutions, annotate a genome with them.',
+      help: 'h-tool-runs',
+      fields: [
+        { key: 'input', type: 'file', label: 'The gpxil file', kinds: ['gpxil'] },
+        { key: 'of', type: 'text', label: 'Of these bases', def: 'AG', placeholder: 'AG, CT, AT, A …', help: 'IUPAC letters: A, C, G, T, or R (A or G), Y (C or T), S (C or G), W (A or T), K, M, B, D, H, V, N.' },
+        { key: 'min', type: 'number', label: 'At least this many bases', def: '51', min: 1, step: 1, help: 'Albrecht-Buehler’s pure GA-sequences are more than 50 bases long: 51 or more.' },
+        { key: 'both', type: 'check', label: 'On both strands (a run of these bases on the other strand: strand -)', def: true },
+        { key: 'regions', type: 'text', label: 'Regions (optional)', def: '', placeholder: 'every contig, whole', help: 'One or more regions, separated by spaces: a contig, or CONTIG:START-END counting from 1. Regions that overlap are read once, as one. Leave it empty for every contig: chromosome 17 takes a few seconds.' },
+        REF_FIELD,
+        { key: 'out', type: 'path', label: 'Save as', def: (v) => `~/results/${stemOf(v.input)}_${setName(v.of) || 'runs'}_runs.bed` }
+      ],
+      check: (v) => {
+        if (badLetters(v.of)) return 'Give the bases in IUPAC letters, such as AG (purines), CT, AT or A.';
+        if (!int(v.min) || Number(v.min) < 1) return 'Give the shortest run as a whole number, 1 or more: 51 for Albrecht-Buehler’s pure GA-sequences.';
+        const bad = checkRegions(v);
+        if (bad) return bad;
+        if (!/\.bed$/i.test(v.out || '')) return 'Save the runs with a name ending in .bed.';
+        return checkNeedsRef(v);
+      },
+      argv: (v) => ['gpxil', 'runs', v.input, ...regionArgs(v), '--of', lettersOf(v.of), ...optArgs(int(v.min) !== '51', '--min', int(v.min)), ...optArgs(v.both, '--both-strands'), '-o', v.out, ...refArgs(v)],
+      outputs: (v) => [v.out],
+      wf: { outputs: (v) => [{ name: 'runs', label: 'runs (BED)', kinds: ['bed'], path: v.out }], summary: (res) => ((res.stderr || '').split('\n').find((l) => /\bruns of\b/.test(l)) || '').split(';')[0] },
+      python: (v) =>
+        [
+          'from gpxiltools import GpxilFile',
+          'from gpxiltools.runs import RunFinder, Summary, format_summary, write_bed',
+          '',
+          `with GpxilFile(${pyq(v.input)}${refPy(v)}) as g:`,
+          `    finder = RunFinder(g, ${regionsPy(v)}, of=${pyq(lettersOf(v.of))}, min_length=${int(v.min) || 51}${v.both ? ', both_strands=True' : ''})`,
+          '    summary = Summary()',
+          `    with open(${pyq(v.out)}, "w") as bed:`,
+          `        write_bed(bed, finder.runs(), summary, of=${pyq(lettersOf(v.of))})   # (BED: the set, the length (at most 1000), the strand)`,
+          `print(format_summary(summary.as_dict(${pyq(lettersOf(v.of))}, ${int(v.min) || 51}, finder.acgt)))`
+        ].join('\n'),
+      next: (res, v) => [
+        ['layers', 'Stack them', () => MG.app.useTool('stack', { input: v.input, features: v.out, sort: 'run' })],
+        ...(hasSample(v.input) ? [['percent', 'Their substitutions', () => MG.app.useTool('spectrum', { input: v.input, features: v.out })]] : []),
+        ['eye', 'Look at the BED file', () => MG.app.editFile(v.out)]
+      ]
+    },
+    {
+      id: 'stack',
+      group: 'discover',
+      title: 'Stack features, lined up',
+      pkg: 'gpxiltools',
+      what: 'Features – runs, repeats, genes, any BED file – one a row, lined up at their starts, ends or centres, each read on its own strand: the picture in which Albrecht-Buehler saw Alu elements line up upstream of GA-sequences: gpxil stack.',
+      about:
+        'Each feature becomes a row: the bases before its anchor and those from it, read 5′ to 3′ on the feature’s strand, so a feature on the minus strand is reverse-complemented (and the sample’s variants with it). Lined up, what features share stands out as stripes, and sorting brings like rows together: by length, by score (a repeat’s divergence from its consensus, which grows with its age), by name, by position, or by the <b>run</b> of some bases from the anchor, such as the poly(A) a GA-sequence begins with, as Albrecht-Buehler sorted them. The rows are drawn as <i>Draw a region</i> draws bases, the reference or the sample’s variants; for thousands of features, <b>bin</b> them, each pixel row the mean colour of many. The profile gives each column’s bases (and the sample’s variants) as a table: the picture as numbers. Features come from a BED file, or from a RepeatMasker table, whose repeats are named class/family/name (SINE/Alu/AluSx).',
+      help: 'h-tool-stack',
+      fields: [
+        { key: 'input', type: 'file', label: 'The gpxil file', kinds: ['gpxil'] },
+        { key: 'features', type: 'file', label: 'The features', kinds: FEATURES, choose: 'choose a BED file or a RepeatMasker table', help: 'A BED file (from Find runs, say, or of genes), or a RepeatMasker table: UCSC’s rmsk table, or RepeatMasker’s .out. The examples have chromosome 17’s genes and repeats.' },
+        ...PICK_FIELDS,
+        { key: 'anchor', type: 'select', label: 'Line them up at', def: 'start', options: [['start', 'their starts (on their strands)'], ['end', 'their ends'], ['centre', 'their centres']] },
+        { key: 'up', type: 'number', label: 'Bases before the anchor', def: '400', min: 0, step: 1 },
+        { key: 'down', type: 'number', label: 'Bases from the anchor on', def: '200', min: 0, step: 1 },
+        { key: 'sort', type: 'select', label: 'Sort the rows', def: (v) => (isRmsk(v.features) ? 'score' : /_runs\.bed$/i.test(v.features || '') ? 'run' : 'file'), options: [['file', 'as the features come'], ['run', 'by the run of some bases from the anchor (a poly(A)), longest first'], ['score', 'by score, highest first (a repeat’s divergence: oldest first)'], ['length', 'by length, longest first'], ['name', 'by name'], ['position', 'by position']] },
+        { key: 'runOf', type: 'text', label: 'The run’s bases', def: 'A', placeholder: 'A', show: (v) => v.sort === 'run', help: 'IUPAC letters: A for a poly(A); the run starts at the anchor and may hold a few other bases (below).' },
+        { key: 'tolerance', type: 'number', label: 'Other bases a run may hold', def: '2', min: 0, step: 1, show: (v) => v.sort === 'run' },
+        { key: 'reverse', type: 'check', label: 'Sort the other way', def: false },
+        { key: 'maxRows', type: 'number', label: 'At most this many rows (optional)', def: '', min: 1, step: 1, placeholder: 'all of them', help: 'The first rows, once sorted.' },
+        { key: 'mode', type: 'select', label: 'Show', def: 'reference', options: MODES },
+        { key: 'palette', type: 'select', label: 'Colours', def: 'classic', options: PALETTES },
+        { key: 'bin', type: 'number', label: 'Rows to a pixel row', def: '1', min: 1, step: 1, help: 'Each pixel row the mean colour of this many rows: for thousands of features (100 for chromosome 17’s 43,132 Alu elements).' },
+        { key: 'scale', type: 'number', label: 'Pixels per base, each way', def: '1', min: 1, max: 16, step: 1 },
+        { key: 'labelled', type: 'check', label: 'With a title, the anchor, the bases from it, and a key', def: true },
+        { key: 'profile', type: 'check', label: 'Also each column’s bases (and variants) as a table', def: false },
+        REF_FIELD,
+        { key: 'out', type: 'path', label: 'Save as', def: (v) => `~/results/${bothStems(v.input, v.features)}_${v.anchor || 'start'}s.png` }
+      ],
+      check: (v) => {
+        if (v.mode !== 'reference' && infoOf(v.input) && !hasSample(v.input)) return `${base(v.input)} has no sample, so it can only show the reference.`;
+        for (const [k, what, min] of [['up', 'bases before the anchor', 0], ['down', 'bases from the anchor', 0], ['bin', 'rows to a pixel row', 1], ['scale', 'pixels per base', 1]]) if (!int(v[k]) || Number(v[k]) < min) return `Give the ${what} as a whole number${min ? `, ${min} or more` : ''}.`;
+        if (Number(v.up) + Number(v.down) < 1) return 'A row needs bases: give some before the anchor or from it.';
+        if (v.sort === 'run' && (badLetters(v.runOf) || !int(v.tolerance))) return 'Give the run’s bases in IUPAC letters (A for a poly(A)), and the other bases it may hold as a whole number.';
+        if (v.sort === 'run' && Number(v.down) < 1) return 'A run is measured from the anchor on: give some bases from the anchor on.';
+        if (String(v.maxRows || '').trim() && (!int(v.maxRows) || Number(v.maxRows) < 1)) return 'Give the most rows as a whole number, or clear it.';
+        if (!/\.png$/i.test(v.out || '')) return 'Save the picture with a name ending in .png.';
+        return checkNeedsRef(v);
+      },
+      argv: (v) => [
+        'gpxil', 'stack', v.input, v.features, '-o', v.out,
+        ...optArgs(v.anchor && v.anchor !== 'start', '--anchor', v.anchor),
+        ...optArgs(int(v.up) !== '400', '--up', int(v.up)),
+        ...optArgs(int(v.down) !== '200', '--down', int(v.down)),
+        ...optArgs(v.sort && v.sort !== 'file', '--sort', v.sort),
+        ...optArgs(v.sort === 'run' && setName(v.runOf) !== 'A', '--run-of', lettersOf(v.runOf)),
+        ...optArgs(v.sort === 'run' && int(v.tolerance) !== '2', '--tolerance', int(v.tolerance)),
+        ...optArgs(v.reverse, '--reverse'),
+        ...optArgs(int(v.maxRows), '--max-rows', int(v.maxRows)),
+        ...pickArgs(v),
+        ...optArgs(v.mode !== 'reference', '--mode', v.mode),
+        ...optArgs(v.palette && v.palette !== 'classic', '--palette', v.palette),
+        ...optArgs(int(v.bin) > 1, '--bin', int(v.bin)),
+        ...optArgs(int(v.scale) > 1, '--scale', int(v.scale)),
+        ...optArgs(v.labelled, '--labelled'),
+        ...optArgs(v.profile, '--profile', profileOf(v.out)),
+        ...refArgs(v)
+      ],
+      outputs: (v) => [v.out, ...(v.profile ? [profileOf(v.out)] : [])],
+      wf: {
+        outputs: (v) => [{ name: 'picture', label: 'picture', kinds: ['image'], path: v.out }, ...(v.profile ? [{ name: 'profile', label: 'profile (table)', kinds: ['text'], path: profileOf(v.out) }] : [])],
+        summary: (res) => ((res.stderr || '').split('\n').find((l) => /rows of/.test(l)) || '').split(';')[0]
+      },
+      python: (v) => {
+        const k = [];
+        if (v.anchor && v.anchor !== 'start') k.push(`anchor=${pyq(v.anchor)}`);
+        if (int(v.up) !== '400') k.push(`up=${int(v.up)}`);
+        if (int(v.down) !== '200') k.push(`down=${int(v.down)}`);
+        if (v.sort && v.sort !== 'file') k.push(`sort=${pyq(v.sort)}`);
+        if (v.sort === 'run' && setName(v.runOf) !== 'A') k.push(`run_of=${pyq(lettersOf(v.runOf))}`);
+        if (v.sort === 'run' && int(v.tolerance) !== '2') k.push(`tolerance=${int(v.tolerance)}`);
+        if (v.reverse) k.push('reverse=True');
+        if (int(v.maxRows)) k.push(`max_rows=${int(v.maxRows)}`);
+        if (v.mode !== 'reference' || v.profile) k.push('sample=True');
+        const bin = Number(int(v.bin) || 1), scale = Number(int(v.scale) || 1);
+        const note = `rows, sorted ${sortedBy(v)}${bin > 1 ? `; ${bin} a pixel row` : ''}`;
+        return [
+          'from gpxiltools import GpxilFile',
+          'from gpxiltools.features import read_features',
+          `from gpxiltools.stack import ${[...(bin > 1 ? ['binned'] : []), ...(v.labelled ? ['labelled', 'legend_of'] : []), 'rendering', ...(bin > 1 && !v.labelled ? ['save_pixels'] : []), 'stack', ...(v.profile ? ['write_profile'] : [])].join(', ')}`,
+          '',
+          `features = read_features(${pyq(v.features)}${pickPy(v)})`,
+          `with GpxilFile(${pyq(v.input)}${refPy(v)}) as g:`,
+          `    st = stack(g, features${k.length ? ', ' + k.join(', ') : ''})   # (st.ref: a row of codes for each feature, 5' to 3')`,
+          `picture = rendering(st, mode=${pyq(v.mode)}, palette=${pyq(v.palette || 'classic')})`,
+          ...(v.labelled
+            ? [
+                bin > 1 ? `pixels = binned(picture, ${bin})   # (each pixel row the mean colour of ${bin} rows)` : 'pixels = picture.to_rgb()',
+                `title = ${pyq(`${base(v.features)} on ${base(v.input)}: ${v.anchor || 'start'}s lined up (${v.mode})`)}`,
+                `note = f"{len(st.rows):,} ${note.replace(/[{}]/g, (c) => c + c)}"`,
+                `labelled(pixels, st, scale=${scale}, title=title, legend=legend_of(picture), rows_note=note).save(${pyq(v.out)})`
+              ]
+            : bin > 1
+              ? [`save_pixels(binned(picture, ${bin}), ${pyq(v.out)}, scale=${scale})`]
+              : [`picture.scaled(${scale}).save_png(${pyq(v.out)})`]),
+          ...(v.profile ? [`with open(${pyq(profileOf(v.out))}, "w") as out:`, '    write_profile(out, st)   # (each column: its bases, and the sample\'s variants)'] : []),
+          'print(f"{len(st.rows):,} rows of {st.features:,} features")'
+        ].join('\n');
+      },
+      after: (res, v, out) => {
+        if (MG.app.fs.exists(v.out)) out.appendChild(pictureFile(v.out, `${base(v.features)} on ${base(v.input)}, lined up at their ${v.anchor}s`));
+      },
+      next: (res, v) => [
+        ['image', 'Open the picture', () => MG.app.openFile(v.out)],
+        ...(v.profile ? [['table', 'Look at the profile', () => MG.app.editFile(profileOf(v.out))]] : [])
+      ]
+    },
+    {
+      id: 'spectrum',
+      group: 'discover',
+      title: 'Substitutions in regions, by context',
+      pkg: 'gpxiltools',
+      what: 'Does a person have more or fewer substitutions in some regions than their sequence leads one to expect? The regions’ substitutions against the rest of the genome, context by context, with exact intervals: gpxil spectrum.',
+      about:
+        'A base’s chance of a substitution depends on its neighbours – the C of a CpG changes about ten times as often as other C’s – so the regions’ expected count is built context by context: for each <b>context</b> (a base and its neighbours: 3 bases by default) and each substitution in it, its rate in the <b>background</b> (every called base outside the regions, unless you give a BED file of your own), times how many bases of the regions have that context. Observed over expected is the ratio; its 95 % interval and p-value come from an exact binomial test of the regions’ share of all the substitutions counted, which allows for the background’s counts being a sample too. Contexts are read with a <b>pyrimidine</b> in the middle (C or T: the 96 kinds of mutational signatures) or a <b>purine</b> (A or G: the strand of a GA-sequence). <b>On their own strands</b> reads each feature on its strand too (12 kinds), which shows what transcription does to a gene’s two strands. <b>Isolated</b> substitutions, with no other variant near them, leave out a change written as several substitutions, as in a repeat. Only bases the file calls with confidence count. It also counts transitions and transversions, heterozygous and homozygous alleles, and insertions and deletions a base.',
+      help: 'h-tool-spectrum',
+      fields: [
+        { key: 'input', type: 'file', label: 'The person’s gpxil file', kinds: ['gpxil'] },
+        { key: 'features', type: 'file', label: 'The regions', kinds: FEATURES, choose: 'choose a BED file or a RepeatMasker table', help: 'A BED file (from Find runs, say, or of genes), or a RepeatMasker table.' },
+        ...PICK_FIELDS,
+        { key: 'isolated', type: 'number', label: 'Only substitutions with no other variant within (bases, optional)', def: '', min: 1, step: 1, placeholder: 'count them all', help: 'Experiment 04 took 20: a change of a repeat’s units that an alignment writes as several substitutions then doesn’t count as several.' },
+        { key: 'centre', type: 'select', label: 'Read contexts with in the middle', def: (v) => (/_(AG|GA|R)_runs\.bed$/i.test(v.features || '') ? 'purine' : 'pyrimidine'), options: [['pyrimidine', 'a pyrimidine, C or T (the 96 kinds of mutational signatures)'], ['purine', 'a purine, A or G (the strand of a GA-sequence)']] },
+        { key: 'context', type: 'select', label: 'Context', def: '3', options: [['3', 'a base and its two neighbours'], ['1', 'the base alone'], ['5', 'a base and two either side']] },
+        { key: 'stranded', type: 'check', label: 'Also read each feature on its own strand (12 kinds)', def: false, help: 'For features with strands, such as genes or runs found on both strands.' },
+        { key: 'regions', type: 'text', label: 'Count only in these regions (optional)', def: '', placeholder: 'every contig, whole' },
+        { key: 'background', type: 'file', label: 'The background (optional)', kinds: ['bed'], optional: true, none: 'every called base outside the regions', help: 'A BED file: then only its bases (outside the regions) are the background, such as the regions’ flanks.' },
+        { key: 'callable', type: 'file', label: 'Count only these bases too (optional)', kinds: ['bed'], optional: true, none: 'the bases the file calls with confidence' },
+        { key: 'table', type: 'check', label: 'Also the counts by context, as a table', def: false },
+        { key: 'out', type: 'path', label: 'Save the table as', def: (v) => `~/results/${bothStems(v.input, v.features)}_spectrum.tsv`, show: (v) => !!v.table },
+        REF_FIELD
+      ],
+      check: (v) => {
+        if (infoOf(v.input) && !hasSample(v.input)) return `${base(v.input)} has no sample: a spectrum is of a person’s substitutions.`;
+        if (String(v.isolated || '').trim() && (!int(v.isolated) || Number(v.isolated) < 1)) return 'Give the distance as a whole number of bases, or clear it.';
+        const bad = checkRegions(v);
+        if (bad) return bad;
+        if (v.table && !/\.(tsv|txt)$/i.test(v.out || '')) return 'Save the table with a name ending in .tsv.';
+        return checkNeedsRef(v);
+      },
+      argv: (v) => [
+        'gpxil', 'spectrum', v.input, v.features, ...regionArgs(v),
+        ...pickArgs(v),
+        ...optArgs(v.background, '--background', v.background),
+        ...optArgs(v.callable, '--callable', v.callable),
+        ...optArgs(v.context && v.context !== '3', '--context', v.context),
+        ...optArgs(v.centre === 'purine', '--centre', 'purine'),
+        ...optArgs(v.stranded, '--stranded'),
+        ...optArgs(int(v.isolated), '--isolated', int(v.isolated)),
+        ...optArgs(v.table, '-o', v.out),
+        ...refArgs(v)
+      ],
+      outputs: (v) => (v.table ? [v.out] : []),
+      call: {
+        fn: 'gpxilwb.gui.spectrum',
+        args: (v) => ({
+          path: v.input,
+          features: v.features,
+          regions: regionsOf(v.regions).map((r) => r.replace(/,/g, '')),
+          background: v.background || null,
+          callable: v.callable || null,
+          context: Number(v.context || 3),
+          centre: v.centre || 'pyrimidine',
+          stranded: !!v.stranded,
+          isolated: int(v.isolated) ? Number(v.isolated) : null,
+          match: String(v.match || '').trim() || null,
+          min_length: Number(int(v.minLength) || 0),
+          out: v.table ? v.out : null,
+          reference: v.reference || null
+        })
+      },
+      wf: { outputs: (v) => (v.table ? [{ name: 'table', label: 'table by context', kinds: ['text'], path: v.out }] : []), summary: (res) => (res.result ? spectrumSummary(res.result) : '') },
+      python: (v) => {
+        const k = [];
+        if (v.background) k.push(`background=read_features(${pyq(v.background)})`);
+        if (v.callable) k.push(`callable=read_features(${pyq(v.callable)})`);
+        if (v.context && v.context !== '3') k.push(`k=${Number(v.context)}`);
+        if (v.centre === 'purine') k.push('centre="purine"');
+        if (v.stranded) k.push('stranded=True');
+        if (int(v.isolated)) k.push(`isolated=${int(v.isolated)}`);
+        return [
+          'from gpxiltools import GpxilFile',
+          'from gpxiltools.features import read_features',
+          `from gpxiltools.spectrum import count_spectrum, format_results${v.table ? ', write_table' : ''}`,
+          '',
+          `features = read_features(${pyq(v.features)}${pickPy(v)})`,
+          `with GpxilFile(${pyq(v.input)}${refPy(v)}) as g:`,
+          `    counter = count_spectrum(g, features, ${regionsPy(v)}${k.length ? ', ' + k.join(', ') : ''})`,
+          'results = counter.results()',
+          'print(format_results(results))',
+          ...(v.table ? [`with open(${pyq(v.out)}, "w") as out:`, '    write_table(out, counter.table())   # (by context and substitution)'] : []),
+          'print(results["substitutions"])   # the numbers, to work with'
+        ].join('\n');
+      },
+      render: (r, v, out) => renderSpectrum(r.result, v, out),
+      next: (res, v) => [['layers', 'Stack the regions', () => MG.app.useTool('stack', { input: v.input, features: v.features, mode: 'variants', reference: v.reference })]]
+    },
+    {
+      id: 'annotate',
+      group: 'discover',
+      title: 'Add an annotation plane',
+      pkg: 'gpxiltools',
+      what: 'A copy of a gpxil file with an annotation – repeats, genes, a BED or bedGraph file – as a plane of its own, a value at every base, so it lines up with the genome base for base and travels with it: gpxil annotate.',
+      about:
+        'An extension plane (named x-…, gpxil specification section 5.6) has a value at every base, like the genome’s own planes, so the Viewer draws it, the tools read it, and a working copy cuts it out with the rest. From a <b>RepeatMasker table</b>, each base gets the class, family (the default: SINE/Alu, LINE/L1 …) or name of the repeat over it, as a number, with the labels kept in the plane’s metadata; from a <b>BED file</b>, its features’ names, or just where they are; from a <b>bedGraph</b> – replication timing, a Hi-C compartment’s eigenvector, any signal – its values, as 32-bit floating-point numbers, with NaN where there is none. Where features overlap, the shorter one is drawn. The file’s own planes are copied as they are stored, without decoding them, so a chromosome takes a few seconds, and the plane adds little: chromosome 17’s repeats are 0.7 MB.',
+      help: 'h-tool-annotate',
+      fields: [
+        { key: 'input', type: 'file', label: 'The gpxil file', kinds: ['gpxil'] },
+        { key: 'features', type: 'file', label: 'The annotation', kinds: FEATURES, choose: 'choose a RepeatMasker table, a BED or a bedGraph file' },
+        { key: 'plane', type: 'text', label: 'The plane’s name', def: (v) => `x-${isRmsk(v.features) ? 'repeats' : planeSlug(stemOf(v.features))}`, placeholder: 'x-repeats', help: 'x- and letters, digits, - or _.' },
+        { key: 'as', type: 'select', label: 'A base holds', def: 'auto', options: [['auto', 'what fits the file: a repeat’s label, a bedGraph’s value, a BED feature’s name'], ['category', 'the feature’s label, as a number (the labels in the metadata)'], ['presence', '1 where a feature is, 0 elsewhere'], ['score', 'the feature’s score (a repeat’s divergence, %)'], ['value', 'a bedGraph’s value (its fourth column)']] },
+        { key: 'level', type: 'select', label: 'A repeat’s label', def: 'family', options: [['family', 'its class and family: SINE/Alu, LINE/L1 …'], ['class', 'its class: SINE, LINE, LTR, DNA …'], ['name', 'its name: SINE/Alu/AluSx …']], show: (v) => isRmsk(v.features) && ['auto', 'category'].includes(v.as) },
+        ...PICK_FIELDS,
+        { key: 'description', type: 'text', label: 'What it holds, for its metadata (optional)', def: '', placeholder: 'said from the file' },
+        { key: 'units', type: 'text', label: 'The values’ units (optional)', def: '', placeholder: 'e.g. log2 early/late', show: (v) => ['score', 'value'].includes(v.as) || kindOf(v.features) === 'bedgraph' },
+        { key: 'replace', type: 'check', label: 'Make the plane again if the file has it', def: false },
+        { key: 'out', type: 'path', label: 'Save the copy as', def: (v) => `~/genomes/${stemOf(v.input).replace(/\.noref$/, '')}.${String(v.plane || 'x-plane').replace(/^x-/, '')}${needsRef(v.input) ? '.noref' : ''}.gpxil.tif` }
+      ],
+      check: (v) => {
+        if (!/^x-[A-Za-z0-9_-]+$/.test(v.plane || '')) return 'Name the plane x- and letters, digits, - or _, such as x-repeats.';
+        const info = infoOf(v.input);
+        if (info && info.contigs && !v.replace && info.contigs.some((c) => c.planes.includes(v.plane))) return `${base(v.input)} has a ${v.plane} plane already: tick “Make the plane again”, or give another name.`;
+        if (!/\.gpxil\.tiff?$/i.test(v.out || '')) return 'Save the copy with a name ending in .gpxil.tif.';
+        if (expand(v.out) === expand(v.input)) return 'Save the copy under another name: it can’t replace the file it is copied from.';
+        return '';
+      },
+      argv: (v) => [
+        'gpxil', 'annotate', v.input, v.features, '-o', v.out, '--plane', v.plane,
+        ...optArgs(v.as && v.as !== 'auto', '--as', v.as),
+        ...optArgs(isRmsk(v.features) && v.level && v.level !== 'family', '--level', v.level),
+        ...pickArgs(v),
+        ...optArgs(String(v.description || '').trim(), '--description', String(v.description || '').trim()),
+        ...optArgs(String(v.units || '').trim(), '--units', String(v.units || '').trim()),
+        ...optArgs(v.replace, '--replace')
+      ],
+      outputs: (v) => [v.out],
+      wf: { outputs: (v) => [{ name: 'gpxil', label: 'gpxil file', kinds: ['gpxil'], path: v.out }], summary: (res) => (((res.stderr || '').match(/wrote [^:]+: ([^\n;]+)/) || [])[1] || '').replace(/ from .*/, '') },
+      python: (v) => {
+        const k = [`plane=${pyq(v.plane)}`];
+        if (v.as && v.as !== 'auto') k.push(`kind=${pyq(v.as)}`);
+        if (isRmsk(v.features) && v.level && v.level !== 'family') k.push(`level=${pyq(v.level)}`);
+        if (String(v.match || '').trim()) k.push(`match=${pyq(String(v.match).trim())}`);
+        if (int(v.minLength) && int(v.minLength) !== '0') k.push(`min_length=${int(v.minLength)}`);
+        if (String(v.description || '').trim()) k.push(`description=${pyq(String(v.description).trim())}`);
+        if (String(v.units || '').trim()) k.push(`units=${pyq(String(v.units).trim())}`);
+        if (v.replace) k.push('replace=True');
+        return ['from gpxiltools.annotate import annotate', '', `summary = annotate(${pyq(v.input)}, ${pyq(v.out)}, ${pyq(v.features)}, ${k.join(', ')})`, 'print(summary)'].join('\n');
+      },
+      next: (res, v) => [
+        ['grid', 'Look at it in the Viewer', () => MG.app.viewerOpen(v.out, { mode: 'x:' + v.plane })],
+        ['badgeCheck', 'Check it', () => MG.app.useTool('validate', { input: v.out, digests: false })]
+      ]
+    },
+    {
+      id: 'skew',
+      group: 'discover',
+      title: 'Strand symmetry: skews in windows',
+      pkg: 'gpxiltools',
+      what: 'GC content, the GC and AT skews of each strand, and how far its k-mers are from their reverse complements’ counts (Chargaff’s second rule), in windows along a genome, as a table and a map: gpxil skew.',
+      about:
+        'Over long stretches of one strand, A is as common as T and C as G, and each k-mer as its reverse complement: Chargaff’s second parity rule. Where a stretch breaks it, something has treated the two strands differently: replication (the skews change sign at origins, as the <b>cumulative GC skew</b> shows in bacteria), transcription (a gene’s coding strand leans to G and T), repeats inserted in one direction, or runs of one strand’s bases, as the GA-sequences are. In each window: <b>gc</b> (G + C over all four), <b>gc_skew</b> (G − C)/(G + C), <b>at_skew</b> (A − T)/(A + T), <b>ry_skew</b> (purines less pyrimidines) and <b>km_skew</b> (G + T less A + C), each over all four; and for each k, <b>asymmetry_k</b>: how far the counts of each k-mer and its reverse complement differ, over their counts – 0 when the strands are the same, 1 when no k-mer’s reverse complement is there. Leave out repeats with <b>unmasked</b>, or count only the bases of features, each read on its own strand (genes: transcription’s skews). Windows are set at multiples of their size along each sequence, so files and regions line up.',
+      help: 'h-tool-skew',
+      fields: [
+        { key: 'input', type: 'file', label: 'The gpxil file', kinds: ['gpxil'] },
+        { key: 'window', type: 'number', label: 'Bases a window', def: '100000', min: 1, step: 1 },
+        { key: 'regions', type: 'text', label: 'Regions (optional)', def: '', placeholder: 'every contig, whole' },
+        { key: 'k', type: 'text', label: 'k-mers for the asymmetry', def: '1,2,3,4', placeholder: '1,2,3,4', help: 'Lengths of 1 to 6, separated by commas.' },
+        { key: 'unmasked', type: 'check', label: 'Leave out soft-masked bases (repeats)', def: false },
+        { key: 'features', type: 'file', label: 'Count only the bases of these features (optional)', kinds: FEATURES, optional: true, none: 'none: every base' },
+        { key: 'stranded', type: 'check', label: 'Read each feature on its own strand (genes: their coding strands)', def: true, show: (v) => !!v.features },
+        Object.assign({}, PICK_FIELDS[0], { show: (v) => !!v.features }),
+        Object.assign({}, PICK_FIELDS[1], { show: (v) => !!v.features }),
+        { key: 'picture', type: 'check', label: 'Also a map: a track for each measure, a pixel a window', def: true },
+        { key: 'show', type: 'text', label: 'The map’s measures', def: 'gc,gc_skew,at_skew,asymmetry_4', show: (v) => !!v.picture, help: 'Any of gc, gc_skew, at_skew, ry_skew, km_skew, cumulative_gc_skew and asymmetry_K (for a k above), separated by commas.' },
+        REF_FIELD,
+        { key: 'out', type: 'path', label: 'Save the table as', def: (v) => `~/results/${stemOf(v.input)}_skew_${windowSlug(v.window)}.tsv` }
+      ],
+      check: (v) => {
+        if (!int(v.window) || Number(v.window) < 1) return 'Give the window as a whole number of bases, such as 100000.';
+        const ks = kList(v.k);
+        if (!ks || !ks.length) return 'Give the k-mers’ lengths as whole numbers from 1 to 6, separated by commas.';
+        if (v.picture) {
+          const known = ['gc', 'gc_skew', 'at_skew', 'ry_skew', 'km_skew', 'cumulative_gc_skew', ...ks.map((k) => 'asymmetry_' + k)];
+          const bad = showList(v.show).find((m) => !known.includes(m));
+          if (!showList(v.show).length || bad) return `Choose the map’s measures from ${known.join(', ')}.`;
+        }
+        const bad = checkRegions(v);
+        if (bad) return bad;
+        if (!/\.(tsv|txt)$/i.test(v.out || '')) return 'Save the table with a name ending in .tsv.';
+        return checkNeedsRef(v);
+      },
+      argv: (v) => [
+        'gpxil', 'skew', v.input, ...regionArgs(v),
+        ...optArgs(int(v.window) !== '100000', '--window', int(v.window)),
+        ...optArgs((kList(v.k) || [1, 2, 3, 4]).join(',') !== '1,2,3,4', '--k', (kList(v.k) || []).join(',')),
+        ...optArgs(v.unmasked, '--unmasked'),
+        ...optArgs(v.features, '--features', v.features),
+        ...optArgs(v.features && v.stranded, '--stranded'),
+        ...(v.features ? pickArgs(v) : []),
+        '-o', v.out,
+        ...optArgs(v.picture, '--picture', pictureOf_(v.out)),
+        ...optArgs(v.picture, '--show', showList(v.show).join(',')),
+        ...refArgs(v)
+      ],
+      outputs: (v) => [v.out, ...(v.picture ? [pictureOf_(v.out)] : [])],
+      wf: {
+        outputs: (v) => [{ name: 'table', label: 'windows (table)', kinds: ['text'], path: v.out }, ...(v.picture ? [{ name: 'picture', label: 'map', kinds: ['image'], path: pictureOf_(v.out) }] : [])],
+        summary: (res) => ((res.stderr || '').split('\n').find((l) => /windows of/.test(l)) || '').split('; wrote')[0]
+      },
+      python: (v) => {
+        const ks = kList(v.k) || [1, 2, 3, 4], w = Number(int(v.window) || 100000);
+        const show = showList(v.show);
+        const counterArgs = [`window=${w}`, `ks=(${ks.join(', ')}${ks.length === 1 ? ',' : ''})`, ...(v.unmasked ? ['unmasked=True'] : [])];
+        return [
+          'from gpxiltools import GpxilFile',
+          ...(v.features ? ['from gpxiltools.features import read_features'] : []),
+          `from gpxiltools.skew import SkewCounter, iter_skew${v.picture ? ', picture' : ''}, write_rows`,
+          '',
+          `counter = SkewCounter(${counterArgs.join(', ')})`,
+          ...(v.features ? [`features = read_features(${pyq(v.features)}${pickPy(v)})`] : []),
+          `with GpxilFile(${pyq(v.input)}${refPy(v)}) as g:`,
+          `    rows = list(iter_skew(g, ${regionsPy(v)}${v.features ? `, features=features${v.stranded ? ', stranded=True' : ''}` : ''}, counter=counter))   # (a dict for each window)`,
+          `with open(${pyq(v.out)}, "w") as out:`,
+          '    write_rows(out, rows)',
+          ...(v.picture
+            ? [
+                `show = ${JSON.stringify(show)}`,
+                `picture([{k: r[k] for k in ("sequence", "start", "end", *show)} for r in rows], show, window=${w}, title=${pyq(`${base(v.input)}: windows of ${fmt(w)} bases`)}).save(${pyq(pictureOf_(v.out))})`
+              ]
+            : []),
+          'print(counter.totals()["all"])   # over all the bases'
+        ].join('\n');
+      },
+      after: (res, v, out) => {
+        if (v.picture && MG.app.fs.exists(pictureOf_(v.out))) out.appendChild(pictureFile(pictureOf_(v.out), `${base(v.input)}: ${showList(v.show).join(', ')} in windows of ${fmt(Number(v.window))} bases`));
+      },
+      next: (res, v) => [['table', 'Look at the table', () => MG.app.editFile(v.out)], ...(v.picture ? [['image', 'Open the map', () => MG.app.openFile(pictureOf_(v.out))]] : [])]
+    },
+    {
+      id: 'period',
+      group: 'discover',
+      title: 'Wrap a repeat at its period',
+      pkg: 'gpxiltools',
+      what: 'A tandem repeat – a microsatellite, a GA-sequence – wrapped at its period, one unit a row, so the units line up and a change in one stands out; the reference beside the person’s two haplotypes: gpxil period.',
+      about:
+        'The period is the shortest step at which the stretch’s bases most often equal the base a step on (so a repeat of AAAG is period 4, not 8), or the one you give. Each unit of the repeat becomes a row. In the <b>aligned</b> layout each haplotype is drawn at the reference’s positions, so its rows are the reference’s: a substituted base is outlined, a deleted base is a dash, a base not known is in the colour of N, and an insertion is a bar after the base it follows (its bases are listed with the text). In the <b>sequence</b> layout each haplotype is its own sequence, insertions in and deletions out, so a unit gained or lost shifts the units after it. As text, the units are side by side, a substituted base in lower case.',
+      help: 'h-tool-period',
+      fields: [
+        { key: 'input', type: 'file', label: 'The gpxil file', kinds: ['gpxil'] },
+        { key: 'region', type: 'text', label: 'Region', def: (v) => periodRegion(v.input), placeholder: 'chr17:6,793,028-6,793,302', help: 'CONTIG:START-END, counting from 1: a repeat of up to 20,000 bases.' },
+        { key: 'period', type: 'number', label: 'Period (optional)', def: '', min: 1, step: 1, placeholder: 'found: the shortest that fits' },
+        { key: 'layout', type: 'select', label: 'The haplotypes', def: 'aligned', options: [['aligned', 'at the reference’s positions (aligned)'], ['sequence', 'as their own sequences (a unit gained or lost shifts the rest)']] },
+        { key: 'format', type: 'select', label: 'As', def: 'png', options: [['png', 'a picture (PNG)'], ['text', 'text, the units side by side']] },
+        { key: 'scale', type: 'number', label: 'Pixels a base, each way', def: '8', min: 2, max: 32, step: 1, show: (v) => v.format === 'png' },
+        { key: 'palette', type: 'select', label: 'Colours', def: 'classic', options: PALETTES, show: (v) => v.format === 'png' },
+        REF_FIELD,
+        { key: 'out', type: 'path', label: 'Save as', def: (v) => `~/results/${stemOf(v.input)}_${regionSlug(v.region)}_period.png`, show: (v) => v.format === 'png' }
+      ],
+      check: (v) => {
+        const r = checkRegion(v.input, v.region, 'region', 20000);
+        if (r) return r;
+        if (String(v.period || '').trim() && (!int(v.period) || Number(v.period) < 1)) return 'Give the period as a whole number of bases, or clear it to find it.';
+        if (v.format === 'png' && (!int(v.scale) || Number(v.scale) < 2)) return 'Give the pixels a base as a whole number, 2 or more.';
+        if (v.format === 'png' && !/\.png$/i.test(v.out || '')) return 'Save the picture with a name ending in .png.';
+        return checkNeedsRef(v);
+      },
+      argv: (v) => [
+        'gpxil', 'period', v.input, String(v.region).trim().replace(/,/g, ''),
+        ...optArgs(int(v.period), '--period', int(v.period)),
+        ...optArgs(v.layout === 'sequence', '--layout', 'sequence'),
+        ...optArgs(v.format === 'png', '-o', v.out),
+        ...optArgs(v.format === 'png' && int(v.scale) !== '8', '--scale', int(v.scale)),
+        ...optArgs(v.format === 'png' && v.palette && v.palette !== 'classic', '--palette', v.palette),
+        ...refArgs(v)
+      ],
+      stdoutIsResult: true,
+      outputs: (v) => (v.format === 'png' ? [v.out] : []),
+      wf: { outputs: (v) => (v.format === 'png' ? [{ name: 'picture', label: 'picture', kinds: ['image'], path: v.out }] : []), summary: (res) => (((res.stderr || '') + (res.stdout || '')).match(/period \d+[^\n]*/) || [''])[0] },
+      python: (v) => {
+        const region = String(v.region).trim().replace(/,/g, '');
+        const P = int(v.period);
+        return [
+          'from gpxiltools import GpxilFile',
+          `from gpxiltools.period import best_period, panels, ${v.format === 'png' ? 'picture' : 'text'}`,
+          '',
+          `with GpxilFile(${pyq(v.input)}${refPy(v)}) as g:`,
+          `    c, s, e = g.view(*g.locate(*g.region_of(${pyq(region)}), join=True))   # (the contig, or the windows joined, that hold it)`,
+          `    found, share, shares = best_period(c.read("ref", s, e))`,
+          ...(P ? [`    period, share = ${P}, shares.get(${P})`] : ['    period = found']),
+          `    ps = panels(c, s, e${v.layout === 'sequence' ? ', layout="sequence"' : ''})   # (the reference, then each haplotype)`,
+          '    title = f"{c.region(s, e)}: period {period}" + (f", {100 * share:.0f} % of bases equal to the base a unit on" if share else "")',
+          ...(v.format === 'png'
+            ? [`picture(ps, period${int(v.scale) !== '8' ? `, scale=${int(v.scale)}` : ''}${v.palette && v.palette !== 'classic' ? `, palette=${pyq(v.palette)}` : ''}, title=title).save(${pyq(v.out)})`, 'print(title)']
+            : ['print(title)', 'print(text(ps, period))'])
+        ].join('\n');
+      },
+      after: (res, v, out) => {
+        if (v.format === 'png' && MG.app.fs.exists(v.out)) out.appendChild(pictureFile(v.out, `${v.region} wrapped at its period`));
+      },
+      next: (res, v) => [['grid', 'Look at it in the Viewer', () => MG.app.viewerOpen(v.input, { region: v.region, mode: hasSample(v.input) ? 'variants' : 'reference' })]]
     },
 
     /* ---------------- Pictures and print ---------------- */
@@ -935,7 +1458,8 @@
     ['convert', 'Get sequences and variants back out', ['fasta', 'vcf'], 'h-walk-export'],
     ['print', 'Print a chromosome as a book', ['book'], 'h-walk-book'],
     ['scissors', 'Work with a whole genome: a working copy, and its counts', ['subset', 'stats'], 'h-walk-big'],
-    ['pedigree', 'Compare genomes: two sets of calls, or a child with both parents', ['compare', 'trio'], 'h-walk-trio']
+    ['pedigree', 'Compare genomes: two sets of calls, or a child with both parents', ['compare', 'trio'], 'h-walk-trio'],
+    ['search', 'Look for patterns: runs, stacks, spectra, skews and repeats', ['runs', 'stack', 'spectrum', 'annotate', 'skew', 'period'], 'h-walk-discover']
   ];
 
   /* ------------------------------------------------------------------ files for the pickers */
@@ -1189,7 +1713,7 @@
       const panel = h('div.tl-kindpanel');
       M.appendChild(panel);
       // the tools that read it: as their main file (the reference of encode, for a FASTA file)
-      const mainField = (t) => (t.fields || []).find((f) => (f.key === 'input' || (t.id === 'encode' && (f.key === 'reference' || f.key === 'vcf'))) && f.kinds.includes(kind));
+      const mainField = (t) => (t.fields || []).find((f) => (f.key === 'input' || f.key === 'features' || (t.id === 'encode' && (f.key === 'reference' || f.key === 'vcf'))) && f.kinds.includes(kind));
       const tools = TOOLS.filter((t) => mainField(t) && !(t.id === 'encode' && kind === 'gpxil' && infoOf(path) && !infoOf(path).hasRef));
       panel.appendChild(h('h3.tl-sub', 'What you can do with it'));
       const list = h('div.tl-chooser');
@@ -1656,7 +2180,7 @@
   }
 
   /** the icon of each kind of file */
-  const KIND_ICON = { gpxil: 'grid', pxil: 'pixels', image: 'image', vcf: 'dna', fasta: 'text', bed: 'table', gtf: 'table', pdf: 'file', notebook: 'notebook', workflow: 'workflow', workflowrun: 'workflow', json: 'code' };
+  const KIND_ICON = { gpxil: 'grid', pxil: 'pixels', image: 'image', vcf: 'dna', fasta: 'text', bed: 'table', rmsk: 'layers', bedgraph: 'chart', gtf: 'table', pdf: 'file', notebook: 'notebook', workflow: 'workflow', workflowrun: 'workflow', json: 'code' };
 
   /** a file the tool wrote: its name, and buttons to open it where it belongs */
   function fileChip(p) {
@@ -1737,6 +2261,11 @@
     } else if (info.kind === 'bed') {
       row('Intervals', fmt(info.intervals));
       row('Bases covered', fmt(info.bases));
+      row('By contig', contigList(info.contigs));
+    } else if (info.kind === 'rmsk' || info.kind === 'bedgraph') {
+      row(info.kind === 'rmsk' ? 'Repeats' : 'Intervals', fmt(info.kind === 'rmsk' ? info.features : info.intervals));
+      row('Bases', fmt(info.bases));
+      if (info.classes) row('By class', contigList(info.classes));
       row('By contig', contigList(info.contigs));
     } else if (info.kind === 'pxil') {
       const m = info.meta || {};
@@ -1958,6 +2487,55 @@
     }
     return rows;
   }
+  /* ------------------------------------------------------------------ gpxil spectrum's results */
+  /** a ratio, an interval and a p-value as gpxil spectrum prints them: three figures */
+  const fig3 = (x) => (x == null ? '–' : Math.abs(x) >= 100 ? fmt(Math.round(x)) : String(Number(Number(x).toPrecision(3))));
+  const pText = (p) => (p == null ? '–' : p === 0 ? '< 1e-300' : p < 0.001 ? p.toExponential(1) : String(Number(p.toPrecision(2))));
+  const interval = (iv) => (iv ? `${fig3(iv[0])}–${iv[1] == null ? '∞' : fig3(iv[1])}` : '–');
+  const ratioText = (d) => (d.ratio == null ? 'no ratio: the background has none' : `${fig3(d.ratio)} times (95 % ${interval(d.interval)}; p ${d.p === 0 ? '< 1e-300' : '= ' + pText(d.p)})`);
+  /** in a few words, for a workflow's steps */
+  function spectrumSummary(r) {
+    const s = r.substitutions;
+    if (!s) return '';
+    const i = r.indels || {};
+    return `substitutions ${s.ratio == null ? '–' : fig3(s.ratio) + '×'} the expected (95 % ${interval(s.interval)}); insertions and deletions ${i.ratio == null ? '–' : fig3(i.ratio) + '×'} a base`;
+  }
+  /** the results of gpxil spectrum, as it prints them: the regions, the verdict, a table by kind (and on the features'
+      strands), and the other counts */
+  function renderSpectrum(res, v, out) {
+    if (!res) return;
+    const f = res.features || {}, s = res.substitutions;
+    const centre = res.centre === 'purine' ? 'a purine (A or G)' : 'a pyrimidine (C or T)';
+    out.appendChild(h('p.tl-statshead', `${count(f.given || 0, 'feature')}${f.on_no_sequence ? ` (${fmt(f.on_no_sequence)} on no sequence of the file)` : ''}, ${fmt(f.region_bases || 0)} bases · counted: ${fmt(res.bases.regions)} in the regions and ${fmt(res.bases.background)} in the background, called, in contexts of ${res.context} with ${centre} in the middle${res.isolated ? ` · substitutions with no other variant within ${res.isolated} bases` : ''}`));
+    out.appendChild(h('p.tl-verdict', h('b', `${fmt(s.observed)} substitution${s.observed === 1 ? '' : 's'}`), ` in the regions, where the rest’s rates by context lead one to expect ${Number(s.expected).toFixed(1)}: `, h('b', ratioText(s))));
+    const table = (caption, types) => {
+      const t = h('table.tl-condtable.tl-spectrum', h('caption', caption), h('tr', ...['Kind', 'Observed', 'Expected', 'Ratio', '95 % interval', 'p'].map((x) => h('th', x))));
+      for (const [k, d] of Object.entries(types || {})) t.appendChild(h('tr', h('td', h('code', k)), h('td', fmt(d.observed)), h('td', Number(d.expected).toFixed(1)), h('td', h('b', fig3(d.ratio))), h('td', interval(d.interval)), h('td', pText(d.p))));
+      return h('div.table-scroll', t);
+    };
+    out.appendChild(table(`By kind, read with ${centre} in the middle`, res.types));
+    if (res.on_feature_strands) out.appendChild(table('By kind, on each feature’s own strand', res.on_feature_strands.types));
+    const dl = h('dl.tl-summary');
+    const row = (k, val) => dl.append(h('dt', k), h('dd', val));
+    const tt = (x) => `${fmt(x.transitions)} / ${fmt(x.transversions)}${x.ratio == null ? '' : ' = ' + fig3(x.ratio)}`;
+    const z = res.zygosity, i = res.indels;
+    row('Substitutions a kilobase', `${s.per_kb == null ? '–' : s.per_kb} in the regions, ${s.background_per_kb == null ? '–' : s.background_per_kb} in the background`);
+    row('Transitions / transversions', `${tt(res.ti_tv.regions)} in the regions; ${tt(res.ti_tv.background)} in the background`);
+    row('Homozygous', `${share(z.regions.homozygous_share)} of the regions’ alleles, ${share(z.background.homozygous_share)} of the background’s`);
+    row('Insertions and deletions', `${fmt(i.regions)} in the regions (${i.per_kb == null ? '–' : i.per_kb} a kilobase called), ${fmt(i.background)} in the background (${i.background_per_kb == null ? '–' : i.background_per_kb}): ${ratioText(i)}`);
+    row('Calls outside the confident regions', res.calls_outside_confident_regions === 'left out' ? 'left out, as gpxil compare leaves them out' : 'kept');
+    out.appendChild(dl);
+  }
+  /** a picture a tool wrote, shown under its result */
+  function pictureFile(path, alt) {
+    const img = h('img', { alt });
+    MG.app.fs
+      .toBlob(path)
+      .then((b) => (img.src = URL.createObjectURL(b)))
+      .catch(() => img.replaceWith(h('p', 'The picture couldn’t be read.')));
+    return h('figure.tl-cmppic', h('div.tl-cmpimg', img), h('figcaption', h('code', tilde(path))));
+  }
+
   /** in a few words, for a workflow's steps */
   function compareSummary(res) {
     const t = res.total;

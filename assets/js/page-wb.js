@@ -98,7 +98,7 @@
       hostname: CFG.hostname || 'studio',
       env: {},
       welcome:
-        `A Linux terminal (bash) in your browser, with gpxil (encode, info, validate, stats, subset, compare, render, book, fasta, vcf), gpxil2pxil and pxil. Your files are in ~ (${HOME}), the examples in /data/examples, and the GRCh38 reference, a gpxil file for each chromosome read from the web as needed, in ${REF_DIR}. Try  gpxil info ${REF_DIR}/chr17.gpxil.tif . Type  help  to see what’s here, or  man NAME  to read about a command.` +
+        `A Linux terminal (bash) in your browser, with gpxil (encode, info, validate, stats, subset, compare, render, book, fasta, vcf; runs, stack, spectrum, annotate, skew, period), gpxil2pxil and pxil. Your files are in ~ (${HOME}), the examples in /data/examples, and the GRCh38 reference, a gpxil file for each chromosome read from the web as needed, in ${REF_DIR}. Try  gpxil info ${REF_DIR}/chr17.gpxil.tif . Type  help  to see what’s here, or  man NAME  to read about a command.` +
         (MG.user.name() === MG.user.DEFAULT ? ' To see your name in place of user, click “user” at the top of the page.' : '')
     });
     MG.app.nbApp = new MG.NotebookApp(document.getElementById('nbRoot'), { fs, dir: HOME + '/notebooks' });
@@ -159,6 +159,8 @@
     fasta: 'FASTA file',
     vcf: 'VCF file',
     bed: 'BED file',
+    rmsk: 'RepeatMasker table',
+    bedgraph: 'bedGraph file',
     gtf: 'GTF or GFF file',
     image: 'picture',
     pdf: 'PDF',
@@ -170,7 +172,8 @@
     other: 'file'
   };
   MG.app.kindNames = KIND_NAMES;
-  /** → gpxil | pxil | fasta | vcf | bed | gtf | image | pdf | notebook | workflow | workflowrun | json | text | other */
+  /** → gpxil | pxil | fasta | vcf | bed | rmsk | bedgraph | gtf | image | pdf | notebook | workflow | workflowrun | json | text | other
+      (rmsk: a RepeatMasker table, UCSC's rmsk.txt.gz or RepeatMasker's genome.fa.out) */
   MG.app.fileKind = (path) => {
     const n = String(path).toLowerCase();
     if (n.endsWith('.ipynb')) return 'notebook';
@@ -181,6 +184,8 @@
     if (/\.(fa|fasta|fna|fas)(\.b?gz)?$/.test(n)) return 'fasta';
     if (/\.vcf(\.b?gz)?$/.test(n)) return 'vcf';
     if (/\.bed(\.gz)?$/.test(n)) return 'bed';
+    if (/\.(bedgraph|bdg)(\.gz)?$/.test(n)) return 'bedgraph';
+    if (/(^|\/)rmsk[^/]*\.(txt|tsv)(\.gz)?$/.test(n) || /\.(fa|fasta|fna)\.out(\.gz)?$/.test(n)) return 'rmsk';
     if (/\.(gtf|gff3?)(\.gz)?$/.test(n)) return 'gtf';
     if (/\.(png|jpe?g|gif|bmp|tiff?|webp|svg)$/.test(n)) return 'image';
     if (n.endsWith('.pdf')) return 'pdf';
@@ -205,6 +210,11 @@
       out.push(['wrench', 'More…', 'Everything the Tools tab can do with this file', () => MG.app.toolsFor(path)]);
     } else if (k === 'pxil') {
       out.push(['dna', 'As FASTA', 'The sequence in this picture, as FASTA (pxil)', tool('pxil-fasta')]);
+    } else if (k === 'bed' || k === 'rmsk' || k === 'bedgraph') {
+      const feat = (id, extra) => () => MG.app.useTool(id, Object.assign({ features: path }, extra || {}));
+      if (k !== 'bedgraph') out.push(['layers', 'Stack them', 'Its features one a row, lined up, on a genome (gpxil stack)', feat('stack')]);
+      if (k !== 'bedgraph') out.push(['percent', 'Substitutions in them', 'A person’s substitutions in them against the rest, by context (gpxil spectrum)', feat('spectrum')]);
+      out.push(['grid', 'As a plane', 'A copy of a genome with them as a plane of its own (gpxil annotate)', feat('annotate')]);
     } else if (k === 'vcf') {
       out.push(['grid', 'Encode as gpxil', 'Make a gpxil file of this sample (gpxil encode)', () => MG.app.useTool('encode', { vcf: path })]);
     } else if (k === 'fasta') {

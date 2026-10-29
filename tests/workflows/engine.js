@@ -258,6 +258,17 @@ async function examplesRun() {
       // (the summaries' shares are written with spaces that don't break)
       check(pair && /^> 99\.99 % of variant bases the same; substitutions: precision > 99\.99 %, recall 100\.00 %; indels: 100\.00 %, 100\.00 %$/.test(pair.summary.replace(/\u00a0/g, ' ')) && trio && /^22 Mendelian errors, 22 of them candidate new mutations, in 106,558 variant bases of the child’s$/.test(trio.summary) && pics.length === 2, `${f}: HG002’s two benchmarks agree but for 4 variant bases, and he has 22 Mendelian errors; TP53 drawn twice (${pair && pair.summary} · ${trio && trio.summary})`);
     }
+    if (f === 'ga-sequences.workflow.json') {
+      const [runs, stack, spec, ann] = ['runs', 'stack', 'spectrum', 'annotate'].map((id) => rec.steps.find((e) => e.tool === id));
+      const sums = [runs, spec, ann].map((e) => (e && e.summary ? e.summary.replace(/\u00a0/g, ' ') : ''));
+      check(
+        /^1,561 runs of AG of 51 bases or more \(739 on the \+ strand, 822 on the - strand\)$/.test(sums[0]) &&
+          /^substitutions 0\.767× the expected \(95 % 0\.509–1\.11\); insertions and deletions 20\.1× a base$/.test(sums[1]) &&
+          /x-repeats plane \(category, uint8, 59 labels\)$/.test(sums[2]) &&
+          stack && stack.outputs && files.exists(stack.outputs.picture),
+        `${f}: chromosome 17’s 1,561 pure GA-sequences, stacked; HG002’s isolated substitutions in them at 0.77 times what their contexts predict, and 20 times the insertions and deletions; the repeats as a plane (${sums.join(' · ')})`
+      );
+    }
     fs.rmSync(files.tmp, { recursive: true, force: true });
   }
 }

@@ -40,6 +40,74 @@
     ['ps', 'Phase sets (ps)', ['ps']]
   ];
   const MODE = Object.fromEntries(MODES.map(([k, label, planes]) => [k, { label, planes }]));
+  /** a view's planes: a built-in one's, or an annotation plane's (x:x-repeats: the plane x-repeats, gpxil annotate) */
+  const modeOf = (m) => MODE[m] || (/^x:x-/.test(m) ? { label: 'Annotation ' + m.slice(2), planes: [m.slice(2)] } : MODE.reference);
+  const isAnnotation = (m) => /^x:x-/.test(m || '');
+  /** the planes said for a base: the standard ones, then the annotation planes */
+  const planesOf = (contig) => ['ref', 'gt', 'flags', 'gq', 'dp', 'ps', ...Object.keys(contig.pages).filter((p) => /^x-/.test(p)).sort()];
+
+  /* ---------------- annotation planes (gpxil annotate): what a value means, and its colour ---------------- */
+  // (the categorical palette of the studio's charts; a repeat class keeps its hue, its families lighter or darker)
+  const HUES = [[42, 120, 214], [235, 104, 52], [27, 175, 122], [237, 161, 0], [232, 123, 164], [0, 131, 0], [98, 80, 214], [227, 73, 72]];
+  const CLASS_HUE = { SINE: 7, LINE: 0, LTR: 2, DNA: 3, Simple_repeat: 6, Low_complexity: 4, Satellite: 5 };
+  const SHADES = [0, 0.35, -0.25, 0.6, 0.15, -0.4, 0.75, 0.45];
+  const shade = (c, t) => c.map((v) => Math.round(t >= 0 ? v + (255 - v) * t : v * (1 + t)));
+  const hashOf = (s) => {
+    let x = 2166136261;
+    for (let i = 0; i < s.length; i++) x = Math.imul(x ^ s.charCodeAt(i), 16777619) >>> 0;
+    return x;
+  };
+  /** how to read and colour an annotation plane: {kind, describe(value) → text, colour(value) → [r, g, b] or null
+      (no feature: paper), legend(values seen) → [[colour, text]]}; float planes are scaled to the values in view */
+  function annotationOf(meta, plane, values) {
+    const info = ((meta && meta.planes) || {})[plane] || {};
+    const labels = info.labels || null;
+    const float = values instanceof Float32Array || info.dtype === 'float32';
+    const kind = info.kind || (labels ? 'category' : float ? 'value' : 'presence');
+    if (float) {
+      let lo = Infinity, hi = -Infinity;
+      for (const x of values || []) if (Number.isFinite(x)) (lo = Math.min(lo, x)), (hi = Math.max(hi, x));
+      const A = [205, 226, 251], B = [13, 54, 107];
+      const colour = (x) => {
+        if (!Number.isFinite(x)) return null;
+        const t = hi > lo ? (x - lo) / (hi - lo) : 1;
+        return A.map((a, i) => Math.round(a + (B[i] - a) * t));
+      };
+      const num = (x) => (Math.abs(x) >= 1000 ? Math.round(x).toLocaleString('en-GB') : String(Number(x.toPrecision(4))));
+      return {
+        kind,
+        describe: (x) => (Number.isFinite(x) ? `${num(x)}${info.units ? ' ' + info.units : ''}` : 'none (NaN)'),
+        colour,
+        legend: () => (lo <= hi ? [[colour(lo), `${num(lo)} (the lowest in view)`], [colour((lo + hi) / 2), num((lo + hi) / 2)], [colour(hi), `${num(hi)} (the highest)`]] : [])
+      };
+    }
+    // (categories: a colour for each label, by the class before its first /, so a repeat class keeps its hue)
+    const cache = new Map();
+    const labelOf = (x) => (x === 0 ? '' : labels ? labels[String(x)] || `value ${x}` : kind === 'presence' ? 'a feature' : `value ${x}`);
+    const colour = (x) => {
+      if (!x) return null;
+      if (cache.has(x)) return cache.get(x);
+      const label = labelOf(x);
+      // (a repeat class, SINE, in its hue; its families, SINE/Alu, and names, SINE/Alu/AluY, lighter or darker)
+      const cls = label.split('/')[0];
+      const hue = HUES[CLASS_HUE[cls] != null ? CLASS_HUE[cls] : hashOf(cls) % HUES.length];
+      const t = label === cls && CLASS_HUE[cls] != null ? 0 : SHADES[hashOf(label) % SHADES.length];
+      const c = kind === 'presence' ? HUES[0] : shade(hue, t);
+      cache.set(x, c);
+      return c;
+    };
+    return {
+      kind,
+      describe: (x) => (x ? labelOf(x) : 'none'),
+      colour,
+      legend: (seen) => {
+        const items = [...seen.entries()].filter(([x]) => x).sort((a, b) => b[1] - a[1]);
+        const out = items.slice(0, 14).map(([x, n]) => [colour(x), `${labelOf(x)} (${fmt(n)} base${n === 1 ? '' : 's'})`]);
+        if (items.length > 14) out.push([null, `and ${items.length - 14} more`]);
+        return out;
+      }
+    };
+  }
   const fmt = (n) => Math.round(n).toLocaleString('en-GB');
   /** [s, e) of a contig as the region it is of its chromosome, as gpxil reads one: chr17:7661779-7687546 */
   const place = (c, s, e) => `${c.parent}:${c.start + s + 1}-${c.start + e}`;
@@ -295,7 +363,14 @@
         const ok = need.every((p) => planes.has(p) || (p === 'ref' && this.canBorrowRef()));
         if (ok) this.modeSel.appendChild(h('option', { value: k }, label));
       }
-      const mode = opts.mode || (opts.plane && { ref: 'reference', gt: 'genotype', flags: 'flags', gq: 'gq', dp: 'dp', ps: 'ps' }[opts.plane]) || (hasGt ? 'variants' : 'reference');
+      // (annotation planes, x-…, as gpxil annotate makes them: each a view of its own)
+      for (const p of [...planes].filter((x) => /^x-/.test(x)).sort()) {
+        const info = ((g.meta && g.meta.planes) || {})[p] || {};
+        const what = { category: 'labels', presence: 'where features are', score: 'scores', value: 'values' }[info.kind] || '';
+        this.modeSel.appendChild(h('option', { value: 'x:' + p }, `Annotation: ${p}${what ? ` (${what})` : ''}`));
+      }
+      const asked = opts.plane && (/^x-/.test(opts.plane) ? 'x:' + opts.plane : { ref: 'reference', gt: 'genotype', flags: 'flags', gq: 'gq', dp: 'dp', ps: 'ps' }[opts.plane]);
+      const mode = opts.mode || asked || (hasGt ? 'variants' : 'reference');
       this.state.mode = [...this.modeSel.options].some((o) => o.value === mode) ? mode : this.modeSel.options[0] && this.modeSel.options[0].value;
       this.modeSel.value = this.state.mode;
       let region = opts.region || null;
@@ -419,7 +494,7 @@
       const token = (this._token = (this._token || 0) + 1);
       const { contig, start, end } = this.region;
       const mode = this.state.mode;
-      const need = MODE[mode].planes;
+      const need = modeOf(mode).planes;
       this.infoEl.textContent = `Reading ${R().reader.regionText(contig, start, end)}…`;
       try {
         const planes = {};
@@ -434,7 +509,7 @@
         }
         // the other planes there are, for pointing at pixels: read now for a region of up to a million bases, and for a
         // bigger one, a base at a time as it is pointed at (hover)
-        if (end - start <= 1e6) for (const p of ['ref', 'gt', 'flags', 'gq', 'dp', 'ps']) if (!(p in planes) && p in contig.pages) planes[p] = await this.file.read(contig, p, start, end);
+        if (end - start <= 1e6) for (const p of planesOf(contig)) if (!(p in planes) && p in contig.pages) planes[p] = await this.file.read(contig, p, start, end);
         if (token !== this._token) return;
         this.data = Object.assign({ contig, start, end, mode, planes }, this.layout(end - start, mode));
         this.draw();
@@ -486,6 +561,10 @@
       const P = d.planes;
       // (how many bases of each code are drawn, for the key: the reference's, the genotype's or the haplotypes' codes)
       const seen = new Uint32Array(256);
+      // (an annotation plane: its values' colours, and how many bases of each, for its key)
+      const ann = isAnnotation(d.mode) ? annotationOf(this.file.meta, d.mode.slice(2), P[d.mode.slice(2)]) : null;
+      const annSeen = new Map();
+      d.annotation = ann;
       for (let i = 0; i < n; i++) {
         const x = i % W, y = Math.floor(i / W);
         const ref = P.ref ? P.ref[i] : 15;
@@ -542,7 +621,11 @@
             break;
           }
           default:
-            c = refRgb[ref];
+            if (ann) {
+              const val = P[d.mode.slice(2)][i];
+              if (ann.kind !== 'value' && ann.kind !== 'score') annSeen.set(val, (annSeen.get(val) || 0) + 1);
+              c = ann.colour(val) || [255, 255, 255];
+            } else c = refRgb[ref];
         }
         put(x, y, c);
       }
@@ -559,7 +642,7 @@
       g.drawImage(small, 0, 0, C.width, C.height);
       const win = d.contig.window ? ` · from the window ${esc(d.contig.name)}, which holds ${esc(R().reader.regionText(d.contig))}` : '';
       this.infoEl.innerHTML = `<b>${esc(R().reader.regionText(d.contig, d.start, d.end))}</b>${win} · ${fmt(n)} bases · ${fmt(W)} bases a row, ${rows > 1 ? fmt(rows) + ' rows' : 'one row'} · ${scale} pixel${scale > 1 ? 's' : ''} a base${two ? ' (two rows for each row of bases: haplotype 1 above, 2 below)' : ''}${P._refFrom ? ` · the bases come from ${esc(P._refFrom)}` : ''}`;
-      this.drawLegend(pal, refRgb, seen);
+      this.drawLegend(pal, refRgb, seen, ann ? ann.legend(annSeen) : null);
       this.drawCommand();
       this.countView();
     }
@@ -626,11 +709,19 @@
     /** the key under the picture. For the reference, genotype and haplotypes views it lists the colours in view
         (seen: how many bases of each code were drawn): each base, each heterozygous pair present with how many bases
         have it, N and deleted bases. The other views have a fixed key of their classes. */
-    drawLegend(pal, refRgb, seen) {
+    drawLegend(pal, refRgb, seen, annotation) {
       const sw = (c, label) => `<span class="vw-sw"><i style="background:rgb(${c.join(',')})"></i>${esc(label)}</span>`;
       const note = (t) => `<span class="vw-note">${esc(t)}</span>`;
       const m = this.data.mode;
       let items = [];
+      if (annotation) {
+        items = annotation.map(([c, label]) => (c ? sw(c, label) : note(label)));
+        items.push(sw([255, 255, 255], 'no feature'));
+        const info = ((this.file.meta && this.file.meta.planes) || {})[m.slice(2)] || {};
+        if (info.description) items.push(note(info.description));
+        this.legendEl.innerHTML = items.join('');
+        return;
+      }
       if (m === 'reference' || m === 'genotype' || m === 'haplotypes') {
         const count = new Array(16).fill(0);
         let soft = 0;
@@ -684,12 +775,17 @@
         this.cmdEl.append(h('p.vw-note', 'The same picture as a file, from the terminal (gpxil render):'), pre);
       } else {
         const path = this.state.path;
+        const plane = isAnnotation(d.mode) ? d.mode.slice(2) : d.mode;
+        const name = isAnnotation(d.mode) ? 'values' : d.mode;
+        const labels = isAnnotation(d.mode) && ((this.file.meta.planes || {})[plane] || {}).labels ? `\nlabels = g.metadata["planes"][${JSON.stringify(plane)}]["labels"]   # value -> label` : '';
         // (located as gpxil finds a region: on a window, by the chromosome's positions, at the window's own offsets)
         const code = c.window
-          ? `from gpxiltools import GpxilFile\n\nwith GpxilFile(${JSON.stringify(path)}) as g:\n    c, s, e = g.locate(${JSON.stringify(c.parent)}, ${c.start + d.start}, ${c.start + d.end})   # the window, and where in it\n    ${d.mode} = c.read(${JSON.stringify(d.mode)}, s, e)\nprint(${d.mode}[:40])`
-          : `from gpxiltools import GpxilFile\n\nwith GpxilFile(${JSON.stringify(path)}) as g:\n    ${d.mode} = g[${JSON.stringify(c.name)}].read(${JSON.stringify(d.mode)}, ${d.start}, ${d.end})\nprint(${d.mode}[:40])`;
+          ? `from gpxiltools import GpxilFile\n\nwith GpxilFile(${JSON.stringify(path)}) as g:\n    c, s, e = g.locate(${JSON.stringify(c.parent)}, ${c.start + d.start}, ${c.start + d.end})   # the window, and where in it\n    ${name} = c.read(${JSON.stringify(plane)}, s, e)${labels.replace('\n', '\n    ')}\nprint(${name}[:40])`
+          : `from gpxiltools import GpxilFile\n\nwith GpxilFile(${JSON.stringify(path)}) as g:\n    ${name} = g[${JSON.stringify(c.name)}].read(${JSON.stringify(plane)}, ${d.start}, ${d.end})${labels.replace('\n', '\n    ')}\nprint(${name}[:40])`;
         pre = h('pre.code', { 'data-run': 'py' }, h('code', code));
-        this.cmdEl.append(h('p.vw-note', `These values in Python, as a NumPy array (${d.mode === 'ps' ? '32-bit' : '8-bit'} numbers):`), pre);
+        const dtype = (((this.file.meta || {}).planes || {})[plane] || {}).dtype;
+        const bits = d.mode === 'ps' ? '32-bit' : dtype === 'float32' ? '32-bit floating-point' : dtype === 'uint16' ? '16-bit' : dtype === 'uint32' ? '32-bit' : '8-bit';
+        this.cmdEl.append(h('p.vw-note', `These values in Python, as a NumPy array (${bits} numbers):`), pre);
       }
       const save = h('button.btn.small', { type: 'button', html: MG.icon('download') + '<span>Save the picture</span>', title: 'Save what is shown as a PNG in ~/results' });
       save.addEventListener('click', () => this.savePicture(name));
@@ -767,8 +863,9 @@
       const i = pos - d.start;
       const P = d.planes;
       const got = {};
-      for (const p of ['ref', 'gt', 'flags', 'gq', 'dp', 'ps']) if (P[p]) got[p] = P[p][i];
-      const missing = ['ref', 'gt', 'flags', 'gq', 'dp', 'ps'].filter((p) => !(p in got) && p in d.contig.pages);
+      const all = planesOf(d.contig);
+      for (const p of all) if (P[p]) got[p] = P[p][i];
+      const missing = all.filter((p) => !(p in got) && p in d.contig.pages);
       this.say(d, pos, got);
       if (!missing.length) return;
       // (a big region: the planes not drawn are read for this base alone, and said when they come)
@@ -789,6 +886,10 @@
       if (v.gq != null) parts.push('GQ ' + (v.gq === 255 ? 'missing' : v.gq));
       if (v.dp != null) parts.push('DP ' + (v.dp === 255 ? 'missing' : v.dp));
       if (v.ps) parts.push('phase set ' + v.ps);
+      for (const p of Object.keys(v).filter((x) => /^x-/.test(x))) {
+        const a = d.annotation && d.mode === 'x:' + p ? d.annotation : annotationOf(this.file.meta, p, null);
+        parts.push(`${esc(p)} <b>${esc(a.describe(v[p]))}</b>`);
+      }
       this.hoverEl.innerHTML = parts.join(' · ');
     }
   }

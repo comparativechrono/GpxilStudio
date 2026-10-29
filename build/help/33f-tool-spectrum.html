@@ -1,0 +1,57 @@
+<!-- id: h-tool-spectrum | title: Substitutions in regions, by context | group: Tools | summary: gpxil spectrum: does a person have more or fewer substitutions in some regions than their sequence leads one to expect? Observed against expected, context by context, with exact intervals, on the features’ own strands too | keys: spectrum substitutions point mutations mutation rate mutability context trinucleotide 96 mutational signatures cpg expected observed ratio enrichment depletion binomial exact interval p-value background regions isolated clustered transitions transversions ti/tv heterozygous homozygous insertions deletions indels strand asymmetry transcription stranded purine pyrimidine alu ga-sequences genes look for patterns -->
+<h1><!--ICON:percent-->Substitutions in regions, by context</h1>
+<p class="lede"><code>gpxil spectrum</code> asks whether a person has more or fewer substitutions in some regions – repeats, GA-sequences, genes, any BED file – than their sequence leads one to expect. A base’s chance of changing depends on its neighbours, so the regions are compared with the rest of the genome context by context, with an exact interval for the ratio. It reads a person’s gpxil file and the regions, and counts a chromosome in a few seconds.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="spectrum" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="/data/examples/rmsk_chr17.txt.gz" data-match="^SINE/Alu/">HG002’s substitutions in chromosome 17’s Alu elements</button> <button class="do" type="button" data-tool="spectrum" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="/data/examples/chr17_genes.bed" data-stranded="true">In its genes, on their own strands</button></div>
+
+<h2>How it counts</h2>
+<dl>
+  <dt>contexts</dt><dd>A base with its neighbours: three bases by default, so the C of CG, which changes about ten times as often as other C’s, is a context of its own. Each context is read on the strand where its middle base is a <b>pyrimidine</b>, C or T, so a G that changes to A is counted as the C opposite changing to T: the 6 kinds and 96 contexts of mutational signatures. Or a <b>purine</b>, A or G, which keeps a GA-sequence on its own strand.</dd>
+  <dt>expected</dt><dd>For each context and each substitution in it, its rate in the <b>background</b> – every called base outside the regions, unless you give a BED file of your own, such as the regions’ flanks – times how many bases of the regions have that context. Their sum is what the regions would have if they changed as the rest of the genome does.</dd>
+  <dt>the ratio, its interval and p</dt><dd>Observed over expected. Its 95 % interval and p-value come from an exact binomial test of the regions’ share of all the substitutions counted, regions and background together, which allows for the background’s counts being a sample too. Each kind of substitution gets its own.</dd>
+  <dt>on their own strands</dt><dd>Ticked, the regions’ substitutions are also read on each feature’s strand, 12 kinds from A&gt;C to T&gt;G, against the background’s rates read blind to strands. A difference between a kind and its complement – A&gt;G against T&gt;C – is then an asymmetry between the strands, such as the one transcription leaves on genes.</dd>
+  <dt>isolated</dt><dd>Only substitutions with no other variant – a substitution, a deletion, an insertion – within so many bases count, in the regions and the background alike. In a repeat, a change of a unit is often written as several substitutions side by side; counted as isolated, it counts not at all, rather than as several.</dd>
+  <dt>which bases count</dt><dd>Those where the person’s genotype is known on both haplotypes, and the reference base and its context are all A, C, G and T. In a file written with regions called with confidence, the calls outside them are left out, as <a href="#h-tool-compare">gpxil compare</a> leaves them out; a BED file of bases to count narrows them further.</dd>
+  <dt>also counted</dt><dd>Transitions and transversions, heterozygous and homozygous alleles, and insertions and deletions a called base: a base counts once if a deletion begins there or an insertion follows it.</dd>
+</dl>
+
+<h2>The form</h2>
+<dl>
+  <dt>The person’s gpxil file</dt><dd>With a sample. A file without its reference plane needs the reference too (a field for it appears).</dd>
+  <dt>The regions</dt><dd>A BED file, or a RepeatMasker table, with the features to keep: names that match, and the shortest (<a href="#h-tool-stack">Stack features</a> says how).</dd>
+  <dt>Only substitutions with no other variant within</dt><dd>Empty: all of them. 20 bases is what <a href="#h-walk-discover">Pure GA-sequences</a> takes.</dd>
+  <dt>Read contexts with in the middle</dt><dd>A pyrimidine, or a purine for runs of A and G from <a href="#h-tool-runs">Find runs</a>.</dd>
+  <dt>Context</dt><dd>3 bases, 1 or 5.</dd>
+  <dt>Also read each feature on its own strand</dt><dd>For features with strands: genes, or runs found on both strands.</dd>
+  <dt>Count only in these regions; the background; count only these bases too</dt><dd>A region or contig of the file; a BED file of the background’s bases; a BED file of the bases to count.</dd>
+  <dt>Also the counts by context, as a table</dt><dd>Each context and substitution’s counts and rates, in the regions and the background, as a tab-separated file.</dd>
+</dl>
+
+<h2>What it gives</h2>
+<p>The regions and the bases counted; the verdict – how many substitutions the regions have, how many their contexts lead one to expect, and the ratio with its interval and p; a table by kind (and, ticked, on the features’ own strands); then substitutions a kilobase, transitions over transversions, the homozygous share, and insertions and deletions, each in the regions and the background.</p>
+
+<h2>Two examples on chromosome 17</h2>
+<p><b>Alu elements.</b> HG002 has 18,561 substitutions in chromosome 17’s 58,071 Alu elements: 1.43 a kilobase, against 1.14 elsewhere, a quarter more. But Alu elements are rich in CG, the most mutable context, and their contexts lead one to expect 16,671: 1.11 times (95 % 1.10–1.13). By kind, T&gt;C stands out, at 1.54 times, and insertions and deletions come 2.1 times as often a base, most of them in the A-rich tails at the elements’ ends.</p>
+<p><b>Genes, on their own strands.</b> Inside chromosome 17’s protein-coding genes, mostly introns, HG002 has 0.83 times the substitutions their contexts predict. Read on each gene’s own strand, A&gt;G runs at 0.98 times and its complement T&gt;C at 0.84: the strands differ, as transcription treats them differently.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil spectrum /data/examples/HG002_chr17.gpxil.tif /data/examples/rmsk_chr17.txt.gz --match '^SINE/Alu/'
+gpxil spectrum /data/examples/HG002_chr17.gpxil.tif /data/examples/chr17_genes.bed --stranded --context 1 -o ~/results/genes-spectrum.tsv
+gpxil spectrum /data/examples/HG002_chr17_v5.0q.noref.gpxil.tif /data/examples/chr17_genes.bed chr17:7,000,001-8,000,000 \
+    --reference /data/examples/HG002_chr17.gpxil.tif --isolated 20 --json | head -24</code></pre>
+<p><code>--all-calls</code> keeps the calls outside the regions called with confidence; <code>--json</code> gives every number to programs.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.features import read_features
+from gpxiltools.spectrum import count_spectrum
+
+alus = read_features("/data/examples/rmsk_chr17.txt.gz", match="^SINE/Alu/")
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    counter = count_spectrum(g, alus)
+r = counter.results()
+s = r["substitutions"]
+print(f'{s["observed"]:,} observed, {s["expected"]:,.0f} expected: {s["ratio"]} times (95 % {s["interval"][0]}-{s["interval"][1]})')
+for kind, d in r["types"].items():
+    print(kind, d["ratio"], d["p"])</code></pre>
+<p><code>count_spectrum(g, features, regions, background=…, k=5, centre="purine", isolated=20, stranded=True)</code> takes the form’s settings; <code>counter.table()</code> gives the counts by context, which <code>write_table</code> writes as the command does.</p>
+<!--CITE: gpxiltools signatures transcription-asymmetry repeatmasker giab-->

@@ -138,3 +138,25 @@ make('family.workflow.json', 'A family: two benchmarks, and a son with both pare
     join(w, father, 'file', trio, 'father');
     join(w, mother, 'file', trio, 'mother');
   });
+
+make('ga-sequences.workflow.json', 'Pure GA-sequences: found, stacked and counted',
+  'Albrecht-Buehler’s pure GA-sequences – runs of more than 50 bases of nothing but A and G, on either strand – are found on HG002’s chromosome 17 and stacked, one a row with the 400 bases before each, sorted by the poly(A) each starts with: the stripes before the top rows are Alu elements, whose tails they began as. HG002’s substitutions in them are counted against what their contexts predict, leaving out those with another variant within 20 bases, with their insertions and deletions. And the genome is given RepeatMasker’s repeats as a plane of its own, to look at in the Viewer.',
+  (w) => {
+    const g = E.addInput(w, ['gpxil'], 'The genome, with its reference plane');
+    g.default = EX + 'HG002_chr17.gpxil.tif';
+    const rm = E.addInput(w, ['rmsk'], 'Its repeats (a RepeatMasker table)');
+    rm.default = EX + 'rmsk_chr17.txt.gz';
+    const runs = E.addTool(w, 'runs');
+    join(w, g, 'file', runs, 'input');
+    const st = E.addTool(w, 'stack');
+    st.params = { sort: 'run' };
+    join(w, g, 'file', st, 'input');
+    join(w, runs, 'runs', st, 'features');
+    const sp = E.addTool(w, 'spectrum');
+    sp.params = { isolated: '20', centre: 'purine' };
+    join(w, g, 'file', sp, 'input');
+    join(w, runs, 'runs', sp, 'features');
+    const an = E.addTool(w, 'annotate');
+    join(w, g, 'file', an, 'input');
+    join(w, rm, 'file', an, 'features');
+  });

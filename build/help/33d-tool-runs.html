@@ -1,0 +1,45 @@
+<!-- id: h-tool-runs | title: Find runs of a composition | group: Tools | summary: gpxil runs: the stretches of a genome made only of some bases – pure GA-sequences, runs of one base, AT-rich stretches – on one strand or both, as a BED file | keys: runs run composition ga-sequences ga sequences pure purine purines pyrimidine pyrimidines poly(a) polya homopolymer at-rich gc-rich iupac strand both strands bed albrecht-buehler census tc-sequences chargaff look for patterns discovery -->
+<h1><!--ICON:search-->Find runs of a composition</h1>
+<p class="lede"><code>gpxil runs</code> finds the stretches of a genome made only of some bases: of A and G, as Guenter Albrecht-Buehler’s pure GA-sequences are, of C and T, of A and T, or of one base. It reads the reference plane a piece at a time, so a chromosome takes a few seconds, and writes the runs as a BED file, ready for the other tools that look for patterns: stack them, count their substitutions, or add them to the genome as a plane.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="runs" data-input="/data/examples/HG002_chr17.gpxil.tif">Find chromosome 17’s pure GA-sequences</button></div>
+
+<h2>What a run is</h2>
+<dl>
+  <dt>its bases</dt><dd>Given in IUPAC letters (<a href="#h-codes">The codes</a>): <b>AG</b> or R for purines, <b>CT</b> or Y for pyrimidines, <b>AT</b> or W, <b>CG</b> or S, <b>A</b> for runs of one base, and so on. A base of the reference belongs if its own letter does: an R belongs to AG, an N only to ACGT. Soft masking doesn’t matter.</dd>
+  <dt>as long as it can be</dt><dd>A run is maximal: the bases either side of it don’t belong, or there are none. Runs shorter than the shortest you ask for are left out: 51 bases by default, since Albrecht-Buehler’s pure GA-sequences are more than 50 bases long.</dd>
+  <dt>on both strands</dt><dd>The other strand’s bases are the complements of this one’s, so a run of A and G there is a run of C and T here. With <b>both strands</b>, those are found too, and written with strand <code>-</code>. A set that is its own complement, such as AT or CG, has the same runs on both strands: they are written once, without a strand (<code>.</code>).</dd>
+  <dt>in a file of windows</dt><dd>Windows that overlap or touch are read as one stretch, at the chromosome’s positions, and where a stretch ends, a run ends with it.</dd>
+</dl>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>Any gpxil file with its reference plane, or one without it, with its reference given (a field for it appears).</dd>
+  <dt>Of these bases</dt><dd>The set, in IUPAC letters: AG to begin with.</dd>
+  <dt>At least this many bases</dt><dd>The shortest run to keep: 51.</dd>
+  <dt>On both strands</dt><dd>Ticked: the set’s runs on the other strand too.</dd>
+  <dt>Regions</dt><dd>One or more, separated by spaces: a contig, or CONTIG:START-END counting from 1. Regions that overlap are read once, as one. Empty: every contig.</dd>
+  <dt>Save as</dt><dd>A BED file, named after the genome and the set: <code>~/results/HG002_chr17_AG_runs.bed</code>.</dd>
+</dl>
+
+<h2>What it gives</h2>
+<p>A BED file, a run a line: its contig, its start (counting from 0) and end, the set (<code>AG</code>), its length as the score (up to 1000, the most a BED score can be) and its strand. The tool also says how many runs there are on each strand, how many bases they cover, how long they are – the median, the 90th and 99th percentiles and the longest – and how many there are a megabase of A, C, G and T. <b>Stack them</b> and <b>Their substitutions</b> take the BED file on to the next tools.</p>
+
+<h2>Chromosome 17’s pure GA-sequences</h2>
+<p>Chromosome 17 of GRCh38 has 1,561: 739 runs of A and G on the + strand and 822 on the − strand (runs of C and T on this one), 140,621 bases in all, half of them 71 bases long or less and the longest 574: 18.8 a megabase. By chance, with half the bases purines, a stretch of 51 bases would be all purines once in 2⁵¹ – about 2 × 10¹⁵ – so the whole genome would have none. Albrecht-Buehler counted 19,139 in the human genome of 2008, and 1,667 on chromosome 1; GRCh38 has 22,726 runs of A and G and 22,955 of C and T, as many on each strand as Chargaff’s second rule expects (<a href="#h-tool-skew">Strand symmetry</a>). <a href="#h-walk-discover">Pure GA-sequences</a> follows them through the other tools.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil runs /data/examples/HG002_chr17.gpxil.tif --of AG --both-strands -o ~/results/GA.bed
+gpxil runs /data/examples/HG002_chr17.gpxil.tif chr17:7,661,779-7,687,546 --of A --min 15
+gpxil runs /data/examples/HG002_chr17.gpxil.tif --of W --min 200 -o ~/results/AT-rich.bed --json</code></pre>
+<p>Without <code>-o</code>, the runs go to the terminal; <code>--json</code> gives the counts to programs; <code>--reference</code> gives the reference of a file written without one.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.runs import RunFinder
+
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    runs = list(RunFinder(g, of="AG", min_length=51, both_strands=True).runs())
+print(len(runs), "runs; the longest:", max(runs, key=lambda r: r.length))
+print(sum(r.strand == "-" for r in runs), "on the - strand")</code></pre>
+<p>Each run is a <code>Run(sequence, start, end, strand)</code>, counting from 0; <code>RunFinder(g, [g.region_of("chr17:1-1000000")], …)</code> looks only there, and <code>write_bed</code> writes runs as the command does.</p>
+<!--CITE: gpxiltools albrecht-buehler iupac-->

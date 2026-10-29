@@ -1,0 +1,44 @@
+<!-- id: h-tool-period | title: Wrap a repeat at its period | group: Tools | summary: gpxil period: a tandem repeat – a microsatellite, a GA-sequence – wrapped at its period, one unit a row, so the units line up and a change in one stands out; the reference beside the person’s two haplotypes, as a picture or text | keys: period periodicity tandem repeat repeats microsatellite str short tandem repeat minisatellite unit units wrap wrapped aligned sequence haplotypes substitutions insertions deletions expansion contraction slippage gene conversion ga-sequences agaa look for patterns -->
+<h1><!--ICON:grid-->Wrap a repeat at its period</h1>
+<p class="lede"><code>gpxil period</code> wraps a tandem repeat – a microsatellite, a GA-sequence – at its period, one unit a row, so its units line up in columns and a unit that differs stands out. The reference is drawn beside the person’s two haplotypes, so you can see which units they have changed, gained or lost.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="period" data-input="/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif" data-region="chr17:6,793,028-6,793,302" data-reference="/data/examples/HG002_chr17.gpxil.tif">A GA-sequence in HG002’s newer benchmark</button> <button class="do" type="button" data-tool="period" data-input="/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif" data-region="chr17:6,793,028-6,793,302" data-reference="/data/examples/HG002_chr17.gpxil.tif" data-layout="sequence" data-format="text">The same, as sequences, in text</button></div>
+
+<h2>How it is wrapped</h2>
+<dl>
+  <dt>the period</dt><dd>For each step up to 50 bases, the share of the stretch’s bases that equal the base a step further on. The period is the shortest step whose share is within 0.05 of the best, so a repeat of AAAG is period 4, not 8. A stretch with no clear period – the best share under 0.6 – still gets the best, with a note. Or you give the period.</dd>
+  <dt>aligned</dt><dd>Each haplotype is drawn at the reference’s positions, so its rows are the reference’s rows: a substituted base is outlined, a deleted base is a dash, a base not known is in the colour of N, and an insertion is a bar on the right edge of the base it follows. A haplotype that isn’t there, as the second where a man has one X, is blank.</dd>
+  <dt>as sequences</dt><dd>Each haplotype is its own sequence, insertions in and deletions out, wrapped at the same period, so a unit gained or lost shifts the units after it, and the haplotype ends lower or higher than the reference.</dd>
+  <dt>as text</dt><dd>The reference and the haplotypes side by side, a unit a line; a substituted base is in lower case, a deleted one a dash, and an insertion a <code>+</code> after the unit, with its bases listed below.</dd>
+</dl>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>A person’s file, or a reference alone. A file without its reference plane needs the reference too.</dd>
+  <dt>Region</dt><dd>CONTIG:START-END, counting from 1, of up to 20,000 bases. For a chromosome 17 file, the GA-sequence of the first button, to begin with.</dd>
+  <dt>Period</dt><dd>Empty: found.</dd>
+  <dt>The haplotypes</dt><dd>Aligned, or as their own sequences.</dd>
+  <dt>As</dt><dd>A picture, 8 pixels a base in any palette, or text.</dd>
+</dl>
+
+<h2>A GA-sequence that began as an Alu’s tail</h2>
+<p>At chr17:6,793,028-6,793,302, 275 bases of A and G begin in the tail of an AluJb element: RepeatMasker calls most of them a simple repeat, (AGAA)n. Their period is 4: 85 % of the bases equal the base a unit on. Genome in a Bottle’s v4.2.1 benchmark doesn’t call them; the newer v5.0q, made from a whole assembly of HG002’s genome, does, and he is heterozygous for 15 substitutions, 2 insertions and 2 deletions there. Wrapped, haplotype 1 is the reference but for an insertion of three units, AGAA AGAA AGAA. Haplotype 2 has all the substitutions, 15 bases in 13 units, and each of those units becomes one the repeat already has – AAAG becomes AGAG, AGAA becomes AGAG – as a unit copied over its neighbour would; it also has an insertion of five units and two deletions of two bases. As sequences, haplotype 1 is 12 bases longer than the reference, and haplotype 2 16. <a href="#h-walk-discover">Pure GA-sequences</a> counts how often that happens.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil period /data/examples/HG002_chr17_v5.0q.noref.gpxil.tif chr17:6,793,028-6,793,302 --reference /data/examples/HG002_chr17.gpxil.tif \
+    -o ~/results/GA-period.png
+gpxil period /data/examples/HG002_chr17_v5.0q.noref.gpxil.tif chr17:6,793,028-6,793,302 --reference /data/examples/HG002_chr17.gpxil.tif \
+    --layout sequence | head -12</code></pre>
+<p><code>--period</code> gives the period, <code>--max-period</code> the longest to look for, and <code>--scale</code> and <code>--palette</code> the picture’s squares and colours. Without <code>-o</code>, the text goes to the terminal.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.period import best_period, panels, text
+
+with GpxilFile("/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif", reference="/data/examples/HG002_chr17.gpxil.tif") as g:
+    c, s, e = g.view(*g.locate(*g.region_of("chr17:6793028-6793302"), join=True))
+    period, share, shares = best_period(c.read("ref", s, e))
+    ps = panels(c, s, e)                          # (the reference, then each haplotype)
+print(period, round(share, 2), {k: round(v, 2) for k, v in shares.items() if k <= 8})
+print(text(ps, period)[:300])</code></pre>
+<p><code>picture(ps, period, scale=8, title=…)</code> draws the picture, a Pillow image.</p>
+<!--CITE: gpxiltools giab repeatmasker-->

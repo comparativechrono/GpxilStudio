@@ -1,0 +1,57 @@
+<!-- id: h-tool-stack | title: Stack features, lined up | group: Tools | summary: gpxil stack: features – runs, repeats, genes, any BED file – one a row, lined up at their starts, ends or centres on their own strands, sorted, and drawn as bases or variants, with each column’s bases as a table | keys: stack stacked features rows lined up align anchor start end centre center upstream downstream flanks strand reverse complement sort poly(a) polya run alu repeats repeatmasker rmsk divergence age bin binned profile meta-gene heatmap ga-complex albrecht-buehler genes tss look for patterns -->
+<h1><!--ICON:layers-->Stack features, lined up</h1>
+<p class="lede"><code>gpxil stack</code> draws features one a row – runs, repeats, genes, the intervals of any BED file – each with the bases before and after a point of it, its start, end or centre, read on its own strand. Lined up, what the features share stands out as stripes running down the picture. It is how Guenter Albrecht-Buehler saw Alu elements line up before the pure GA-sequences that begin with a poly(A).</p>
+<div class="tryrow"><button class="do" type="button" data-tool="stack" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="/data/examples/rmsk_chr17.txt.gz" data-match="^SINE/Alu/" data-min-length="250" data-anchor="end" data-up="40" data-down="80" data-bin="50" data-scale="2">Chromosome 17’s Alu elements, by age</button> <button class="do" type="button" data-tool="stack" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="/data/examples/chr17_genes.bed" data-up="1000" data-down="1000" data-sort="length" data-bin="4">Its genes’ starts</button></div>
+
+<h2>How the rows are made</h2>
+<dl>
+  <dt>the anchor</dt><dd>Each feature’s start, end or centre, <b>on its strand</b>: the start of a feature on the − strand is its right-hand end. Each row holds the bases before the anchor and those from it on, so lined up at their starts, the column just right of the anchor’s mark holds the first base of every feature, and lined up at their ends, the first base after each.</dd>
+  <dt>read 5′ to 3′</dt><dd>A feature on the − strand is read as the reverse complement, and the sample’s variants with it: a substitution of C by T there is drawn as one of G by A. So a poly(A) that starts features on either strand starts every row. A feature without a strand is read on the + strand.</dd>
+  <dt>beyond the sequence</dt><dd>Where a row runs off the end of its sequence, or out of the windows of a file of windows, it has no bases: paper.</dd>
+  <dt>sorted</dt><dd>As the features come; by position; by length; by score (a repeat’s divergence from its family’s consensus, which grows with its age, so the oldest come first); by name; or by the <b>run</b> of some bases from the anchor, such as the poly(A) a GA-sequence begins with, allowing a few other bases in it, as Albrecht-Buehler sorted his. Lengths, scores and runs go longest first, unless you sort the other way.</dd>
+  <dt>binned</dt><dd>A chromosome has thousands of repeats of a family: with <b>rows to a pixel row</b> above 1, each pixel row is the mean colour of that many rows, so the stripes they share remain and the picture fits a screen.</dd>
+</dl>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>The genome the rows are read from.</dd>
+  <dt>The features</dt><dd>A BED file – the runs of <a href="#h-tool-runs">Find runs</a>, the examples’ <code>chr17_genes.bed</code>, any of your own – or a RepeatMasker table: UCSC’s <code>rmsk</code> table, as in the examples’ <code>rmsk_chr17.txt.gz</code>, or RepeatMasker’s own <code>.out</code>. Plain or gzipped. A repeat’s name is its class, family and name: <code>SINE/Alu/AluSx</code>.</dd>
+  <dt>Only features whose name matches, of at least this many bases</dt><dd>A regular expression looked for in the names (<code>^SINE/Alu/</code> for Alu elements, <code>/L1</code> for L1s, a gene’s name), and the shortest feature to keep: 250 bases leaves out the fragments of Alu elements.</dd>
+  <dt>Line them up at; bases before the anchor; bases from it on</dt><dd>Their starts, 400 bases before and 200 from it on, to begin with.</dd>
+  <dt>Sort the rows</dt><dd>By score for a RepeatMasker table, by the poly(A) for runs from <a href="#h-tool-runs">Find runs</a>, else as the features come.</dd>
+  <dt>At most this many rows</dt><dd>The first rows, once sorted.</dd>
+  <dt>Show, colours</dt><dd>The reference’s bases, or the sample’s genotype, haplotypes or variants, as <a href="#h-tool-render">Draw a region</a> draws them, in any palette.</dd>
+  <dt>Rows to a pixel row, pixels per base</dt><dd>1 and 1 to begin with.</dd>
+  <dt>With a title…</dt><dd>Ticked: the picture gets a title, a mark at the anchor, a ruler of bases from it, and a key.</dd>
+  <dt>Each column’s bases as a table</dt><dd>The <b>profile</b>: for each column, how many rows have A, C, G and T there (and, for a sample, how many have a substitution, a deletion or an insertion): the picture as numbers, to plot.</dd>
+</dl>
+
+<h2>What it gives</h2>
+<p>The picture, shown under the result, and the profile if you asked for it. The tool says how many rows it drew, of how many features, and how they were sorted. Features on a contig the file doesn’t have are left out.</p>
+
+<h2>Two pictures of chromosome 17</h2>
+<p><b>Its Alu elements, by age</b> (the first button): 43,132 Alu elements of 250 bases or more, lined up at their ends, oldest at the top, fifty to a pixel row. RepeatMasker counts an Alu’s poly(A) tail as part of it, so the tails are the pink band just before the ends: in the young elements at the bottom, long and pure; in the old ones at the top, shorter and mixed, as A’s have been substituted.</p>
+<p><b>Its genes’ starts</b> (the second): 1,187 protein-coding genes, longest first, with 1,000 bases either side of where each begins on its own strand, four to a pixel row. The starts sit in a band of C and G, blue and green – the CpG islands of promoters: 63 % of the bases just after the starts are C or G, against 50 % a kilobase before them – and the band is greener after the start than before it, as on a gene’s own strand G outnumbers C there (the GC skew is +0.035 in the first 500 bases, −0.01 before the start). The profile gives these counts column by column.</p>
+<p>The GA-sequences’ own stack, sorted by their poly(A)s, is in <a href="#h-walk-discover">Pure GA-sequences</a>.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil runs /data/examples/HG002_chr17.gpxil.tif --of AG --both-strands -o ~/results/GA.bed
+gpxil stack /data/examples/HG002_chr17.gpxil.tif ~/results/GA.bed --sort run --labelled -o ~/results/GA-stack.png
+gpxil stack /data/examples/HG002_chr17.gpxil.tif /data/examples/rmsk_chr17.txt.gz --match '^SINE/Alu/' --min-length 250 \
+    --anchor end --up 40 --down 80 --sort score --bin 50 --scale 2 --labelled -o ~/results/alu-ends.png --profile ~/results/alu-ends.tsv</code></pre>
+<p><code>--rows</code> writes the features in the order drawn, each with its row and what it was sorted by; <code>--ignore-strand</code> reads every feature on the + strand; <code>--cmyk</code> writes a CMYK TIFF for print. Without <code>-o</code>, the profile goes to the terminal.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.features import read_features
+from gpxiltools.stack import profile, rendering, stack
+
+alus = read_features("/data/examples/rmsk_chr17.txt.gz", match="^SINE/Alu/", min_length=250)
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    st = stack(g, alus, anchor="end", up=40, down=80, sort="score")
+print(len(st.rows), "rows;", st.ref.shape)          # (a row of reference codes for each feature, 5' to 3')
+rendering(st, mode="reference").save_png("/home/user/results/alu-ends-unbinned.png")
+for col in profile(st)[30:46:3]:                     # (a dict for each column: its counts of A, C, G and T …)
+    print(col["offset"], col["commonest"], col["commonest_share"], col["soft_masked"])</code></pre>
+<p><code>stack(…, sample=True)</code> reads the sample’s genotype too, for <code>mode="variants"</code>; <code>binned</code> and <code>labelled</code> make the command’s picture.</p>
+<!--CITE: gpxiltools albrecht-buehler repeatmasker ensembl-->

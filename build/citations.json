@@ -202,6 +202,92 @@
    "corporate": "Jeffrey A. Clark and contributors",
    "title": "Pillow, the friendly PIL fork",
    "url": "https://python-pillow.github.io/"
+  },
+  "albrechtbuehler2008": {
+   "authors": ["Albrecht-Buehler G"],
+   "short": "Albrecht-Buehler",
+   "year": 2008,
+   "title": "Properties and distribution of pure GA-sequences of mammalian genomes",
+   "container": "PLoS ONE",
+   "volume": "3",
+   "issue": "11",
+   "pages": "e3818",
+   "doi": "10.1371/journal.pone.0003818"
+  },
+  "albrechtbuehler2009c": {
+   "authors": ["Albrecht-Buehler G"],
+   "short": "Albrecht-Buehler",
+   "year": 2009,
+   "title": "Correction: Properties and distribution of pure GA-sequences of mammalian genomes",
+   "container": "PLoS ONE",
+   "doi": "10.1371/annotation/7126ab55-ca2a-4202-9e66-fac899bd52ee"
+  },
+  "repeatmasker": {
+   "authors": ["Smit AFA", "Hubley R", "Green P"],
+   "short": "Smit et al.",
+   "year": "2013–2015",
+   "title": "RepeatMasker Open-4.0",
+   "url": "https://www.repeatmasker.org"
+  },
+  "kent2002": {
+   "authors": ["Kent WJ", "Sugnet CW", "Furey TS", "Roskin KM", "Pringle TH", "Zahler AM", "Haussler D"],
+   "short": "Kent et al.",
+   "year": 2002,
+   "title": "The human genome browser at UCSC",
+   "container": "Genome Research",
+   "volume": "12",
+   "issue": "6",
+   "pages": "996-1006",
+   "doi": "10.1101/gr.229102"
+  },
+  "ucscrmsk": {
+   "corporate": "UCSC Genome Browser",
+   "title": "RepeatMasker’s repeats on hg38 (GRCh38): the rmsk table",
+   "url": "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/"
+  },
+  "rudner1968": {
+   "authors": ["Rudner R", "Karkas JD", "Chargaff E"],
+   "short": "Rudner et al.",
+   "year": 1968,
+   "title": "Separation of B. subtilis DNA into complementary strands. 3. Direct analysis",
+   "container": "Proceedings of the National Academy of Sciences of the USA",
+   "volume": "60",
+   "issue": "3",
+   "pages": "921-922",
+   "doi": "10.1073/pnas.60.3.921"
+  },
+  "green2003": {
+   "authors": ["Green P", "Ewing B", "Miller W", "Thomas PJ", "NISC Comparative Sequencing Program", "Green ED"],
+   "short": "Green et al.",
+   "year": 2003,
+   "title": "Transcription-associated mutational asymmetry in mammalian evolution",
+   "container": "Nature Genetics",
+   "volume": "33",
+   "issue": "4",
+   "pages": "514-517",
+   "doi": "10.1038/ng1103"
+  },
+  "grigoriev1998": {
+   "authors": ["Grigoriev A"],
+   "short": "Grigoriev",
+   "year": 1998,
+   "title": "Analyzing genomes with cumulative skew diagrams",
+   "container": "Nucleic Acids Research",
+   "volume": "26",
+   "issue": "10",
+   "pages": "2286-2290",
+   "doi": "10.1093/nar/26.10.2286"
+  },
+  "alexandrov2013": {
+   "authors": ["Alexandrov LB", "Nik-Zainal S", "Wedge DC", "Aparicio SA", "Behjati S", "Biankin AV", "Bignell GR", "Bolli N", "Borg A", "Børresen-Dale AL"],
+   "short": "Alexandrov et al.",
+   "year": 2013,
+   "title": "Signatures of mutational processes in human cancer",
+   "container": "Nature",
+   "volume": "500",
+   "issue": "7463",
+   "pages": "415-421",
+   "doi": "10.1038/nature12477"
   }
  },
  "programs": {
@@ -223,6 +309,12 @@
   "refget": {"name": "refget sequence identifiers", "refs": ["yates2021refget"]},
   "iupac": {"name": "IUPAC nucleotide codes", "refs": ["cornishbowden1985"]},
   "hilbert": {"name": "The Hilbert-curve layout", "refs": ["anders2009"]},
-  "okabe-ito": {"name": "The Okabe–Ito colours", "refs": ["okabeito2002"]}
+  "okabe-ito": {"name": "The Okabe–Ito colours", "refs": ["okabeito2002"]},
+  "albrecht-buehler": {"name": "Pure GA-sequences, and their flanks", "refs": ["albrechtbuehler2008", "albrechtbuehler2009c", "albrechtbuehler2009"], "note": "The correction replaces the abstract’s “160 times fewer” point mutations with “many”."},
+  "repeatmasker": {"name": "RepeatMasker, and the UCSC Genome Browser’s table of its repeats on GRCh38 (rmsk_chr17.txt.gz)", "refs": ["repeatmasker", "kent2002", "ucscrmsk"]},
+  "chargaff": {"name": "Chargaff’s second parity rule", "refs": ["rudner1968"]},
+  "transcription-asymmetry": {"name": "Transcription’s mark on the two strands of genes", "refs": ["green2003"]},
+  "cumulative-skew": {"name": "Cumulative skews", "refs": ["grigoriev1998"]},
+  "signatures": {"name": "Mutational signatures: substitutions in their contexts (the 96 kinds)", "refs": ["alexandrov2013"]}
  }
 }

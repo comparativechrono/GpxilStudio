@@ -1,6 +1,6 @@
 <!-- id: h-home | title: Help | group: Start here | summary: All the topics | keys: help index topics contents start gpxilstudio -->
 <h1><!--ICON:pixels-->GpxilStudio</h1>
-<p class="lede">A gpxil file holds a genome as pictures: one pixel for every base of DNA, with a page for each chromosome and each kind of information – the reference’s bases, a person’s genotype, and how sure the calls are. GpxilStudio is a workbench for these files that runs entirely in your browser. You can look at a gpxil file, check it, make one from a person’s variants, draw any part of it, print it, get FASTA and VCF back out, and make pictures of a person’s own version of a gene and its protein. You can do all of this by pointing and clicking in the <b>Tools</b> tab, by typing commands in the <b>Terminal</b> tab, or by writing Python in the <b>Notebook</b> tab.</p>
+<p class="lede">A gpxil file holds a genome as pictures: one pixel for every base of DNA, with a page for each chromosome and each kind of information – the reference’s bases, a person’s genotype, and how sure the calls are. GpxilStudio is a workbench for these files that runs entirely in your browser. You can look at a gpxil file, check it, make one from a person’s variants, draw any part of it, print it, get FASTA and VCF back out, make pictures of a person’s own version of a gene and its protein, compare genomes, and look for patterns in them. You can do all of this by pointing and clicking in the <b>Tools</b> tab, by typing commands in the <b>Terminal</b> tab, or by writing Python in the <b>Notebook</b> tab.</p>
 <div class="help-start">
   <button type="button" data-goto="h-start"><b><!--ICON:play-->A first session</b><span>ten minutes: look, draw, a person’s TP53, your own file</span></button>
   <button type="button" data-bench="viewer"><b><!--ICON:grid-->Viewer</b><span>any gpxil file, one pixel a base</span></button>
@@ -19,6 +19,7 @@
   <li><b>HG002’s chromosome 17</b> (<code>/data/examples/HG002_chr17.gpxil.tif</code>): the genome of a real person, from the Genome in a Bottle project’s benchmark, with their genotype at all 83 million bases. Its TP53 gene is a good place to start.</li>
   <li><b>HG002’s TP53, as a window</b> (<code>/data/examples/HG002_TP53.gpxil.tif</code>): TP53 and 100,000 bases either side, cut out of chromosome 17 into a file of 76 kB that keeps the chromosome’s positions.</li>
   <li><b>The GRCh38 reference</b> (<code>/data/grch38</code>): a gpxil file for every human chromosome, read from the Gpxil browser’s web site a piece at a time, so nothing has to be downloaded first.</li>
+  <li><b>Chromosome 17’s repeats and genes</b> (<code>/data/examples/rmsk_chr17.txt.gz</code>, <code>/data/examples/chr17_genes.bed</code>): RepeatMasker’s 170,331 repeats and Ensembl’s 1,187 protein-coding genes, to stack, count substitutions in, and add to a genome as planes of their own (<a href="#h-walk-discover">Pure GA-sequences</a>).</li>
   <li><b>The worked example</b> of the gpxil specification: ten bases, four variants, small enough to read pixel by pixel (<a href="#h-codes">The codes</a>).</li>
 </ul>
 

@@ -1,4 +1,4 @@
-<!-- id: h-viewer-views | title: The views and their colours | group: The viewer | summary: What each of the Viewer’s views shows, and what its colours mean | keys: views modes colours legend reference genotype haplotypes variants flags gq dp ps phase set quality depth heterozygous homozygous unknown n near-black deleted insertion complex soft-masked render same -->
+<!-- id: h-viewer-views | title: The views and their colours | group: The viewer | summary: What each of the Viewer’s views shows, and what its colours mean | keys: views modes colours legend reference genotype haplotypes variants flags gq dp ps phase set quality depth heterozygous homozygous unknown n near-black deleted insertion complex soft-masked render same annotation annotations x- x-repeats repeats labels plane extension -->
 <h1><!--ICON:palette-->The views and their colours</h1>
 <p class="lede">Each view of the Viewer draws one or two planes of the file. The key under the picture names its colours; this page says what each one means. The first four views are exactly what <code>gpxil render</code> draws, pixel for pixel, in every palette, so a picture you like in the Viewer can be made as a file with the command under it.</p>
 
@@ -49,6 +49,18 @@
 <h2>Phase sets</h2>
 <p>The <code>ps</code> plane: each phase set in a colour of its own, and white where a base is in none. Within one phase set, haplotype 1 is the same parental copy throughout; between phase sets, it may not be.</p>
 
+<h2>Annotation planes</h2>
+<p>A file can hold planes of its own, named <code>x-…</code>, such as the repeats or genes <a href="#h-tool-annotate">Add an annotation plane</a> puts in it. Each is a view of the <b>Show</b> list, <i>Annotation: x-repeats (labels)</i> say, and they are drawn by what their bases hold:</p>
+<table>
+<tr><th>The plane holds</th><th>Drawn as</th></tr>
+<tr><td>labels, such as a repeat’s family</td><td>a colour for each label. A repeat class keeps one hue – SINE red, LINE blue, LTR teal, DNA transposons yellow, simple repeats violet, low-complexity sequence pink, satellites green, others another hue – and its families and names are lighter and darker shades of it. The key lists the labels in view, commonest first, with their bases.</td></tr>
+<tr><td>where features are</td><td>blue where there is one</td></tr>
+<tr><td>scores or values</td><td>from light to dark blue, over the lowest and highest values in view</td></tr>
+<tr><td>nothing at a base (0, or no value)</td><td>paper</td></tr>
+</table>
+<p>Point at a base to read its label or value, with the other planes’ values. The <code>viewer</code> command opens one with <code>--plane=x-repeats</code>.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="annotate" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="/data/examples/rmsk_chr17.txt.gz">Add chromosome 17’s repeats as a plane</button></div>
+
 <h2>The same in a file</h2>
-<p>For the reference, genotype, haplotypes and variants views, the command under the picture is the <code>gpxil render</code> that makes the same picture as a file, with the same bases per row, pixels per base and palette (<a href="#h-tool-render">Draw a region as a picture</a>). <code>gpxil render</code> can also mark the bases that insertions follow in the haplotypes view (<code>--mark-insertions</code>), lay a region out along a Hilbert curve, and write CMYK for print. The flags, quality, depth and phase-set views are the Viewer’s own: under them, a Python cell reads the plane’s values as a NumPy array, ready to add to the notebook. <a href="#h-codes">The codes</a> describes the values behind every colour.</p>
+<p>For the reference, genotype, haplotypes and variants views, the command under the picture is the <code>gpxil render</code> that makes the same picture as a file, with the same bases per row, pixels per base and palette (<a href="#h-tool-render">Draw a region as a picture</a>). <code>gpxil render</code> can also mark the bases that insertions follow in the haplotypes view (<code>--mark-insertions</code>), lay a region out along a Hilbert curve, and write CMYK for print. The flags, quality, depth, phase-set and annotation views are the Viewer’s own: under them, a Python cell reads the plane’s values as a NumPy array (and an annotation plane’s labels), ready to add to the notebook. <a href="#h-codes">The codes</a> describes the values behind every colour.</p>
 <!--CITE: gpxiltools okabe-ito gpxi-->

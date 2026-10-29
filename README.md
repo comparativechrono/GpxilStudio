@@ -32,7 +32,7 @@ One page, `index.html`, with the help on the left and five tabs on the right:
 
 | Tab | What it is for |
 |---|---|
-| **Viewer** | Any gpxil file – yours, an example, or a chromosome of GRCh38 – as pixels: the reference, the genotype, the two haplotypes, the variants by zygosity, and the flags, quality, depth and phase-set planes. Pointing at a pixel says what the file holds there, and under the picture it counts what the region holds, as `gpxil stats` does. It reads only the strips it shows, so a whole genome opens at once, and it draws exactly what `gpxil render` draws, whose command it gives. A window – a contig that holds a stretch of a chromosome – is shown at the chromosome's positions, and what is in view can be saved as one. |
+| **Viewer** | Any gpxil file – yours, an example, or a chromosome of GRCh38 – as pixels: the reference, the genotype, the two haplotypes, the variants by zygosity, the flags, quality, depth and phase-set planes, and annotation planes (repeats, genes, signals) with their labels. Pointing at a pixel says what the file holds there, and under the picture it counts what the region holds, as `gpxil stats` does. It reads only the strips it shows, so a whole genome opens at once, and it draws exactly what `gpxil render` draws, whose command it gives. A window – a contig that holds a stretch of a chromosome – is shown at the chromosome's positions, and what is in view can be saved as one. |
 | **Tools** | The packages behind forms: each tool runs one command, exactly as the terminal would, and shows that command, and the same work in Python. The first page is a map of the formats and the common tasks. **Workflows** chains the tools together, after the Galaxy-style workflows of the lab's other workbenches. |
 | **Files** | Your files and the examples: look at them (a gpxil file's contigs and planes, read in the page), edit, upload and download. |
 | **Notebook** | Python notebooks (`.ipynb`) with all the packages, starting with *gpxil in Python*, which works through a genome pixel by pixel. |
@@ -45,6 +45,7 @@ The tools:
 | Look inside and check | What's in a gpxil file (`gpxil info`) · Check a gpxil file (`gpxil validate`) · Count what a file holds (`gpxil stats`) |
 | Make gpxil files | Make a gpxil file (`gpxil encode`): a reference (FASTA, or a gpxil file such as a chromosome of GRCh38) and one person's VCF, with the regions called with confidence · Make a working copy (`gpxil subset`): some contigs and planes of a file, copied without decoding |
 | Compare genomes | Compare two genomes (`gpxil compare`): two sets of calls of one person, base by base, the second as the truth – the same, only written differently (as in a repeat), or different, with precision and recall · A child and both parents (`gpxil compare --father --mother`): Mendelian errors, candidate new mutations, where each of the child's variants came from, and crossovers where the parents are phased |
+| Look for patterns | Find runs of a composition (`gpxil runs`: pure GA-sequences, runs of one base, on one strand or both, as BED) · Stack features, lined up (`gpxil stack`: runs, repeats or genes one a row at their starts, ends or centres, on their strands, sorted and binned, with each column's bases) · Substitutions in regions, by context (`gpxil spectrum`: observed against expected from the rest of the genome, context by context, with exact intervals, on the features' strands too) · Add an annotation plane (`gpxil annotate`: repeats, BED or bedGraph files as an `x-` plane, which the Viewer draws) · Strand symmetry (`gpxil skew`: GC content, skews and k-mer asymmetry in windows, as a table and a map) · Wrap a repeat at its period (`gpxil period`: one unit a row, the reference beside both haplotypes) |
 | Pictures and print | Draw a region as a picture (`gpxil render`: PNG, or TIFF in RGB or CMYK) · Print it as a book (`gpxil book`) · The palettes |
 | Back to FASTA and VCF | Sequences as FASTA (`gpxil fasta`: the reference, either haplotype, or the genotype in IUPAC codes) · Variants as VCF (`gpxil vcf`) |
 | Genes as pictures | Genes, transcripts and proteins as pxil pictures (`gpxil2pxil`) · pxil pictures → FASTA (`pxil`) |
@@ -56,8 +57,10 @@ chromosome's positions; HG002's variants around TP53 as a VCF with its
 callable regions;
 chromosome 17 of HG002's father and mother, HG003 and HG004, and of HG002's
 newer benchmark (v5.0q), each without its reference plane, for comparing
-genomes; and TP53's lines of the Ensembl GTF. Five example workflows run on
-them. The GRCh38 reference is there too, as `/data/grch38`: one gpxil file
+genomes; TP53's lines of the Ensembl GTF; and chromosome 17's repeats
+(RepeatMasker's, from the UCSC Genome Browser's `rmsk` table for hg38) and
+protein-coding genes (Ensembl 116), for looking for patterns. Six example
+workflows run on them. The GRCh38 reference is there too, as `/data/grch38`: one gpxil file
 per chromosome, read from the
 [Gpxil browser](https://comparativechrono.github.io/Gpxil-browser/) a strip at
 a time.
@@ -208,8 +211,10 @@ GpxilStudio's own code, help and examples are under the MIT licence
 or loads from elsewhere, with their licences. The genome pixel image is
 Guenter Albrecht-Buehler's idea
 ([PLoS ONE 4(3): e4701, 2009](https://doi.org/10.1371/journal.pone.0004701)).
-The examples use data from the Genome in a Bottle Consortium (NIST) and
-Ensembl.
+Pure GA-sequences are his discovery too
+([PLoS ONE 3(11): e3818, 2008](https://doi.org/10.1371/journal.pone.0003818)).
+The examples use data from the Genome in a Bottle Consortium (NIST), Ensembl,
+and RepeatMasker's annotation as the UCSC Genome Browser gives it.
 
 Copyright © 2026 Chronomic Medicine Group, Department of Genomic Medicine,
 University of Cambridge.

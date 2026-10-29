@@ -1,13 +1,13 @@
 {
  "archive": "gpxil-tools.zip",
- "sha256": "f17a686712e313fbba10e35dbe5f144443eb54f1954ff8df2e17552e0afc2138",
- "bytes": 417856,
+ "sha256": "eec8ce8aa7c2ef5c456ed46476b58c42c024083b415381b268e72c7050fee17d",
+ "bytes": 464887,
  "packages": {
-  "gpxiltools": "0.7.0",
+  "gpxiltools": "0.8.0",
   "gpxil2pxil": "0.2.0",
   "pxil": "0.1.1",
   "tifffile": "2026.10.15",
-  "gpxilwb": "1.0.0"
+  "gpxilwb": "1.1.0"
  },
  "pyodide_packages": [
   "numpy",

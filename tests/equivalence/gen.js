@@ -15,7 +15,7 @@ const MG = {
     HOME,
     kindNames: {},
     // (as page-wb.js tells kinds of file apart)
-    fileKind: (p) => (/\.gpxil(\.tiff?)?$/i.test(p) ? 'gpxil' : /\.pxil(\.png)?$/i.test(p) ? 'pxil' : /\.(fa|fasta|fna)(\.b?gz)?$/i.test(p) ? 'fasta' : /\.vcf(\.b?gz)?$/i.test(p) ? 'vcf' : /\.bed(\.gz)?$/i.test(p) ? 'bed' : /\.(gtf|gff3?)(\.gz)?$/i.test(p) ? 'gtf' : /\.(png|tiff?)$/i.test(p) ? 'image' : /\.pdf$/i.test(p) ? 'pdf' : 'other')
+    fileKind: (p) => (/\.gpxil(\.tiff?)?$/i.test(p) ? 'gpxil' : /\.pxil(\.png)?$/i.test(p) ? 'pxil' : /\.(fa|fasta|fna)(\.b?gz)?$/i.test(p) ? 'fasta' : /\.vcf(\.b?gz)?$/i.test(p) ? 'vcf' : /\.bed(\.gz)?$/i.test(p) ? 'bed' : /\.(bedgraph|bdg)(\.gz)?$/i.test(p) ? 'bedgraph' : /(^|\/)rmsk[^/]*\.(txt|tsv)(\.gz)?$/i.test(p) || /\.(fa|fasta|fna)\.out(\.gz)?$/i.test(p) ? 'rmsk' : /\.(gtf|gff3?)(\.gz)?$/i.test(p) ? 'gtf' : /\.(png|tiff?)$/i.test(p) ? 'image' : /\.pdf$/i.test(p) ? 'pdf' : 'other')
   }
 };
 global.window = { MG, matchMedia: () => ({ matches: false }) };
@@ -64,6 +64,27 @@ const CASES = [
   ['trio', { child: HG, father: HG3, mother: HG4, regions: 'chr17:4,000,001-4,100,000', draw: 'chr17:4,047,904-4,047,964', scale: '8', out: '~/results/trio-error.tif' }],
   // all three without (HG002's working copy, made above), with GRCh38's chromosome 17 as their reference
   ['trio', { child: HOME + '/genomes/HG002_chr17.noref.gpxil.tif', father: HG3, mother: HG4, regions: 'chr17:58,300,001-58,400,000', draw: 'chr17:58,332,201-58,332,300', reference: '/data/grch38/chr17.gpxil.tif' }],
+  // looking for patterns: chromosome 17's pure GA-sequences (runs of A and G of more than 50 bases, on both strands),
+  // then stacked, lined up at their starts and sorted by their poly(A)s, and their substitutions in HG002's v5.0q
+  // benchmark (without its reference plane: the v4.2.1 file gives it)
+  ['runs', { input: HG }],
+  ['runs', { input: EX + 'worked-example.gpxil.tif', of: 'w', min: '3', both: false, regions: 'chrT', out: '~/results/we-AT.bed' }],
+  ['stack', { input: HG, features: R + 'HG002_chr17_AG_runs.bed' }],
+  ['stack', { input: V5, features: R + 'HG002_chr17_AG_runs.bed', mode: 'variants', anchor: 'end', up: '30', down: '60', sort: 'length', reverse: true, maxRows: '300', labelled: false, scale: '2', reference: HG, out: '~/results/GA-ends.png' }],
+  // chromosome 17's Alu elements, binned a hundred to a pixel row, with the profile; and its longest genes, unlabelled
+  ['stack', { input: HG, features: EX + 'rmsk_chr17.txt.gz', match: 'Alu', minLength: '250', mode: 'variants', up: '100', down: '350', bin: '100', profile: true }],
+  ['stack', { input: HG, features: EX + 'chr17_genes.bed', anchor: 'centre', sort: 'name', maxRows: '50', palette: 'okabe-ito', up: '20', down: '20', labelled: false }],
+  ['spectrum', { input: V5, features: R + 'HG002_chr17_AG_runs.bed', isolated: '20', table: true, reference: HG }],
+  ['spectrum', { input: HG, features: EX + 'chr17_genes.bed', stranded: true, context: '1', regions: 'chr17:1-20,000,000', table: true, out: '~/results/genes-spectrum.tsv' }],
+  ['annotate', { input: HG, features: EX + 'rmsk_chr17.txt.gz' }],
+  ['annotate', { input: V5, features: EX + 'chr17_genes.bed', as: 'presence', plane: 'x-genes', description: 'where a protein-coding gene is (Ensembl 116)' }],
+  ['annotate', { input: HG, features: EX + 'rmsk_chr17.txt.gz', as: 'score', match: 'L1', units: '%', plane: 'x-L1-divergence', out: '~/genomes/L1.gpxil.tif' }],
+  ['skew', { input: HG, window: '1000000' }],
+  ['skew', { input: HG, features: EX + 'chr17_genes.bed', window: '10000000', k: '2', unmasked: true, show: 'gc_skew,at_skew,cumulative_gc_skew', out: '~/results/genes-skew.tsv' }],
+  ['skew', { input: EX + 'worked-example.gpxil.tif', window: '10', k: '1,3', picture: false, out: '~/results/we-skew.tsv' }],
+  ['period', { input: V5, region: 'chr17:6,793,028-6,793,302', reference: HG }],
+  ['period', { input: HG, region: 'chr17:6,793,028-6,793,302', layout: 'sequence', period: '8', scale: '4', palette: 'okabe-ito', out: '~/results/GA-period8.png' }],
+  ['period', { input: HG, region: 'chr17:6,793,028-6,793,302', format: 'text' }, { same: true }],
   // the VCF of TP53 encoded again, with the gpxil file itself as the reference
   ['encode', { reference: HG, vcf: R + 'HG002_chr17_chr17_7661779-7687546.vcf', contigs: 'chr17', out: '~/genomes/round-trip.gpxil.tif' }],
   // on GRCh38 from /data/grch38, without the reference plane; and drawn with the reference given

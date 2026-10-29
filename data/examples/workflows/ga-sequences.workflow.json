@@ -1,0 +1,104 @@
+{
+  "gpxilstudio_workflow": 1,
+  "name": "Pure GA-sequences: found, stacked and counted",
+  "annotation": "Albrecht-Buehler’s pure GA-sequences – runs of more than 50 bases of nothing but A and G, on either strand – are found on HG002’s chromosome 17 and stacked, one a row with the 400 bases before each, sorted by the poly(A) each starts with: the stripes before the top rows are Alu elements, whose tails they began as. HG002’s substitutions in them are counted against what their contexts predict, leaving out those with another variant within 20 bases, with their insertions and deletions. And the genome is given RepeatMasker’s repeats as a plane of its own, to look at in the Viewer.",
+  "steps": [
+    {
+      "id": "s1",
+      "type": "input",
+      "label": "The genome, with its reference plane",
+      "kinds": [
+        "gpxil"
+      ],
+      "x": 16,
+      "y": 16,
+      "default": "/data/examples/HG002_chr17.gpxil.tif"
+    },
+    {
+      "id": "s2",
+      "type": "input",
+      "label": "Its repeats (a RepeatMasker table)",
+      "kinds": [
+        "rmsk"
+      ],
+      "x": 16,
+      "y": 145,
+      "default": "/data/examples/rmsk_chr17.txt.gz"
+    },
+    {
+      "id": "s3",
+      "type": "tool",
+      "tool": "runs",
+      "params": {},
+      "connections": {
+        "input": {
+          "step": "s1",
+          "output": "file"
+        }
+      },
+      "x": 286,
+      "y": 16
+    },
+    {
+      "id": "s4",
+      "type": "tool",
+      "tool": "stack",
+      "params": {
+        "sort": "run"
+      },
+      "connections": {
+        "input": {
+          "step": "s1",
+          "output": "file"
+        },
+        "features": {
+          "step": "s3",
+          "output": "runs"
+        }
+      },
+      "x": 556,
+      "y": 16
+    },
+    {
+      "id": "s5",
+      "type": "tool",
+      "tool": "spectrum",
+      "params": {
+        "isolated": "20",
+        "centre": "purine"
+      },
+      "connections": {
+        "input": {
+          "step": "s1",
+          "output": "file"
+        },
+        "features": {
+          "step": "s3",
+          "output": "runs"
+        }
+      },
+      "x": 556,
+      "y": 173
+    },
+    {
+      "id": "s6",
+      "type": "tool",
+      "tool": "annotate",
+      "params": {},
+      "connections": {
+        "input": {
+          "step": "s1",
+          "output": "file"
+        },
+        "features": {
+          "step": "s2",
+          "output": "file"
+        }
+      },
+      "x": 286,
+      "y": 168
+    }
+  ],
+  "created": "2026-10-20T12:00:00.000Z",
+  "updated": "2026-10-20T12:00:00.000Z"
+}

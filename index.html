@@ -45,7 +45,7 @@
       <div class="help-body" id="helpBody">
 <article class="help-page" id="h-home" data-title="Help" data-group="Start here" data-group-page="h-home" data-keys="help index topics contents start gpxilstudio" hidden>
 <h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>GpxilStudio</h1>
-<p class="lede">A gpxil file holds a genome as pictures: one pixel for every base of DNA, with a page for each chromosome and each kind of information – the reference’s bases, a person’s genotype, and how sure the calls are. GpxilStudio is a workbench for these files that runs entirely in your browser. You can look at a gpxil file, check it, make one from a person’s variants, draw any part of it, print it, get FASTA and VCF back out, and make pictures of a person’s own version of a gene and its protein. You can do all of this by pointing and clicking in the <b>Tools</b> tab, by typing commands in the <b>Terminal</b> tab, or by writing Python in the <b>Notebook</b> tab.</p>
+<p class="lede">A gpxil file holds a genome as pictures: one pixel for every base of DNA, with a page for each chromosome and each kind of information – the reference’s bases, a person’s genotype, and how sure the calls are. GpxilStudio is a workbench for these files that runs entirely in your browser. You can look at a gpxil file, check it, make one from a person’s variants, draw any part of it, print it, get FASTA and VCF back out, make pictures of a person’s own version of a gene and its protein, compare genomes, and look for patterns in them. You can do all of this by pointing and clicking in the <b>Tools</b> tab, by typing commands in the <b>Terminal</b> tab, or by writing Python in the <b>Notebook</b> tab.</p>
 <div class="help-start">
   <button type="button" data-goto="h-start"><b><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7 4l13 8-13 8z"/></svg>A first session</b><span>ten minutes: look, draw, a person’s TP53, your own file</span></button>
   <button type="button" data-bench="viewer"><b><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Viewer</b><span>any gpxil file, one pixel a base</span></button>
@@ -64,6 +64,7 @@
   <li><b>HG002’s chromosome 17</b> (<code>/data/examples/HG002_chr17.gpxil.tif</code>): the genome of a real person, from the Genome in a Bottle project’s benchmark, with their genotype at all 83 million bases. Its TP53 gene is a good place to start.</li>
   <li><b>HG002’s TP53, as a window</b> (<code>/data/examples/HG002_TP53.gpxil.tif</code>): TP53 and 100,000 bases either side, cut out of chromosome 17 into a file of 76 kB that keeps the chromosome’s positions.</li>
   <li><b>The GRCh38 reference</b> (<code>/data/grch38</code>): a gpxil file for every human chromosome, read from the Gpxil browser’s web site a piece at a time, so nothing has to be downloaded first.</li>
+  <li><b>Chromosome 17’s repeats and genes</b> (<code>/data/examples/rmsk_chr17.txt.gz</code>, <code>/data/examples/chr17_genes.bed</code>): RepeatMasker’s 170,331 repeats and Ensembl’s 1,187 protein-coding genes, to stack, count substitutions in, and add to a genome as planes of their own (<a href="#h-walk-discover">Pure GA-sequences</a>).</li>
   <li><b>The worked example</b> of the gpxil specification: ten bases, four variants, small enough to read pixel by pixel (<a href="#h-codes">The codes</a>).</li>
 </ul>
 
@@ -81,6 +82,7 @@
 <li><a href="#h-walk-python">Work with a gpxil file pixel by pixel, in Python<small>Planes as NumPy arrays: read a region, decode the codes, find variants, count, compare haplotypes, draw, and write files of your own</small></a></li>
 <li><a href="#h-walk-big">A whole genome without running out of memory<small>Regions and strips, a chromosome a piece at a time, files without the reference that borrow it, working copies and their counts, and the whole genome on your own computer</small></a></li>
 <li><a href="#h-walk-trio">A family: comparing genomes<small>HG002’s two benchmarks compared base by base, then HG002 against both his parents: what each variant came from, and the few that are new</small></a></li>
+<li><a href="#h-walk-discover">Pure GA-sequences: looking for patterns<small>Albrecht-Buehler’s pure GA-sequences on chromosome 17: found, stacked, traced to the Alu elements whose tails they began as, and HG002’s substitutions in them counted against what their sequence predicts</small></a></li>
 </ul></section>
 <section><h2><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><a href="#h-viewer">The viewer</a></h2><ul>
 <li><a href="#h-viewer-views">The views and their colours<small>What each of the Viewer’s views shows, and what its colours mean</small></a></li>
@@ -94,6 +96,12 @@
 <li><a href="#h-tool-subset">Make a working copy (subset)<small>gpxil subset: some contigs, and some planes, of a gpxil file in a new and smaller file, copied without being decoded; or a region, such as a gene, cut out as a window</small></a></li>
 <li><a href="#h-tool-compare">Compare two genomes<small>gpxil compare: two gpxil files of one person, base by base, the second as the truth: the same, written differently or different, with precision, recall and a picture</small></a></li>
 <li><a href="#h-tool-trio">A child and both parents (trio)<small>gpxil compare --father --mother: Mendelian errors and candidate new mutations, where the child’s variants came from, and crossovers where the parents are phased</small></a></li>
+<li><a href="#h-tool-runs">Find runs of a composition<small>gpxil runs: the stretches of a genome made only of some bases – pure GA-sequences, runs of one base, AT-rich stretches – on one strand or both, as a BED file</small></a></li>
+<li><a href="#h-tool-stack">Stack features, lined up<small>gpxil stack: features – runs, repeats, genes, any BED file – one a row, lined up at their starts, ends or centres on their own strands, sorted, and drawn as bases or variants, with each column’s bases as a table</small></a></li>
+<li><a href="#h-tool-spectrum">Substitutions in regions, by context<small>gpxil spectrum: does a person have more or fewer substitutions in some regions than their sequence leads one to expect? Observed against expected, context by context, with exact intervals, on the features’ own strands too</small></a></li>
+<li><a href="#h-tool-annotate">Add an annotation plane<small>gpxil annotate: a copy of a gpxil file with an annotation – repeats, genes, a BED or bedGraph file – as a plane of its own, a value at every base, which the Viewer draws and the tools read</small></a></li>
+<li><a href="#h-tool-skew">Strand symmetry: skews in windows<small>gpxil skew: GC content, the GC and AT skews, and how far each strand’s k-mers are from their reverse complements’ counts (Chargaff’s second rule), in windows along a genome, as a table and a map</small></a></li>
+<li><a href="#h-tool-period">Wrap a repeat at its period<small>gpxil period: a tandem repeat – a microsatellite, a GA-sequence – wrapped at its period, one unit a row, so the units line up and a change in one stands out; the reference beside the person’s two haplotypes, as a picture or text</small></a></li>
 <li><a href="#h-tool-render">Draw a region as a picture<small>gpxil render: a region in four views, as PNG for the screen or TIFF (RGB or CMYK) for print</small></a></li>
 <li><a href="#h-tool-book">Print it as a book (PDF)<small>gpxil book: a PDF to print with one dot per base, in CMYK or RGB</small></a></li>
 <li><a href="#h-tool-palettes">The palettes<small>gpxil palettes: the colours of A, C, G, T and N in each palette, for the screen and in ink</small></a></li>
@@ -211,7 +219,7 @@ gpxil validate ~/genomes/worked-example.gpxil.tif</code></pre>
 <tr><td><code>~/notebooks</code></td><td>notebooks, including <code>gpxil-in-python.ipynb</code>, which a new visitor is given</td></tr>
 <tr><td><code>~/workflows</code></td><td>your workflows, made the first time you save one</td></tr>
 <tr><td><code>~/examples</code></td><td>copies of examples you ask for, which are yours to change</td></tr>
-<tr><td><code>/data/examples</code></td><td>the examples (read-only): HG002’s chromosome 17 (and a newer benchmark of it), his TP53 as a window, his father’s and mother’s (HG003 and HG004, without the reference plane), HG002’s variants around TP53 with the regions called with confidence, TP53’s transcripts, the specification’s worked example, and example workflows</td></tr>
+<tr><td><code>/data/examples</code></td><td>the examples (read-only): HG002’s chromosome 17 (and a newer benchmark of it), his TP53 as a window, his father’s and mother’s (HG003 and HG004, without the reference plane), HG002’s variants around TP53 with the regions called with confidence, TP53’s transcripts, chromosome 17’s repeats (RepeatMasker) and protein-coding genes (Ensembl), the specification’s worked example, and example workflows</td></tr>
 <tr><td><code>/data/grch38</code></td><td>the GRCh38 reference, a gpxil file for each chromosome (read-only), read from the Gpxil browser’s web site a piece at a time (<a href="#h-reference">The GRCh38 reference</a>)</td></tr>
 </table>
 <p>You can make any other folders you like. The tools save in <code>~/results</code> unless you choose otherwise, and they can only save in your home folder.</p>
@@ -257,7 +265,7 @@ gpxil validate ~/genomes/worked-example.gpxil.tif</code></pre>
 </article>
 <article class="help-page" id="h-walks" data-title="Walkthroughs" data-group="Walkthroughs" data-group-page="h-walks" data-keys="walkthrough walkthroughs tutorial how to steps guide task jobs recipe" hidden>
 <h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M7.5 6H15a3.5 3.5 0 0 1 0 7H9a3.5 3.5 0 0 0 0 7h7.5"/></svg>Walkthroughs</h1>
-<p class="lede">Each walkthrough takes you through one job from beginning to end, with a button for every step. They use the examples – HG002’s chromosome 17 and his parents’, his variants around TP53, the GRCh38 reference and the specification’s worked example – so you can follow one through before you try it with files of your own.</p>
+<p class="lede">Each walkthrough takes you through one job from beginning to end, with a button for every step. They use the examples – HG002’s chromosome 17 and his parents’, his variants around TP53, chromosome 17’s repeats and genes, the GRCh38 reference and the specification’s worked example – so you can follow one through before you try it with files of your own.</p>
 <ul class="help-grouplist">
 <li><a href="#h-walk-look">Look inside a gpxil file, and check it<small>What a file holds, its planes, its metadata, its counts, and a check against the specification</small></a></li>
 <li><a href="#h-walk-encode">Turn someone’s VCF into a gpxil file<small>A person’s variants and a reference become a gpxil file: with GRCh38 from the web, without the reference plane, as a window of just the region the VCF covers, and from a FASTA file</small></a></li>
@@ -269,6 +277,7 @@ gpxil validate ~/genomes/worked-example.gpxil.tif</code></pre>
 <li><a href="#h-walk-python">Work with a gpxil file pixel by pixel, in Python<small>Planes as NumPy arrays: read a region, decode the codes, find variants, count, compare haplotypes, draw, and write files of your own</small></a></li>
 <li><a href="#h-walk-big">A whole genome without running out of memory<small>Regions and strips, a chromosome a piece at a time, files without the reference that borrow it, working copies and their counts, and the whole genome on your own computer</small></a></li>
 <li><a href="#h-walk-trio">A family: comparing genomes<small>HG002’s two benchmarks compared base by base, then HG002 against both his parents: what each variant came from, and the few that are new</small></a></li>
+<li><a href="#h-walk-discover">Pure GA-sequences: looking for patterns<small>Albrecht-Buehler’s pure GA-sequences on chromosome 17: found, stacked, traced to the Alu elements whose tails they began as, and HG002’s substitutions in them counted against what their sequence predicts</small></a></li>
 </ul>
 <p>You’ll also find most of these jobs on the first page of the Tools tab, under <b>Common tasks</b>, each with its tools in the order you need them.</p>
 <div class="tryrow"><button class="do" type="button" data-tool="start">Open the Tools tab’s first page</button></div>
@@ -1099,6 +1108,103 @@ gpxil compare HG002.gpxil.tif --father HG003.noref.gpxil.tif --mother HG004.nore
 <dd>Schneider VA, Graves-Lindsay T, Howe K, Bouk N, Chen HC, Kitts PA, et al. (2017) Evaluation of GRCh38 and de novo haploid genome assemblies demonstrates the enduring quality of the reference assembly. <i>Genome Research</i> 27(5): 849–864. <a href="https://doi.org/10.1101/gr.213611.116" target="_blank" rel="noopener">doi:10.1101/gr.213611.116</a></dd>
 </dl>
 </article>
+<article class="help-page" id="h-walk-discover" data-title="Pure GA-sequences: looking for patterns" data-group="Walkthroughs" data-group-page="h-walks" data-keys="ga-sequences pure ga sequences purine runs albrecht-buehler gpxi discovery patterns research alu poly(a) tails repeatmasker repeats stack stripes spectrum substitutions point mutations fewer isolated period units microsatellite chargaff strands skew hg002 v5.0q workflow" hidden>
+<h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>Pure GA-sequences: looking for patterns</h1>
+<p class="lede">Guenter Albrecht-Buehler drew genomes as pictures, a pixel a base, and in them found <b>pure GA-sequences</b>: stretches of more than 50 bases of nothing but A and G, thousands of them, where chance would give none. He saw Alu elements line up before those that begin with a run of A’s, and reported that they have many times fewer point mutations than the genome at large. This walkthrough follows his questions on chromosome 17 with the tools that look for patterns: find the GA-sequences, stack them, trace where they come from, and count a person’s substitutions in them.</p>
+
+<h2>1 · Find them</h2>
+<p>A pure GA-sequence is a run of A and G of 51 bases or more. On the other strand, the same stretch is a run of C and T, so look on both strands:</p>
+<div class="tryrow"><button class="do" type="button" data-tool="runs" data-input="/data/examples/HG002_chr17.gpxil.tif">Find chromosome 17’s pure GA-sequences</button></div>
+<pre class="code" data-run="term"><code>gpxil runs /data/examples/HG002_chr17.gpxil.tif --of AG --both-strands -o ~/results/HG002_chr17_AG_runs.bed</code></pre>
+<p>Chromosome 17 has 1,561: 739 on the + strand and 822 on the − strand, as many on each as Chargaff’s second rule expects of a genome’s two strands, 140,621 bases in all. Half are 71 bases long or less; the longest is 574. Albrecht-Buehler counted 19,139 in the whole human genome of 2008; GRCh38 has 45,681.</p>
+
+<h2>2 · Stack them</h2>
+<p>His picture of them stacks the GA-sequences one a row, lined up at their starts, each read on its own strand with the 400 bases before it, and sorts the rows by the run of A’s each begins with, longest first:</p>
+<div class="tryrow"><button class="do" type="button" data-tool="stack" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="~/results/HG002_chr17_AG_runs.bed" data-sort="run">Stack them, sorted by their poly(A)s</button></div>
+<pre class="code" data-run="term"><code>gpxil stack /data/examples/HG002_chr17.gpxil.tif ~/results/HG002_chr17_AG_runs.bed --sort run --labelled -o ~/results/GA-stack.png</code></pre>
+<p>Right of the anchor, the poly(A)s run down as a pink wedge (A, in a soft-masked repeat), longest at the top, turning into mixed A and G below. Left of it, in the top few hundred rows, the bases line up into vertical stripes reaching about 280 bases back, with an A-rich stripe halfway along: the body of an Alu element, whose two halves are joined by a run of A’s. Rows that start without a poly(A) show no stripes.</p>
+
+<h2>3 · Where they come from</h2>
+<p>An Alu element ends in a poly(A) tail. Give the genome RepeatMasker’s repeats as a plane of its own, and look at one of the GA-sequences in the Viewer:</p>
+<div class="tryrow"><button class="do" type="button" data-tool="annotate" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="/data/examples/rmsk_chr17.txt.gz">Add the repeats as a plane</button> <button class="do" type="button" data-viewer="~/genomes/HG002_chr17.repeats.gpxil.tif" data-region="chr17:6,792,801-6,793,400" data-plane="x-repeats">Then look at a GA-sequence</button></div>
+<pre class="code" data-run="term"><code>gpxil annotate /data/examples/HG002_chr17.gpxil.tif /data/examples/rmsk_chr17.txt.gz --plane x-repeats -o ~/genomes/HG002_chr17.repeats.gpxil.tif</code></pre>
+<p>The GA-sequence at chr17:6,793,028-6,793,302 begins in the tail of an AluJb element (red, a SINE) and runs on as a simple repeat of AGAA (violet): an Alu tail that has become a repeat of A and G. Switch <b>Show</b> to the reference’s bases to see it. To count how many begin where an Alu ends, on the same strand, take the GA-sequences and the repeats into Python:</p>
+<pre class="code" data-run="py"><code>import numpy as np
+from gpxiltools.features import read_features
+
+ga = read_features("/home/user/results/HG002_chr17_AG_runs.bed")
+alus = read_features("/data/examples/rmsk_chr17.txt.gz", match="^SINE/Alu/")
+# an Alu's 3' end on each strand: its end on +, its start on -
+ends = {s: np.sort([a.end if s == "+" else a.start for a in alus if a.strand == s]) for s in "+-"}
+
+def alu_tail(f, near=30):
+    five = f.start if f.strand == "+" else f.end      # (where the GA-sequence begins, on its strand)
+    e = ends[f.strand]
+    i = np.searchsorted(e, five - near)
+    return i < len(e) and e[i] <= five + near
+
+tails = sum(alu_tail(f) for f in ga)
+print(f"{tails:,} of {len(ga):,} pure GA-sequences ({100 * tails / len(ga):.0f} %) begin within 30 bases of an Alu's end")</code></pre>
+<p>704 of the 1,561 do, 45 %: many GA-sequences began as Alu elements’ poly(A) tails, which, with time, take up G’s and become repeats of A and G. <a href="#h-tool-stack">Stack features</a> shows chromosome 17’s Alu elements lined up at their ends by age, their tails pure A in the young and mixed in the old.</p>
+
+<h2>4 · Do they have fewer point mutations?</h2>
+<p>Albrecht-Buehler reported 160 times fewer point mutations in GA-sequences than in the genome at large, a figure his correction withdrew for “many”. HG002’s substitutions in them can be counted, and compared with what their sequence leads one to expect, context by context. Read contexts with a purine in the middle, so a GA-sequence is read on its own strand, and count only <b>isolated</b> substitutions, with no other variant within 20 bases: a repeat’s unit changed is often written as several substitutions side by side.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="spectrum" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="~/results/HG002_chr17_AG_runs.bed" data-isolated="20">In HG002’s v4.2.1 benchmark</button> <button class="do" type="button" data-tool="spectrum" data-input="/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif" data-features="~/results/HG002_chr17_AG_runs.bed" data-isolated="20" data-reference="/data/examples/HG002_chr17.gpxil.tif">In his v5.0q benchmark</button></div>
+<pre class="code" data-run="term"><code>gpxil spectrum /data/examples/HG002_chr17_v5.0q.noref.gpxil.tif ~/results/HG002_chr17_AG_runs.bed \
+    --reference /data/examples/HG002_chr17.gpxil.tif --centre purine --isolated 20</code></pre>
+<table>
+<tr><th></th><th>v4.2.1</th><th>v5.0q</th></tr>
+<tr><td>GA-sequence bases called with confidence</td><td>54,051 (38 %)</td><td>117,343 (83 %)</td></tr>
+<tr><td>isolated substitutions in them, observed / expected</td><td>28 / 36.5</td><td>92 / 78.4</td></tr>
+<tr><td>… the ratio (95 % interval; p)</td><td>0.77 (0.51–1.11; 0.18)</td><td>1.17 (0.95–1.44; 0.15)</td></tr>
+<tr><td>all substitutions, observed / expected</td><td>50 / 42.0</td><td>410 / 96.0</td></tr>
+<tr><td>isolated transitions / transversions (the background’s)</td><td>8.3 (2.4)</td><td>4.8 (2.4)</td></tr>
+<tr><td>insertions and deletions a kilobase (the background’s)</td><td>4.3 (0.21)</td><td>8.4 (0.36)</td></tr>
+</table>
+<p>Not many times fewer: in both benchmarks, the isolated substitutions are about what their contexts predict, and each ratio’s interval includes 1. The older benchmark leaves most GA-sequences out of the regions it calls with confidence; the newer, made from a whole assembly of his genome, keeps 83 % of their bases, and in them finds four times the substitutions their contexts predict when every one is counted – most of them clustered, changes of a repeat’s units. What GA-sequences do have is <b>20 to 23 times the insertions and deletions</b> of the rest of the chromosome, as repeats do, and substitutions that lean to transitions, A to G and G to A, which keep a GA-sequence pure.</p>
+
+<h2>5 · One up close</h2>
+<p>Wrap the GA-sequence of step 3 at its period, one unit a row, the reference beside HG002’s two haplotypes:</p>
+<div class="tryrow"><button class="do" type="button" data-tool="period" data-input="/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif" data-region="chr17:6,793,028-6,793,302" data-reference="/data/examples/HG002_chr17.gpxil.tif">Wrap it at its period</button> <button class="do" type="button" data-viewer="/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif" data-region="chr17:6,793,028-6,793,302" data-mode="variants">Its variants in the Viewer</button></div>
+<p>Its period is 4. Haplotype 1 is the reference but for three more units; haplotype 2 has 15 substituted bases in 13 units, and each of those units becomes one the repeat already has, AAAG becoming AGAG, AGAA becoming AGAG, as if copied from a neighbour – the way repeats change, by slippage and by copying their own units, rather than the way a protected sequence would.</p>
+
+<h2>6 · The whole of it, as a workflow</h2>
+<p>Finding them, stacking them, counting their substitutions (in the v4.2.1 benchmark) and adding the repeats are an example workflow, to run again on a genome of your own:</p>
+<div class="tryrow"><button class="do" type="button" data-workflow="/data/examples/workflows/ga-sequences.workflow.json">Open the workflow “Pure GA-sequences”</button></div>
+
+<h2>7 · The whole genome, on your own computer</h2>
+<p>With the Gpxil browser’s GRCh38 file and a person’s genome encoded on it, the same commands cover every chromosome:</p>
+<pre class="code"><code>gpxil runs GRCh38.gpxil.tif --of AG --both-strands -o GA.bed
+awk '$1 == "chr1"' GA.bed > GA.chr1.bed
+gpxil stack GRCh38.gpxil.tif GA.chr1.bed --sort run --labelled -o GA.chr1.png
+gpxil spectrum HG002.v5.0q.noref.gpxil.tif GA.bed --reference GRCh38.gpxil.tif --centre purine --isolated 20</code></pre>
+<p>Genome-wide, 37 % of GRCh38’s GA-sequences on the autosomes begin at an Alu’s end, 71 % of those that begin with a poly(A) of 15 or more; the older the Alu, the more often its tail is a GA-sequence; HG002’s isolated substitutions in them run at 0.90 and 1.11 times what their contexts predict in the two benchmarks, and the newest variants of 76,215 people in gnomAD at 1.00 times. Experiment 04 of the <a href="https://github.com/comparativechrono/Gpxil-scratchpad/tree/main/experiments/04-ga-sequences" target="_blank" rel="noopener">gpxil scratchpad</a> has it all, with the scripts.</p>
+<h2 data-anchor="cite">References</h2>
+<p>If you use these programs in your work, cite the papers below, and give the versions you used (<a href="#h-versions">Versions, and how to cite</a>):</p>
+<dl class="cite-list">
+<dt>Pure GA-sequences, and their flanks</dt>
+<dd class="cite-note">The correction replaces the abstract’s “160 times fewer” point mutations with “many”.</dd>
+<dd>Albrecht-Buehler G (2008) Properties and distribution of pure GA-sequences of mammalian genomes. <i>PLoS ONE</i> 3(11): e3818. <a href="https://doi.org/10.1371/journal.pone.0003818" target="_blank" rel="noopener">doi:10.1371/journal.pone.0003818</a></dd>
+<dd>Albrecht-Buehler G (2009) Correction: Properties and distribution of pure GA-sequences of mammalian genomes. <i>PLoS ONE</i>. <a href="https://doi.org/10.1371/annotation/7126ab55-ca2a-4202-9e66-fac899bd52ee" target="_blank" rel="noopener">doi:10.1371/annotation/7126ab55-ca2a-4202-9e66-fac899bd52ee</a></dd>
+<dd>Albrecht-Buehler G (2009) Outline of a genome navigation system based on the properties of GA-sequences and their flanks. <i>PLoS ONE</i> 4(3): e4701. <a href="https://doi.org/10.1371/journal.pone.0004701" target="_blank" rel="noopener">doi:10.1371/journal.pone.0004701</a></dd>
+<dt>gpxiltools (the gpxil command, and the Python package)</dt>
+<dd>Chronomic Medicine Group, University of Cambridge (2026) gpxiltools: read, write, render and check gpxil files (Python). <a href="https://github.com/comparativechrono/Gpxil-tools" target="_blank" rel="noopener">github.com/comparativechrono/Gpxil-tools</a></dd>
+<dt>RepeatMasker, and the UCSC Genome Browser’s table of its repeats on GRCh38 (rmsk_chr17.txt.gz)</dt>
+<dd>Smit AFA, Hubley R, Green P (2013–2015) RepeatMasker Open-4.0. <a href="https://www.repeatmasker.org" target="_blank" rel="noopener">www.repeatmasker.org</a></dd>
+<dd>Kent WJ, Sugnet CW, Furey TS, Roskin KM, Pringle TH, Zahler AM, et al. (2002) The human genome browser at UCSC. <i>Genome Research</i> 12(6): 996–1006. <a href="https://doi.org/10.1101/gr.229102" target="_blank" rel="noopener">doi:10.1101/gr.229102</a></dd>
+<dd>UCSC Genome Browser. RepeatMasker’s repeats on hg38 (GRCh38): the rmsk table. <a href="https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/" target="_blank" rel="noopener">hgdownload.soe.ucsc.edu/goldenPath/hg38/database</a></dd>
+<dt>Genome in a Bottle: HG002, his parents HG003 and HG004, and their benchmarks</dt>
+<dd class="cite-note">The examples HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from HG002’s v4.2.1 benchmark, HG003_chr17.noref.gpxil.tif and HG004_chr17.noref.gpxil.tif from his parents’, and HG002_chr17_v5.0q.noref.gpxil.tif from his v5.0q benchmark, which is made from the T2T HG002 Q100 assembly of his genome (Hansen et al. 2026).</dd>
+<dd>Zook JM, Catoe D, McDaniel J, Vang L, Spies N, Sidow A, et al. (2016) Extensive sequencing of seven human genomes to characterize benchmark reference materials. <i>Scientific Data</i> 3: 160025. <a href="https://doi.org/10.1038/sdata.2016.25" target="_blank" rel="noopener">doi:10.1038/sdata.2016.25</a></dd>
+<dd>Wagner J, Olson ND, Harris L, Khan Z, Farek J, Mahmoud M, et al. (2022) Benchmarking challenging small variants with linked and long reads. <i>Cell Genomics</i> 2(5): 100128. <a href="https://doi.org/10.1016/j.xgen.2022.100128" target="_blank" rel="noopener">doi:10.1016/j.xgen.2022.100128</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) small-variant benchmark v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG003 (NA24149) and HG004 (NA24143), the parents of HG002: small-variant benchmarks v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio</a></dd>
+<dd>Hansen NF, Dwarshuis N, Ji HJ, Rhie A, Loucks H, Logsdon GA, et al. (2026) A complete diploid human genome benchmark for personalized genomics. <i>Cell</i> 189(16): 4857–4875.e31. <a href="https://doi.org/10.1016/j.cell.2026.06.016" target="_blank" rel="noopener">doi:10.1016/j.cell.2026.06.016</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) assembly-based small-variant benchmark v5.0q, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q</a></dd>
+<dt>Chargaff’s second parity rule</dt>
+<dd>Rudner R, Karkas JD, Chargaff E (1968) Separation of B. subtilis DNA into complementary strands. 3. Direct analysis. <i>Proceedings of the National Academy of Sciences of the USA</i> 60(3): 921–922. <a href="https://doi.org/10.1073/pnas.60.3.921" target="_blank" rel="noopener">doi:10.1073/pnas.60.3.921</a></dd>
+</dl>
+</article>
 <article class="help-page" id="h-viewer" data-title="The Viewer" data-group="The viewer" data-group-page="h-viewer" data-keys="viewer view look see pixels region zoom pan move keyboard hover point base counts count stats called substitutions file add upload web grch38 save picture command render window windows stretch part save region gpxil file subset positions" hidden>
 <h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>The Viewer</h1>
 <p class="lede">The Viewer shows a gpxil file as it is: one pixel, or a square of pixels, for each base, in rows that read from left to right and from top to bottom like a page of text. It reads only the part of the file it shows, straight from the file, without Python, so a whole genome opens at once – even one on the web.</p>
@@ -1152,7 +1258,7 @@ viewer /data/grch38/chr21.gpxil.tif chr21:30,000,001-30,500,000 --plane=ref</cod
 <li><a href="#h-viewer-views">The views and their colours<small>What each of the Viewer’s views shows, and what its colours mean</small></a></li>
 </ul>
 </article>
-<article class="help-page" id="h-viewer-views" data-title="The views and their colours" data-group="The viewer" data-group-page="h-viewer" data-keys="views modes colours legend reference genotype haplotypes variants flags gq dp ps phase set quality depth heterozygous homozygous unknown n near-black deleted insertion complex soft-masked render same" hidden>
+<article class="help-page" id="h-viewer-views" data-title="The views and their colours" data-group="The viewer" data-group-page="h-viewer" data-keys="views modes colours legend reference genotype haplotypes variants flags gq dp ps phase set quality depth heterozygous homozygous unknown n near-black deleted insertion complex soft-masked render same annotation annotations x- x-repeats repeats labels plane extension" hidden>
 <h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 1.8-.9 1.8-1.8 0-.5-.2-.9-.5-1.2-.3-.4-.5-.8-.5-1.3 0-1 .8-1.7 1.8-1.7H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10" cy="7" r="1.2" fill="currentColor"/><circle cx="15" cy="7.5" r="1.2" fill="currentColor"/></svg>The views and their colours</h1>
 <p class="lede">Each view of the Viewer draws one or two planes of the file. The key under the picture names its colours; this page says what each one means. The first four views are exactly what <code>gpxil render</code> draws, pixel for pixel, in every palette, so a picture you like in the Viewer can be made as a file with the command under it.</p>
 
@@ -1203,8 +1309,20 @@ viewer /data/grch38/chr21.gpxil.tif chr21:30,000,001-30,500,000 --plane=ref</cod
 <h2>Phase sets</h2>
 <p>The <code>ps</code> plane: each phase set in a colour of its own, and white where a base is in none. Within one phase set, haplotype 1 is the same parental copy throughout; between phase sets, it may not be.</p>
 
+<h2>Annotation planes</h2>
+<p>A file can hold planes of its own, named <code>x-…</code>, such as the repeats or genes <a href="#h-tool-annotate">Add an annotation plane</a> puts in it. Each is a view of the <b>Show</b> list, <i>Annotation: x-repeats (labels)</i> say, and they are drawn by what their bases hold:</p>
+<table>
+<tr><th>The plane holds</th><th>Drawn as</th></tr>
+<tr><td>labels, such as a repeat’s family</td><td>a colour for each label. A repeat class keeps one hue – SINE red, LINE blue, LTR teal, DNA transposons yellow, simple repeats violet, low-complexity sequence pink, satellites green, others another hue – and its families and names are lighter and darker shades of it. The key lists the labels in view, commonest first, with their bases.</td></tr>
+<tr><td>where features are</td><td>blue where there is one</td></tr>
+<tr><td>scores or values</td><td>from light to dark blue, over the lowest and highest values in view</td></tr>
+<tr><td>nothing at a base (0, or no value)</td><td>paper</td></tr>
+</table>
+<p>Point at a base to read its label or value, with the other planes’ values. The <code>viewer</code> command opens one with <code>--plane=x-repeats</code>.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="annotate" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="/data/examples/rmsk_chr17.txt.gz">Add chromosome 17’s repeats as a plane</button></div>
+
 <h2>The same in a file</h2>
-<p>For the reference, genotype, haplotypes and variants views, the command under the picture is the <code>gpxil render</code> that makes the same picture as a file, with the same bases per row, pixels per base and palette (<a href="#h-tool-render">Draw a region as a picture</a>). <code>gpxil render</code> can also mark the bases that insertions follow in the haplotypes view (<code>--mark-insertions</code>), lay a region out along a Hilbert curve, and write CMYK for print. The flags, quality, depth and phase-set views are the Viewer’s own: under them, a Python cell reads the plane’s values as a NumPy array, ready to add to the notebook. <a href="#h-codes">The codes</a> describes the values behind every colour.</p>
+<p>For the reference, genotype, haplotypes and variants views, the command under the picture is the <code>gpxil render</code> that makes the same picture as a file, with the same bases per row, pixels per base and palette (<a href="#h-tool-render">Draw a region as a picture</a>). <code>gpxil render</code> can also mark the bases that insertions follow in the haplotypes view (<code>--mark-insertions</code>), lay a region out along a Hilbert curve, and write CMYK for print. The flags, quality, depth, phase-set and annotation views are the Viewer’s own: under them, a Python cell reads the plane’s values as a NumPy array (and an annotation plane’s labels), ready to add to the notebook. <a href="#h-codes">The codes</a> describes the values behind every colour.</p>
 <h2 data-anchor="cite">References</h2>
 <p>If you use these programs in your work, cite the papers below, and give the versions you used (<a href="#h-versions">Versions, and how to cite</a>):</p>
 <dl class="cite-list">
@@ -1228,6 +1346,7 @@ viewer /data/grch38/chr21.gpxil.tif chr21:30,000,001-30,500,000 --plane=ref</cod
 <tr><td>Look inside and check</td><td><a href="#h-tool-info">What’s in a gpxil file</a> · <a href="#h-tool-validate">Check a gpxil file</a> · <a href="#h-tool-stats">Count what a file holds</a></td></tr>
 <tr><td>Make gpxil files</td><td><a href="#h-tool-encode">Make a gpxil file (encode)</a> · <a href="#h-tool-subset">Make a working copy (subset)</a></td></tr>
 <tr><td>Compare genomes</td><td><a href="#h-tool-compare">Compare two genomes</a> · <a href="#h-tool-trio">A child and both parents (trio)</a></td></tr>
+<tr><td>Look for patterns</td><td><a href="#h-tool-runs">Find runs of a composition</a> · <a href="#h-tool-stack">Stack features, lined up</a> · <a href="#h-tool-spectrum">Substitutions in regions, by context</a> · <a href="#h-tool-annotate">Add an annotation plane</a> · <a href="#h-tool-skew">Strand symmetry: skews in windows</a> · <a href="#h-tool-period">Wrap a repeat at its period</a></td></tr>
 <tr><td>Pictures and print</td><td><a href="#h-tool-render">Draw a region as a picture</a> · <a href="#h-tool-book">Print it as a book (PDF)</a> · <a href="#h-tool-palettes">The palettes</a></td></tr>
 <tr><td>Back to FASTA and VCF</td><td><a href="#h-tool-fasta">Sequences as FASTA</a> · <a href="#h-tool-vcf">Variants as VCF</a></td></tr>
 <tr><td>Genes as pictures (pxil)</td><td><a href="#h-tool-gpxil2pxil">Genes, transcripts and proteins as pxil pictures</a> · <a href="#h-tool-pxil-fasta">pxil pictures → FASTA</a></td></tr>
@@ -1263,6 +1382,12 @@ viewer /data/grch38/chr21.gpxil.tif chr21:30,000,001-30,500,000 --plane=ref</cod
 <li><a href="#h-tool-subset">Make a working copy (subset)<small>gpxil subset: some contigs, and some planes, of a gpxil file in a new and smaller file, copied without being decoded; or a region, such as a gene, cut out as a window</small></a></li>
 <li><a href="#h-tool-compare">Compare two genomes<small>gpxil compare: two gpxil files of one person, base by base, the second as the truth: the same, written differently or different, with precision, recall and a picture</small></a></li>
 <li><a href="#h-tool-trio">A child and both parents (trio)<small>gpxil compare --father --mother: Mendelian errors and candidate new mutations, where the child’s variants came from, and crossovers where the parents are phased</small></a></li>
+<li><a href="#h-tool-runs">Find runs of a composition<small>gpxil runs: the stretches of a genome made only of some bases – pure GA-sequences, runs of one base, AT-rich stretches – on one strand or both, as a BED file</small></a></li>
+<li><a href="#h-tool-stack">Stack features, lined up<small>gpxil stack: features – runs, repeats, genes, any BED file – one a row, lined up at their starts, ends or centres on their own strands, sorted, and drawn as bases or variants, with each column’s bases as a table</small></a></li>
+<li><a href="#h-tool-spectrum">Substitutions in regions, by context<small>gpxil spectrum: does a person have more or fewer substitutions in some regions than their sequence leads one to expect? Observed against expected, context by context, with exact intervals, on the features’ own strands too</small></a></li>
+<li><a href="#h-tool-annotate">Add an annotation plane<small>gpxil annotate: a copy of a gpxil file with an annotation – repeats, genes, a BED or bedGraph file – as a plane of its own, a value at every base, which the Viewer draws and the tools read</small></a></li>
+<li><a href="#h-tool-skew">Strand symmetry: skews in windows<small>gpxil skew: GC content, the GC and AT skews, and how far each strand’s k-mers are from their reverse complements’ counts (Chargaff’s second rule), in windows along a genome, as a table and a map</small></a></li>
+<li><a href="#h-tool-period">Wrap a repeat at its period<small>gpxil period: a tandem repeat – a microsatellite, a GA-sequence – wrapped at its period, one unit a row, so the units line up and a change in one stands out; the reference beside the person’s two haplotypes, as a picture or text</small></a></li>
 <li><a href="#h-tool-render">Draw a region as a picture<small>gpxil render: a region in four views, as PNG for the screen or TIFF (RGB or CMYK) for print</small></a></li>
 <li><a href="#h-tool-book">Print it as a book (PDF)<small>gpxil book: a PDF to print with one dot per base, in CMYK or RGB</small></a></li>
 <li><a href="#h-tool-palettes">The palettes<small>gpxil palettes: the colours of A, C, G, T and N in each palette, for the screen and in ink</small></a></li>
@@ -1736,6 +1861,413 @@ print(len(errors), "Mendelian errors:", [e["position"] for e in errors if e["new
 <dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) assembly-based small-variant benchmark v5.0q, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q</a></dd>
 </dl>
 </article>
+<article class="help-page" id="h-tool-runs" data-title="Find runs of a composition" data-group="Tools" data-group-page="h-tools" data-keys="runs run composition ga-sequences ga sequences pure purine purines pyrimidine pyrimidines poly(a) polya homopolymer at-rich gc-rich iupac strand both strands bed albrecht-buehler census tc-sequences chargaff look for patterns discovery" hidden>
+<h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>Find runs of a composition</h1>
+<p class="lede"><code>gpxil runs</code> finds the stretches of a genome made only of some bases: of A and G, as Guenter Albrecht-Buehler’s pure GA-sequences are, of C and T, of A and T, or of one base. It reads the reference plane a piece at a time, so a chromosome takes a few seconds, and writes the runs as a BED file, ready for the other tools that look for patterns: stack them, count their substitutions, or add them to the genome as a plane.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="runs" data-input="/data/examples/HG002_chr17.gpxil.tif">Find chromosome 17’s pure GA-sequences</button></div>
+
+<h2>What a run is</h2>
+<dl>
+  <dt>its bases</dt><dd>Given in IUPAC letters (<a href="#h-codes">The codes</a>): <b>AG</b> or R for purines, <b>CT</b> or Y for pyrimidines, <b>AT</b> or W, <b>CG</b> or S, <b>A</b> for runs of one base, and so on. A base of the reference belongs if its own letter does: an R belongs to AG, an N only to ACGT. Soft masking doesn’t matter.</dd>
+  <dt>as long as it can be</dt><dd>A run is maximal: the bases either side of it don’t belong, or there are none. Runs shorter than the shortest you ask for are left out: 51 bases by default, since Albrecht-Buehler’s pure GA-sequences are more than 50 bases long.</dd>
+  <dt>on both strands</dt><dd>The other strand’s bases are the complements of this one’s, so a run of A and G there is a run of C and T here. With <b>both strands</b>, those are found too, and written with strand <code>-</code>. A set that is its own complement, such as AT or CG, has the same runs on both strands: they are written once, without a strand (<code>.</code>).</dd>
+  <dt>in a file of windows</dt><dd>Windows that overlap or touch are read as one stretch, at the chromosome’s positions, and where a stretch ends, a run ends with it.</dd>
+</dl>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>Any gpxil file with its reference plane, or one without it, with its reference given (a field for it appears).</dd>
+  <dt>Of these bases</dt><dd>The set, in IUPAC letters: AG to begin with.</dd>
+  <dt>At least this many bases</dt><dd>The shortest run to keep: 51.</dd>
+  <dt>On both strands</dt><dd>Ticked: the set’s runs on the other strand too.</dd>
+  <dt>Regions</dt><dd>One or more, separated by spaces: a contig, or CONTIG:START-END counting from 1. Regions that overlap are read once, as one. Empty: every contig.</dd>
+  <dt>Save as</dt><dd>A BED file, named after the genome and the set: <code>~/results/HG002_chr17_AG_runs.bed</code>.</dd>
+</dl>
+
+<h2>What it gives</h2>
+<p>A BED file, a run a line: its contig, its start (counting from 0) and end, the set (<code>AG</code>), its length as the score (up to 1000, the most a BED score can be) and its strand. The tool also says how many runs there are on each strand, how many bases they cover, how long they are – the median, the 90th and 99th percentiles and the longest – and how many there are a megabase of A, C, G and T. <b>Stack them</b> and <b>Their substitutions</b> take the BED file on to the next tools.</p>
+
+<h2>Chromosome 17’s pure GA-sequences</h2>
+<p>Chromosome 17 of GRCh38 has 1,561: 739 runs of A and G on the + strand and 822 on the − strand (runs of C and T on this one), 140,621 bases in all, half of them 71 bases long or less and the longest 574: 18.8 a megabase. By chance, with half the bases purines, a stretch of 51 bases would be all purines once in 2⁵¹ – about 2 × 10¹⁵ – so the whole genome would have none. Albrecht-Buehler counted 19,139 in the human genome of 2008, and 1,667 on chromosome 1; GRCh38 has 22,726 runs of A and G and 22,955 of C and T, as many on each strand as Chargaff’s second rule expects (<a href="#h-tool-skew">Strand symmetry</a>). <a href="#h-walk-discover">Pure GA-sequences</a> follows them through the other tools.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil runs /data/examples/HG002_chr17.gpxil.tif --of AG --both-strands -o ~/results/GA.bed
+gpxil runs /data/examples/HG002_chr17.gpxil.tif chr17:7,661,779-7,687,546 --of A --min 15
+gpxil runs /data/examples/HG002_chr17.gpxil.tif --of W --min 200 -o ~/results/AT-rich.bed --json</code></pre>
+<p>Without <code>-o</code>, the runs go to the terminal; <code>--json</code> gives the counts to programs; <code>--reference</code> gives the reference of a file written without one.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.runs import RunFinder
+
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    runs = list(RunFinder(g, of="AG", min_length=51, both_strands=True).runs())
+print(len(runs), "runs; the longest:", max(runs, key=lambda r: r.length))
+print(sum(r.strand == "-" for r in runs), "on the - strand")</code></pre>
+<p>Each run is a <code>Run(sequence, start, end, strand)</code>, counting from 0; <code>RunFinder(g, [g.region_of("chr17:1-1000000")], …)</code> looks only there, and <code>write_bed</code> writes runs as the command does.</p>
+<h2 data-anchor="cite">References</h2>
+<p>If you use these programs in your work, cite the papers below, and give the versions you used (<a href="#h-versions">Versions, and how to cite</a>):</p>
+<dl class="cite-list">
+<dt>gpxiltools (the gpxil command, and the Python package)</dt>
+<dd>Chronomic Medicine Group, University of Cambridge (2026) gpxiltools: read, write, render and check gpxil files (Python). <a href="https://github.com/comparativechrono/Gpxil-tools" target="_blank" rel="noopener">github.com/comparativechrono/Gpxil-tools</a></dd>
+<dt>Pure GA-sequences, and their flanks</dt>
+<dd class="cite-note">The correction replaces the abstract’s “160 times fewer” point mutations with “many”.</dd>
+<dd>Albrecht-Buehler G (2008) Properties and distribution of pure GA-sequences of mammalian genomes. <i>PLoS ONE</i> 3(11): e3818. <a href="https://doi.org/10.1371/journal.pone.0003818" target="_blank" rel="noopener">doi:10.1371/journal.pone.0003818</a></dd>
+<dd>Albrecht-Buehler G (2009) Correction: Properties and distribution of pure GA-sequences of mammalian genomes. <i>PLoS ONE</i>. <a href="https://doi.org/10.1371/annotation/7126ab55-ca2a-4202-9e66-fac899bd52ee" target="_blank" rel="noopener">doi:10.1371/annotation/7126ab55-ca2a-4202-9e66-fac899bd52ee</a></dd>
+<dd>Albrecht-Buehler G (2009) Outline of a genome navigation system based on the properties of GA-sequences and their flanks. <i>PLoS ONE</i> 4(3): e4701. <a href="https://doi.org/10.1371/journal.pone.0004701" target="_blank" rel="noopener">doi:10.1371/journal.pone.0004701</a></dd>
+<dt>IUPAC nucleotide codes</dt>
+<dd>Cornish-Bowden A (1985) Nomenclature for incompletely specified bases in nucleic acid sequences: recommendations 1984. <i>Nucleic Acids Research</i> 13(9): 3021–3030. <a href="https://doi.org/10.1093/nar/13.9.3021" target="_blank" rel="noopener">doi:10.1093/nar/13.9.3021</a></dd>
+</dl>
+</article>
+<article class="help-page" id="h-tool-stack" data-title="Stack features, lined up" data-group="Tools" data-group-page="h-tools" data-keys="stack stacked features rows lined up align anchor start end centre center upstream downstream flanks strand reverse complement sort poly(a) polya run alu repeats repeatmasker rmsk divergence age bin binned profile meta-gene heatmap ga-complex albrecht-buehler genes tss look for patterns" hidden>
+<h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3L2 8l10 5 10-5z"/><path d="M2 13l10 5 10-5"/></svg>Stack features, lined up</h1>
+<p class="lede"><code>gpxil stack</code> draws features one a row – runs, repeats, genes, the intervals of any BED file – each with the bases before and after a point of it, its start, end or centre, read on its own strand. Lined up, what the features share stands out as stripes running down the picture. It is how Guenter Albrecht-Buehler saw Alu elements line up before the pure GA-sequences that begin with a poly(A).</p>
+<div class="tryrow"><button class="do" type="button" data-tool="stack" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="/data/examples/rmsk_chr17.txt.gz" data-match="^SINE/Alu/" data-min-length="250" data-anchor="end" data-up="40" data-down="80" data-bin="50" data-scale="2">Chromosome 17’s Alu elements, by age</button> <button class="do" type="button" data-tool="stack" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="/data/examples/chr17_genes.bed" data-up="1000" data-down="1000" data-sort="length" data-bin="4">Its genes’ starts</button></div>
+
+<h2>How the rows are made</h2>
+<dl>
+  <dt>the anchor</dt><dd>Each feature’s start, end or centre, <b>on its strand</b>: the start of a feature on the − strand is its right-hand end. Each row holds the bases before the anchor and those from it on, so lined up at their starts, the column just right of the anchor’s mark holds the first base of every feature, and lined up at their ends, the first base after each.</dd>
+  <dt>read 5′ to 3′</dt><dd>A feature on the − strand is read as the reverse complement, and the sample’s variants with it: a substitution of C by T there is drawn as one of G by A. So a poly(A) that starts features on either strand starts every row. A feature without a strand is read on the + strand.</dd>
+  <dt>beyond the sequence</dt><dd>Where a row runs off the end of its sequence, or out of the windows of a file of windows, it has no bases: paper.</dd>
+  <dt>sorted</dt><dd>As the features come; by position; by length; by score (a repeat’s divergence from its family’s consensus, which grows with its age, so the oldest come first); by name; or by the <b>run</b> of some bases from the anchor, such as the poly(A) a GA-sequence begins with, allowing a few other bases in it, as Albrecht-Buehler sorted his. Lengths, scores and runs go longest first, unless you sort the other way.</dd>
+  <dt>binned</dt><dd>A chromosome has thousands of repeats of a family: with <b>rows to a pixel row</b> above 1, each pixel row is the mean colour of that many rows, so the stripes they share remain and the picture fits a screen.</dd>
+</dl>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>The genome the rows are read from.</dd>
+  <dt>The features</dt><dd>A BED file – the runs of <a href="#h-tool-runs">Find runs</a>, the examples’ <code>chr17_genes.bed</code>, any of your own – or a RepeatMasker table: UCSC’s <code>rmsk</code> table, as in the examples’ <code>rmsk_chr17.txt.gz</code>, or RepeatMasker’s own <code>.out</code>. Plain or gzipped. A repeat’s name is its class, family and name: <code>SINE/Alu/AluSx</code>.</dd>
+  <dt>Only features whose name matches, of at least this many bases</dt><dd>A regular expression looked for in the names (<code>^SINE/Alu/</code> for Alu elements, <code>/L1</code> for L1s, a gene’s name), and the shortest feature to keep: 250 bases leaves out the fragments of Alu elements.</dd>
+  <dt>Line them up at; bases before the anchor; bases from it on</dt><dd>Their starts, 400 bases before and 200 from it on, to begin with.</dd>
+  <dt>Sort the rows</dt><dd>By score for a RepeatMasker table, by the poly(A) for runs from <a href="#h-tool-runs">Find runs</a>, else as the features come.</dd>
+  <dt>At most this many rows</dt><dd>The first rows, once sorted.</dd>
+  <dt>Show, colours</dt><dd>The reference’s bases, or the sample’s genotype, haplotypes or variants, as <a href="#h-tool-render">Draw a region</a> draws them, in any palette.</dd>
+  <dt>Rows to a pixel row, pixels per base</dt><dd>1 and 1 to begin with.</dd>
+  <dt>With a title…</dt><dd>Ticked: the picture gets a title, a mark at the anchor, a ruler of bases from it, and a key.</dd>
+  <dt>Each column’s bases as a table</dt><dd>The <b>profile</b>: for each column, how many rows have A, C, G and T there (and, for a sample, how many have a substitution, a deletion or an insertion): the picture as numbers, to plot.</dd>
+</dl>
+
+<h2>What it gives</h2>
+<p>The picture, shown under the result, and the profile if you asked for it. The tool says how many rows it drew, of how many features, and how they were sorted. Features on a contig the file doesn’t have are left out.</p>
+
+<h2>Two pictures of chromosome 17</h2>
+<p><b>Its Alu elements, by age</b> (the first button): 43,132 Alu elements of 250 bases or more, lined up at their ends, oldest at the top, fifty to a pixel row. RepeatMasker counts an Alu’s poly(A) tail as part of it, so the tails are the pink band just before the ends: in the young elements at the bottom, long and pure; in the old ones at the top, shorter and mixed, as A’s have been substituted.</p>
+<p><b>Its genes’ starts</b> (the second): 1,187 protein-coding genes, longest first, with 1,000 bases either side of where each begins on its own strand, four to a pixel row. The starts sit in a band of C and G, blue and green – the CpG islands of promoters: 63 % of the bases just after the starts are C or G, against 50 % a kilobase before them – and the band is greener after the start than before it, as on a gene’s own strand G outnumbers C there (the GC skew is +0.035 in the first 500 bases, −0.01 before the start). The profile gives these counts column by column.</p>
+<p>The GA-sequences’ own stack, sorted by their poly(A)s, is in <a href="#h-walk-discover">Pure GA-sequences</a>.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil runs /data/examples/HG002_chr17.gpxil.tif --of AG --both-strands -o ~/results/GA.bed
+gpxil stack /data/examples/HG002_chr17.gpxil.tif ~/results/GA.bed --sort run --labelled -o ~/results/GA-stack.png
+gpxil stack /data/examples/HG002_chr17.gpxil.tif /data/examples/rmsk_chr17.txt.gz --match '^SINE/Alu/' --min-length 250 \
+    --anchor end --up 40 --down 80 --sort score --bin 50 --scale 2 --labelled -o ~/results/alu-ends.png --profile ~/results/alu-ends.tsv</code></pre>
+<p><code>--rows</code> writes the features in the order drawn, each with its row and what it was sorted by; <code>--ignore-strand</code> reads every feature on the + strand; <code>--cmyk</code> writes a CMYK TIFF for print. Without <code>-o</code>, the profile goes to the terminal.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.features import read_features
+from gpxiltools.stack import profile, rendering, stack
+
+alus = read_features("/data/examples/rmsk_chr17.txt.gz", match="^SINE/Alu/", min_length=250)
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    st = stack(g, alus, anchor="end", up=40, down=80, sort="score")
+print(len(st.rows), "rows;", st.ref.shape)          # (a row of reference codes for each feature, 5' to 3')
+rendering(st, mode="reference").save_png("/home/user/results/alu-ends-unbinned.png")
+for col in profile(st)[30:46:3]:                     # (a dict for each column: its counts of A, C, G and T …)
+    print(col["offset"], col["commonest"], col["commonest_share"], col["soft_masked"])</code></pre>
+<p><code>stack(…, sample=True)</code> reads the sample’s genotype too, for <code>mode="variants"</code>; <code>binned</code> and <code>labelled</code> make the command’s picture.</p>
+<h2 data-anchor="cite">References</h2>
+<p>If you use these programs in your work, cite the papers below, and give the versions you used (<a href="#h-versions">Versions, and how to cite</a>):</p>
+<dl class="cite-list">
+<dt>gpxiltools (the gpxil command, and the Python package)</dt>
+<dd>Chronomic Medicine Group, University of Cambridge (2026) gpxiltools: read, write, render and check gpxil files (Python). <a href="https://github.com/comparativechrono/Gpxil-tools" target="_blank" rel="noopener">github.com/comparativechrono/Gpxil-tools</a></dd>
+<dt>Pure GA-sequences, and their flanks</dt>
+<dd class="cite-note">The correction replaces the abstract’s “160 times fewer” point mutations with “many”.</dd>
+<dd>Albrecht-Buehler G (2008) Properties and distribution of pure GA-sequences of mammalian genomes. <i>PLoS ONE</i> 3(11): e3818. <a href="https://doi.org/10.1371/journal.pone.0003818" target="_blank" rel="noopener">doi:10.1371/journal.pone.0003818</a></dd>
+<dd>Albrecht-Buehler G (2009) Correction: Properties and distribution of pure GA-sequences of mammalian genomes. <i>PLoS ONE</i>. <a href="https://doi.org/10.1371/annotation/7126ab55-ca2a-4202-9e66-fac899bd52ee" target="_blank" rel="noopener">doi:10.1371/annotation/7126ab55-ca2a-4202-9e66-fac899bd52ee</a></dd>
+<dd>Albrecht-Buehler G (2009) Outline of a genome navigation system based on the properties of GA-sequences and their flanks. <i>PLoS ONE</i> 4(3): e4701. <a href="https://doi.org/10.1371/journal.pone.0004701" target="_blank" rel="noopener">doi:10.1371/journal.pone.0004701</a></dd>
+<dt>RepeatMasker, and the UCSC Genome Browser’s table of its repeats on GRCh38 (rmsk_chr17.txt.gz)</dt>
+<dd>Smit AFA, Hubley R, Green P (2013–2015) RepeatMasker Open-4.0. <a href="https://www.repeatmasker.org" target="_blank" rel="noopener">www.repeatmasker.org</a></dd>
+<dd>Kent WJ, Sugnet CW, Furey TS, Roskin KM, Pringle TH, Zahler AM, et al. (2002) The human genome browser at UCSC. <i>Genome Research</i> 12(6): 996–1006. <a href="https://doi.org/10.1101/gr.229102" target="_blank" rel="noopener">doi:10.1101/gr.229102</a></dd>
+<dd>UCSC Genome Browser. RepeatMasker’s repeats on hg38 (GRCh38): the rmsk table. <a href="https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/" target="_blank" rel="noopener">hgdownload.soe.ucsc.edu/goldenPath/hg38/database</a></dd>
+<dt>Ensembl (GRCh38 sequence, and genes from release 116)</dt>
+<dd>Yates AD, Austine-Orimoloye O, Azov AG, Barba M, Barnes I, Barrera-Enriquez VP, et al. (2026) Ensembl 2026. <i>Nucleic Acids Research</i> 54(D1): D1053–D1060. <a href="https://doi.org/10.1093/nar/gkaf1239" target="_blank" rel="noopener">doi:10.1093/nar/gkaf1239</a></dd>
+</dl>
+</article>
+<article class="help-page" id="h-tool-spectrum" data-title="Substitutions in regions, by context" data-group="Tools" data-group-page="h-tools" data-keys="spectrum substitutions point mutations mutation rate mutability context trinucleotide 96 mutational signatures cpg expected observed ratio enrichment depletion binomial exact interval p-value background regions isolated clustered transitions transversions ti/tv heterozygous homozygous insertions deletions indels strand asymmetry transcription stranded purine pyrimidine alu ga-sequences genes look for patterns" hidden>
+<h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.6"/><circle cx="17" cy="17" r="2.6"/></svg>Substitutions in regions, by context</h1>
+<p class="lede"><code>gpxil spectrum</code> asks whether a person has more or fewer substitutions in some regions – repeats, GA-sequences, genes, any BED file – than their sequence leads one to expect. A base’s chance of changing depends on its neighbours, so the regions are compared with the rest of the genome context by context, with an exact interval for the ratio. It reads a person’s gpxil file and the regions, and counts a chromosome in a few seconds.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="spectrum" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="/data/examples/rmsk_chr17.txt.gz" data-match="^SINE/Alu/">HG002’s substitutions in chromosome 17’s Alu elements</button> <button class="do" type="button" data-tool="spectrum" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="/data/examples/chr17_genes.bed" data-stranded="true">In its genes, on their own strands</button></div>
+
+<h2>How it counts</h2>
+<dl>
+  <dt>contexts</dt><dd>A base with its neighbours: three bases by default, so the C of CG, which changes about ten times as often as other C’s, is a context of its own. Each context is read on the strand where its middle base is a <b>pyrimidine</b>, C or T, so a G that changes to A is counted as the C opposite changing to T: the 6 kinds and 96 contexts of mutational signatures. Or a <b>purine</b>, A or G, which keeps a GA-sequence on its own strand.</dd>
+  <dt>expected</dt><dd>For each context and each substitution in it, its rate in the <b>background</b> – every called base outside the regions, unless you give a BED file of your own, such as the regions’ flanks – times how many bases of the regions have that context. Their sum is what the regions would have if they changed as the rest of the genome does.</dd>
+  <dt>the ratio, its interval and p</dt><dd>Observed over expected. Its 95 % interval and p-value come from an exact binomial test of the regions’ share of all the substitutions counted, regions and background together, which allows for the background’s counts being a sample too. Each kind of substitution gets its own.</dd>
+  <dt>on their own strands</dt><dd>Ticked, the regions’ substitutions are also read on each feature’s strand, 12 kinds from A&gt;C to T&gt;G, against the background’s rates read blind to strands. A difference between a kind and its complement – A&gt;G against T&gt;C – is then an asymmetry between the strands, such as the one transcription leaves on genes.</dd>
+  <dt>isolated</dt><dd>Only substitutions with no other variant – a substitution, a deletion, an insertion – within so many bases count, in the regions and the background alike. In a repeat, a change of a unit is often written as several substitutions side by side; counted as isolated, it counts not at all, rather than as several.</dd>
+  <dt>which bases count</dt><dd>Those where the person’s genotype is known on both haplotypes, and the reference base and its context are all A, C, G and T. In a file written with regions called with confidence, the calls outside them are left out, as <a href="#h-tool-compare">gpxil compare</a> leaves them out; a BED file of bases to count narrows them further.</dd>
+  <dt>also counted</dt><dd>Transitions and transversions, heterozygous and homozygous alleles, and insertions and deletions a called base: a base counts once if a deletion begins there or an insertion follows it.</dd>
+</dl>
+
+<h2>The form</h2>
+<dl>
+  <dt>The person’s gpxil file</dt><dd>With a sample. A file without its reference plane needs the reference too (a field for it appears).</dd>
+  <dt>The regions</dt><dd>A BED file, or a RepeatMasker table, with the features to keep: names that match, and the shortest (<a href="#h-tool-stack">Stack features</a> says how).</dd>
+  <dt>Only substitutions with no other variant within</dt><dd>Empty: all of them. 20 bases is what <a href="#h-walk-discover">Pure GA-sequences</a> takes.</dd>
+  <dt>Read contexts with in the middle</dt><dd>A pyrimidine, or a purine for runs of A and G from <a href="#h-tool-runs">Find runs</a>.</dd>
+  <dt>Context</dt><dd>3 bases, 1 or 5.</dd>
+  <dt>Also read each feature on its own strand</dt><dd>For features with strands: genes, or runs found on both strands.</dd>
+  <dt>Count only in these regions; the background; count only these bases too</dt><dd>A region or contig of the file; a BED file of the background’s bases; a BED file of the bases to count.</dd>
+  <dt>Also the counts by context, as a table</dt><dd>Each context and substitution’s counts and rates, in the regions and the background, as a tab-separated file.</dd>
+</dl>
+
+<h2>What it gives</h2>
+<p>The regions and the bases counted; the verdict – how many substitutions the regions have, how many their contexts lead one to expect, and the ratio with its interval and p; a table by kind (and, ticked, on the features’ own strands); then substitutions a kilobase, transitions over transversions, the homozygous share, and insertions and deletions, each in the regions and the background.</p>
+
+<h2>Two examples on chromosome 17</h2>
+<p><b>Alu elements.</b> HG002 has 18,561 substitutions in chromosome 17’s 58,071 Alu elements: 1.43 a kilobase, against 1.14 elsewhere, a quarter more. But Alu elements are rich in CG, the most mutable context, and their contexts lead one to expect 16,671: 1.11 times (95 % 1.10–1.13). By kind, T&gt;C stands out, at 1.54 times, and insertions and deletions come 2.1 times as often a base, most of them in the A-rich tails at the elements’ ends.</p>
+<p><b>Genes, on their own strands.</b> Inside chromosome 17’s protein-coding genes, mostly introns, HG002 has 0.83 times the substitutions their contexts predict. Read on each gene’s own strand, A&gt;G runs at 0.98 times and its complement T&gt;C at 0.84: the strands differ, as transcription treats them differently.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil spectrum /data/examples/HG002_chr17.gpxil.tif /data/examples/rmsk_chr17.txt.gz --match '^SINE/Alu/'
+gpxil spectrum /data/examples/HG002_chr17.gpxil.tif /data/examples/chr17_genes.bed --stranded --context 1 -o ~/results/genes-spectrum.tsv
+gpxil spectrum /data/examples/HG002_chr17_v5.0q.noref.gpxil.tif /data/examples/chr17_genes.bed chr17:7,000,001-8,000,000 \
+    --reference /data/examples/HG002_chr17.gpxil.tif --isolated 20 --json | head -24</code></pre>
+<p><code>--all-calls</code> keeps the calls outside the regions called with confidence; <code>--json</code> gives every number to programs.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.features import read_features
+from gpxiltools.spectrum import count_spectrum
+
+alus = read_features("/data/examples/rmsk_chr17.txt.gz", match="^SINE/Alu/")
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    counter = count_spectrum(g, alus)
+r = counter.results()
+s = r["substitutions"]
+print(f'{s["observed"]:,} observed, {s["expected"]:,.0f} expected: {s["ratio"]} times (95 % {s["interval"][0]}-{s["interval"][1]})')
+for kind, d in r["types"].items():
+    print(kind, d["ratio"], d["p"])</code></pre>
+<p><code>count_spectrum(g, features, regions, background=…, k=5, centre="purine", isolated=20, stranded=True)</code> takes the form’s settings; <code>counter.table()</code> gives the counts by context, which <code>write_table</code> writes as the command does.</p>
+<h2 data-anchor="cite">References</h2>
+<p>If you use these programs in your work, cite the papers below, and give the versions you used (<a href="#h-versions">Versions, and how to cite</a>):</p>
+<dl class="cite-list">
+<dt>gpxiltools (the gpxil command, and the Python package)</dt>
+<dd>Chronomic Medicine Group, University of Cambridge (2026) gpxiltools: read, write, render and check gpxil files (Python). <a href="https://github.com/comparativechrono/Gpxil-tools" target="_blank" rel="noopener">github.com/comparativechrono/Gpxil-tools</a></dd>
+<dt>Mutational signatures: substitutions in their contexts (the 96 kinds)</dt>
+<dd>Alexandrov LB, Nik-Zainal S, Wedge DC, Aparicio SA, Behjati S, Biankin AV, et al. (2013) Signatures of mutational processes in human cancer. <i>Nature</i> 500(7463): 415–421. <a href="https://doi.org/10.1038/nature12477" target="_blank" rel="noopener">doi:10.1038/nature12477</a></dd>
+<dt>Transcription’s mark on the two strands of genes</dt>
+<dd>Green P, Ewing B, Miller W, Thomas PJ, NISC Comparative Sequencing Program, Green ED (2003) Transcription-associated mutational asymmetry in mammalian evolution. <i>Nature Genetics</i> 33(4): 514–517. <a href="https://doi.org/10.1038/ng1103" target="_blank" rel="noopener">doi:10.1038/ng1103</a></dd>
+<dt>RepeatMasker, and the UCSC Genome Browser’s table of its repeats on GRCh38 (rmsk_chr17.txt.gz)</dt>
+<dd>Smit AFA, Hubley R, Green P (2013–2015) RepeatMasker Open-4.0. <a href="https://www.repeatmasker.org" target="_blank" rel="noopener">www.repeatmasker.org</a></dd>
+<dd>Kent WJ, Sugnet CW, Furey TS, Roskin KM, Pringle TH, Zahler AM, et al. (2002) The human genome browser at UCSC. <i>Genome Research</i> 12(6): 996–1006. <a href="https://doi.org/10.1101/gr.229102" target="_blank" rel="noopener">doi:10.1101/gr.229102</a></dd>
+<dd>UCSC Genome Browser. RepeatMasker’s repeats on hg38 (GRCh38): the rmsk table. <a href="https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/" target="_blank" rel="noopener">hgdownload.soe.ucsc.edu/goldenPath/hg38/database</a></dd>
+<dt>Genome in a Bottle: HG002, his parents HG003 and HG004, and their benchmarks</dt>
+<dd class="cite-note">The examples HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from HG002’s v4.2.1 benchmark, HG003_chr17.noref.gpxil.tif and HG004_chr17.noref.gpxil.tif from his parents’, and HG002_chr17_v5.0q.noref.gpxil.tif from his v5.0q benchmark, which is made from the T2T HG002 Q100 assembly of his genome (Hansen et al. 2026).</dd>
+<dd>Zook JM, Catoe D, McDaniel J, Vang L, Spies N, Sidow A, et al. (2016) Extensive sequencing of seven human genomes to characterize benchmark reference materials. <i>Scientific Data</i> 3: 160025. <a href="https://doi.org/10.1038/sdata.2016.25" target="_blank" rel="noopener">doi:10.1038/sdata.2016.25</a></dd>
+<dd>Wagner J, Olson ND, Harris L, Khan Z, Farek J, Mahmoud M, et al. (2022) Benchmarking challenging small variants with linked and long reads. <i>Cell Genomics</i> 2(5): 100128. <a href="https://doi.org/10.1016/j.xgen.2022.100128" target="_blank" rel="noopener">doi:10.1016/j.xgen.2022.100128</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) small-variant benchmark v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG003 (NA24149) and HG004 (NA24143), the parents of HG002: small-variant benchmarks v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio</a></dd>
+<dd>Hansen NF, Dwarshuis N, Ji HJ, Rhie A, Loucks H, Logsdon GA, et al. (2026) A complete diploid human genome benchmark for personalized genomics. <i>Cell</i> 189(16): 4857–4875.e31. <a href="https://doi.org/10.1016/j.cell.2026.06.016" target="_blank" rel="noopener">doi:10.1016/j.cell.2026.06.016</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) assembly-based small-variant benchmark v5.0q, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q</a></dd>
+</dl>
+</article>
+<article class="help-page" id="h-tool-annotate" data-title="Add an annotation plane" data-group="Tools" data-group-page="h-tools" data-keys="annotate annotation plane extension x- x-repeats track layer repeats repeatmasker rmsk genes bed bedgraph signal replication timing compartment eigenvector category labels presence score value float nan class family name level viewer look for patterns" hidden>
+<h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></svg>Add an annotation plane</h1>
+<p class="lede"><code>gpxil annotate</code> copies a gpxil file with an annotation as a plane of its own: RepeatMasker’s repeats, a BED file’s genes or regions, a bedGraph’s signal. The plane has a value at every base, like the genome’s own planes, so it lines up with the genome base for base and goes wherever the file goes: the Viewer draws it, Python reads it, and a working copy of a region cuts it out with the rest.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="annotate" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="/data/examples/rmsk_chr17.txt.gz">Add chromosome 17’s repeats to HG002’s genome</button> <button class="do" type="button" data-tool="annotate" data-input="/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif" data-features="/data/examples/chr17_genes.bed" data-as="presence" data-plane="x-genes">Where the genes are, in his newer benchmark</button></div>
+
+<h2>What a base holds</h2>
+<dl>
+  <dt>a label</dt><dd>From a <b>RepeatMasker table</b>, the repeat over the base: its family by default (<code>SINE/Alu</code>, <code>LINE/L1</code>, <code>Satellite/centr</code> …), or its class (<code>SINE</code>), or its name (<code>SINE/Alu/AluSx</code>). From a <b>BED file</b> with names, the feature’s name. Each label is a number, 1, 2, 3 … in the order of their names, 0 where there is no feature, and the plane’s metadata keeps the labels: 8-bit numbers for up to 255 labels, 16-bit for more.</dd>
+  <dt>where a feature is</dt><dd>1 there, 0 elsewhere: a BED file without names, or any file, as <b>presence</b>.</dd>
+  <dt>a score or a value</dt><dd>A feature’s score (a repeat’s divergence from its family’s consensus, in %), or a <b>bedGraph</b>’s value – replication timing, a Hi-C compartment’s eigenvector, any signal – as a 32-bit floating-point number, and NaN where there is none.</dd>
+  <dt>where features overlap</dt><dd>The shorter one is drawn, so a repeat inside another shows; of two as long, the later in the file.</dd>
+</dl>
+<p>The plane is an extension plane of the gpxil specification (section 5.6): its name is <code>x-</code> and letters, digits, - or _, and readers that don’t know it pass it by. The file’s own planes are copied as they are stored, without decoding them, so a chromosome takes a few seconds, and the plane adds little: chromosome 17’s repeats add 0.7 MB to its 24.6 MB. In a file of windows, each window gets the features over its own stretch of the chromosome.</p>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>Any gpxil file, with its reference plane or without.</dd>
+  <dt>The annotation</dt><dd>A RepeatMasker table (UCSC’s <code>rmsk</code> table, or RepeatMasker’s <code>.out</code>), a BED file or a bedGraph file, plain or gzipped.</dd>
+  <dt>The plane’s name</dt><dd><code>x-repeats</code> for repeats, else <code>x-</code> and the file’s name.</dd>
+  <dt>A base holds; a repeat’s label</dt><dd>What fits the file, to begin with: labels for a RepeatMasker table or a BED file with names, values for a bedGraph. A repeat’s label is its family, unless you choose its class or name.</dd>
+  <dt>Only features whose name matches, of at least this many bases</dt><dd>As in <a href="#h-tool-stack">Stack features</a>.</dd>
+  <dt>What it holds; the values’ units</dt><dd>Kept in the plane’s metadata: said from the file if you leave them empty.</dd>
+  <dt>Make the plane again if the file has it</dt><dd>Otherwise a file that has the plane already is refused.</dd>
+  <dt>Save the copy as</dt><dd>A new file, <code>~/genomes/HG002_chr17.repeats.gpxil.tif</code> for the first example: the tool never changes the file it copies.</dd>
+</dl>
+
+<h2>What it gives</h2>
+<p>The copy, and a line saying what was added: the plane, what its bases hold, how many labels, and how many bases have a feature. Chromosome 17’s repeats give 59 labels over 43,047,843 bases, half the chromosome. <b>Look at it in the Viewer</b> opens the plane’s own view: each label in a colour of its own, a repeat class in one hue – SINE red, LINE blue, LTR teal, DNA transposons yellow, simple repeats violet, low-complexity sequence pink, satellites green – its families in lighter and darker shades of it, and paper where there is no feature. Point at a base to read its label. A plane of values is drawn from light to dark blue over the range in view. Any annotation plane of a file is in the Viewer’s <b>Show</b> list.</p>
+<p>Once the first button has made the copy, look at the repeats around a GA-sequence that began as an Alu element’s tail: an AluJb, then a run of AGAA repeated, which RepeatMasker calls a simple repeat.</p>
+<div class="tryrow"><button class="do" type="button" data-viewer="~/genomes/HG002_chr17.repeats.gpxil.tif" data-region="chr17:6,792,801-6,793,400" data-plane="x-repeats">The repeats at chr17:6,792,801-6,793,400</button></div>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil annotate /data/examples/HG002_chr17.gpxil.tif /data/examples/rmsk_chr17.txt.gz --plane x-repeats -o ~/genomes/HG002_chr17.repeats.gpxil.tif
+gpxil annotate ~/genomes/HG002_chr17.repeats.gpxil.tif /data/examples/rmsk_chr17.txt.gz --plane x-repeat-age --as score --units % \
+    -o ~/genomes/HG002_chr17.repeats-age.gpxil.tif
+gpxil info ~/genomes/HG002_chr17.repeats-age.gpxil.tif
+viewer ~/genomes/HG002_chr17.repeats.gpxil.tif chr17:6,792,801-6,793,400 --plane=x-repeats</code></pre>
+<p>A second plane goes on the copy that has the first. <code>gpxil subset … --planes ref,gt,flags,x-repeats</code> keeps planes by name, and <code>gpxil validate</code> checks the new file.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.annotate import annotate
+
+summary = annotate("/data/examples/HG002_chr17.gpxil.tif", "/home/user/genomes/HG002_repeats.gpxil.tif",
+                   "/data/examples/rmsk_chr17.txt.gz", plane="x-repeats", log=lambda msg: None)
+print(summary["labels"], "labels over", summary["bases_with_a_feature"], "bases")
+with GpxilFile("/home/user/genomes/HG002_repeats.gpxil.tif") as g:
+    labels = g.metadata["planes"]["x-repeats"]["labels"]   # value -> label
+    values = g["chr17"].read("x-repeats", 6_792_900, 6_793_300)
+print(sorted({labels[str(v)] for v in values.tolist() if v}))</code></pre>
+<h2 data-anchor="cite">References</h2>
+<p>If you use these programs in your work, cite the papers below, and give the versions you used (<a href="#h-versions">Versions, and how to cite</a>):</p>
+<dl class="cite-list">
+<dt>gpxiltools (the gpxil command, and the Python package)</dt>
+<dd>Chronomic Medicine Group, University of Cambridge (2026) gpxiltools: read, write, render and check gpxil files (Python). <a href="https://github.com/comparativechrono/Gpxil-tools" target="_blank" rel="noopener">github.com/comparativechrono/Gpxil-tools</a></dd>
+<dt>RepeatMasker, and the UCSC Genome Browser’s table of its repeats on GRCh38 (rmsk_chr17.txt.gz)</dt>
+<dd>Smit AFA, Hubley R, Green P (2013–2015) RepeatMasker Open-4.0. <a href="https://www.repeatmasker.org" target="_blank" rel="noopener">www.repeatmasker.org</a></dd>
+<dd>Kent WJ, Sugnet CW, Furey TS, Roskin KM, Pringle TH, Zahler AM, et al. (2002) The human genome browser at UCSC. <i>Genome Research</i> 12(6): 996–1006. <a href="https://doi.org/10.1101/gr.229102" target="_blank" rel="noopener">doi:10.1101/gr.229102</a></dd>
+<dd>UCSC Genome Browser. RepeatMasker’s repeats on hg38 (GRCh38): the rmsk table. <a href="https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/" target="_blank" rel="noopener">hgdownload.soe.ucsc.edu/goldenPath/hg38/database</a></dd>
+<dt>Ensembl (GRCh38 sequence, and genes from release 116)</dt>
+<dd>Yates AD, Austine-Orimoloye O, Azov AG, Barba M, Barnes I, Barrera-Enriquez VP, et al. (2026) Ensembl 2026. <i>Nucleic Acids Research</i> 54(D1): D1053–D1060. <a href="https://doi.org/10.1093/nar/gkaf1239" target="_blank" rel="noopener">doi:10.1093/nar/gkaf1239</a></dd>
+</dl>
+</article>
+<article class="help-page" id="h-tool-skew" data-title="Strand symmetry: skews in windows" data-group="Tools" data-group-page="h-tools" data-keys="skew skews gc content gc skew at skew purine pyrimidine keto amino strand symmetry asymmetry chargaff second parity rule k-mers reverse complement windows replication origins cumulative transcription coding strand genes centromere satellite map look for patterns" hidden>
+<h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/></svg>Strand symmetry: skews in windows</h1>
+<p class="lede"><code>gpxil skew</code> measures, in windows along a genome, how the bases of one strand compare with the other’s. Over long stretches, a strand has as many A as T and as many C as G, and each short word as often as its reverse complement: Chargaff’s second parity rule. Where a stretch breaks it, something has treated the two strands differently – replication, transcription, repeats inserted one way round, runs of one strand’s bases – and the windows show where.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="skew" data-input="/data/examples/HG002_chr17.gpxil.tif">Chromosome 17 in windows of 100,000 bases</button> <button class="do" type="button" data-tool="skew" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="/data/examples/chr17_genes.bed">Its genes, on their coding strands</button></div>
+
+<h2>The measures</h2>
+<table>
+<tr><th>Measure</th><th>What it is</th></tr>
+<tr><td><code>gc</code></td><td>G and C over all four bases</td></tr>
+<tr><td><code>gc_skew</code></td><td>(G − C) / (G + C): above 0 where G outnumbers C on the + strand</td></tr>
+<tr><td><code>at_skew</code></td><td>(A − T) / (A + T)</td></tr>
+<tr><td><code>ry_skew</code></td><td>purines less pyrimidines, (A + G − C − T), over all four</td></tr>
+<tr><td><code>km_skew</code></td><td>keto less amino bases, (G + T − A − C), over all four</td></tr>
+<tr><td><code>asymmetry_k</code></td><td>for words of k bases: how far each word’s count and its reverse complement’s differ, over their counts (palindromes left out): 0 when the strands are alike, 1 when no word’s reverse complement is there</td></tr>
+<tr><td><code>cumulative_gc_skew</code></td><td>the GC skew summed along the sequence: in bacteria, it turns where replication changes direction</td></tr>
+</table>
+<p>The bases counted are the reference’s A, C, G and T, on the + strand; a word is counted in the window of its first base, if all its bases count. Windows are set at multiples of their size along each sequence, so the windows of two files, or of a region and its whole chromosome, line up. You can leave out soft-masked bases (repeats), or count only the bases of some features, each read on its own strand: then the skews of genes are those of their coding strands, and a base under genes on both strands counts on each.</p>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>Its reference is what is measured: the sample’s variants aren’t.</dd>
+  <dt>Bases a window</dt><dd>100,000 to begin with.</dd>
+  <dt>Regions</dt><dd>Contigs or regions; empty, every contig.</dd>
+  <dt>k-mers for the asymmetry</dt><dd>Word lengths of 1 to 6, separated by commas: 1,2,3,4.</dd>
+  <dt>Leave out soft-masked bases</dt><dd>Repeats don’t count.</dd>
+  <dt>Count only the bases of these features</dt><dd>A BED file or a RepeatMasker table, read on each feature’s strand (unless you untick it), with the features to keep.</dd>
+  <dt>Also a map; the map’s measures</dt><dd>A picture: a track for each measure, a pixel a window. Skews run from blue, below 0, through grey to red, above it, to the 99th percentile of their size; GC content and asymmetries from light to dark blue; a window with nothing counted is white.</dd>
+  <dt>Save the table as</dt><dd>A tab-separated file, a window a line: its sequence, start and end, the bases counted, A, C, G and T, the measures, the other bases and the soft-masked ones.</dd>
+</dl>
+
+<h2>What it gives</h2>
+<p>The table and the map, and the measures over all the bases counted.</p>
+
+<h2>Chromosome 17</h2>
+<p>Over its 82,920,204 bases of A, C, G and T, chromosome 17 is 45.3 % G and C; its GC skew is +0.003 and its AT skew −0.001, and the counts of its words differ from their reverse complements’ by 0.2 % for single bases and 1.9 % for words of four: its strands are alike, as Chargaff’s second rule says. Window by window, they differ more, and in one long stretch, from 22.8 to 26.7 Mb, much more: the asymmetry of words of four is 0.39 there, against a median of 0.055 in the chromosome’s other windows, and the GC skew +0.06. That is the centromere: 3.9 Mb of alpha satellite, a unit of 171 bases repeated over and over, 98.6 % of it the same way round, on the + strand, in RepeatMasker’s table.</p>
+<p>Read on their coding strands, chromosome 17’s genes lean to G and T: GC skew +0.018, AT skew −0.042, the asymmetry of single bases 0.030, thirteen times the whole chromosome’s. It is the excess of G and T over A and C on genes’ coding strands that transcription leaves (Green and colleagues, 2003).</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil skew /data/examples/HG002_chr17.gpxil.tif -o ~/results/chr17-skew.tsv --picture ~/results/chr17-skew.png --show gc,gc_skew,at_skew,asymmetry_4
+gpxil skew /data/examples/HG002_chr17.gpxil.tif --features /data/examples/chr17_genes.bed --stranded --json | head -20
+gpxil skew /data/examples/HG002_chr17.gpxil.tif chr17:20,000,001-30,000,000 --window 1000000 --k 4 | cut -f 2,9,10,14</code></pre>
+<p>Without <code>-o</code>, the table goes to the terminal; <code>--json</code> gives the totals, by sequence and over all; <code>--show</code> chooses the map’s measures.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.skew import SkewCounter, iter_skew
+
+counter = SkewCounter(window=1_000_000, ks=(1, 4))
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    rows = list(iter_skew(g, counter=counter))       # (a dict for each window)
+top = max(rows, key=lambda r: r["asymmetry_4"] or 0)
+print(top["start"], top["end"], top["asymmetry_4"], top["gc_skew"])
+print(counter.totals()["all"])</code></pre>
+<p><code>picture(rows, ["gc_skew", "at_skew"], window=…)</code> draws the map, and <code>write_rows</code> writes the table.</p>
+<h2 data-anchor="cite">References</h2>
+<p>If you use these programs in your work, cite the papers below, and give the versions you used (<a href="#h-versions">Versions, and how to cite</a>):</p>
+<dl class="cite-list">
+<dt>gpxiltools (the gpxil command, and the Python package)</dt>
+<dd>Chronomic Medicine Group, University of Cambridge (2026) gpxiltools: read, write, render and check gpxil files (Python). <a href="https://github.com/comparativechrono/Gpxil-tools" target="_blank" rel="noopener">github.com/comparativechrono/Gpxil-tools</a></dd>
+<dt>Chargaff’s second parity rule</dt>
+<dd>Rudner R, Karkas JD, Chargaff E (1968) Separation of B. subtilis DNA into complementary strands. 3. Direct analysis. <i>Proceedings of the National Academy of Sciences of the USA</i> 60(3): 921–922. <a href="https://doi.org/10.1073/pnas.60.3.921" target="_blank" rel="noopener">doi:10.1073/pnas.60.3.921</a></dd>
+<dt>Transcription’s mark on the two strands of genes</dt>
+<dd>Green P, Ewing B, Miller W, Thomas PJ, NISC Comparative Sequencing Program, Green ED (2003) Transcription-associated mutational asymmetry in mammalian evolution. <i>Nature Genetics</i> 33(4): 514–517. <a href="https://doi.org/10.1038/ng1103" target="_blank" rel="noopener">doi:10.1038/ng1103</a></dd>
+<dt>Cumulative skews</dt>
+<dd>Grigoriev A (1998) Analyzing genomes with cumulative skew diagrams. <i>Nucleic Acids Research</i> 26(10): 2286–2290. <a href="https://doi.org/10.1093/nar/26.10.2286" target="_blank" rel="noopener">doi:10.1093/nar/26.10.2286</a></dd>
+<dt>RepeatMasker, and the UCSC Genome Browser’s table of its repeats on GRCh38 (rmsk_chr17.txt.gz)</dt>
+<dd>Smit AFA, Hubley R, Green P (2013–2015) RepeatMasker Open-4.0. <a href="https://www.repeatmasker.org" target="_blank" rel="noopener">www.repeatmasker.org</a></dd>
+<dd>Kent WJ, Sugnet CW, Furey TS, Roskin KM, Pringle TH, Zahler AM, et al. (2002) The human genome browser at UCSC. <i>Genome Research</i> 12(6): 996–1006. <a href="https://doi.org/10.1101/gr.229102" target="_blank" rel="noopener">doi:10.1101/gr.229102</a></dd>
+<dd>UCSC Genome Browser. RepeatMasker’s repeats on hg38 (GRCh38): the rmsk table. <a href="https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/" target="_blank" rel="noopener">hgdownload.soe.ucsc.edu/goldenPath/hg38/database</a></dd>
+</dl>
+</article>
+<article class="help-page" id="h-tool-period" data-title="Wrap a repeat at its period" data-group="Tools" data-group-page="h-tools" data-keys="period periodicity tandem repeat repeats microsatellite str short tandem repeat minisatellite unit units wrap wrapped aligned sequence haplotypes substitutions insertions deletions expansion contraction slippage gene conversion ga-sequences agaa look for patterns" hidden>
+<h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Wrap a repeat at its period</h1>
+<p class="lede"><code>gpxil period</code> wraps a tandem repeat – a microsatellite, a GA-sequence – at its period, one unit a row, so its units line up in columns and a unit that differs stands out. The reference is drawn beside the person’s two haplotypes, so you can see which units they have changed, gained or lost.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="period" data-input="/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif" data-region="chr17:6,793,028-6,793,302" data-reference="/data/examples/HG002_chr17.gpxil.tif">A GA-sequence in HG002’s newer benchmark</button> <button class="do" type="button" data-tool="period" data-input="/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif" data-region="chr17:6,793,028-6,793,302" data-reference="/data/examples/HG002_chr17.gpxil.tif" data-layout="sequence" data-format="text">The same, as sequences, in text</button></div>
+
+<h2>How it is wrapped</h2>
+<dl>
+  <dt>the period</dt><dd>For each step up to 50 bases, the share of the stretch’s bases that equal the base a step further on. The period is the shortest step whose share is within 0.05 of the best, so a repeat of AAAG is period 4, not 8. A stretch with no clear period – the best share under 0.6 – still gets the best, with a note. Or you give the period.</dd>
+  <dt>aligned</dt><dd>Each haplotype is drawn at the reference’s positions, so its rows are the reference’s rows: a substituted base is outlined, a deleted base is a dash, a base not known is in the colour of N, and an insertion is a bar on the right edge of the base it follows. A haplotype that isn’t there, as the second where a man has one X, is blank.</dd>
+  <dt>as sequences</dt><dd>Each haplotype is its own sequence, insertions in and deletions out, wrapped at the same period, so a unit gained or lost shifts the units after it, and the haplotype ends lower or higher than the reference.</dd>
+  <dt>as text</dt><dd>The reference and the haplotypes side by side, a unit a line; a substituted base is in lower case, a deleted one a dash, and an insertion a <code>+</code> after the unit, with its bases listed below.</dd>
+</dl>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>A person’s file, or a reference alone. A file without its reference plane needs the reference too.</dd>
+  <dt>Region</dt><dd>CONTIG:START-END, counting from 1, of up to 20,000 bases. For a chromosome 17 file, the GA-sequence of the first button, to begin with.</dd>
+  <dt>Period</dt><dd>Empty: found.</dd>
+  <dt>The haplotypes</dt><dd>Aligned, or as their own sequences.</dd>
+  <dt>As</dt><dd>A picture, 8 pixels a base in any palette, or text.</dd>
+</dl>
+
+<h2>A GA-sequence that began as an Alu’s tail</h2>
+<p>At chr17:6,793,028-6,793,302, 275 bases of A and G begin in the tail of an AluJb element: RepeatMasker calls most of them a simple repeat, (AGAA)n. Their period is 4: 85 % of the bases equal the base a unit on. Genome in a Bottle’s v4.2.1 benchmark doesn’t call them; the newer v5.0q, made from a whole assembly of HG002’s genome, does, and he is heterozygous for 15 substitutions, 2 insertions and 2 deletions there. Wrapped, haplotype 1 is the reference but for an insertion of three units, AGAA AGAA AGAA. Haplotype 2 has all the substitutions, 15 bases in 13 units, and each of those units becomes one the repeat already has – AAAG becomes AGAG, AGAA becomes AGAG – as a unit copied over its neighbour would; it also has an insertion of five units and two deletions of two bases. As sequences, haplotype 1 is 12 bases longer than the reference, and haplotype 2 16. <a href="#h-walk-discover">Pure GA-sequences</a> counts how often that happens.</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil period /data/examples/HG002_chr17_v5.0q.noref.gpxil.tif chr17:6,793,028-6,793,302 --reference /data/examples/HG002_chr17.gpxil.tif \
+    -o ~/results/GA-period.png
+gpxil period /data/examples/HG002_chr17_v5.0q.noref.gpxil.tif chr17:6,793,028-6,793,302 --reference /data/examples/HG002_chr17.gpxil.tif \
+    --layout sequence | head -12</code></pre>
+<p><code>--period</code> gives the period, <code>--max-period</code> the longest to look for, and <code>--scale</code> and <code>--palette</code> the picture’s squares and colours. Without <code>-o</code>, the text goes to the terminal.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.period import best_period, panels, text
+
+with GpxilFile("/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif", reference="/data/examples/HG002_chr17.gpxil.tif") as g:
+    c, s, e = g.view(*g.locate(*g.region_of("chr17:6793028-6793302"), join=True))
+    period, share, shares = best_period(c.read("ref", s, e))
+    ps = panels(c, s, e)                          # (the reference, then each haplotype)
+print(period, round(share, 2), {k: round(v, 2) for k, v in shares.items() if k <= 8})
+print(text(ps, period)[:300])</code></pre>
+<p><code>picture(ps, period, scale=8, title=…)</code> draws the picture, a Pillow image.</p>
+<h2 data-anchor="cite">References</h2>
+<p>If you use these programs in your work, cite the papers below, and give the versions you used (<a href="#h-versions">Versions, and how to cite</a>):</p>
+<dl class="cite-list">
+<dt>gpxiltools (the gpxil command, and the Python package)</dt>
+<dd>Chronomic Medicine Group, University of Cambridge (2026) gpxiltools: read, write, render and check gpxil files (Python). <a href="https://github.com/comparativechrono/Gpxil-tools" target="_blank" rel="noopener">github.com/comparativechrono/Gpxil-tools</a></dd>
+<dt>Genome in a Bottle: HG002, his parents HG003 and HG004, and their benchmarks</dt>
+<dd class="cite-note">The examples HG002_chr17.gpxil.tif, HG002_TP53.vcf and HG002_TP53.bed come from HG002’s v4.2.1 benchmark, HG003_chr17.noref.gpxil.tif and HG004_chr17.noref.gpxil.tif from his parents’, and HG002_chr17_v5.0q.noref.gpxil.tif from his v5.0q benchmark, which is made from the T2T HG002 Q100 assembly of his genome (Hansen et al. 2026).</dd>
+<dd>Zook JM, Catoe D, McDaniel J, Vang L, Spies N, Sidow A, et al. (2016) Extensive sequencing of seven human genomes to characterize benchmark reference materials. <i>Scientific Data</i> 3: 160025. <a href="https://doi.org/10.1038/sdata.2016.25" target="_blank" rel="noopener">doi:10.1038/sdata.2016.25</a></dd>
+<dd>Wagner J, Olson ND, Harris L, Khan Z, Farek J, Mahmoud M, et al. (2022) Benchmarking challenging small variants with linked and long reads. <i>Cell Genomics</i> 2(5): 100128. <a href="https://doi.org/10.1016/j.xgen.2022.100128" target="_blank" rel="noopener">doi:10.1016/j.xgen.2022.100128</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) small-variant benchmark v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG003 (NA24149) and HG004 (NA24143), the parents of HG002: small-variant benchmarks v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio</a></dd>
+<dd>Hansen NF, Dwarshuis N, Ji HJ, Rhie A, Loucks H, Logsdon GA, et al. (2026) A complete diploid human genome benchmark for personalized genomics. <i>Cell</i> 189(16): 4857–4875.e31. <a href="https://doi.org/10.1016/j.cell.2026.06.016" target="_blank" rel="noopener">doi:10.1016/j.cell.2026.06.016</a></dd>
+<dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) assembly-based small-variant benchmark v5.0q, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q</a></dd>
+<dt>RepeatMasker, and the UCSC Genome Browser’s table of its repeats on GRCh38 (rmsk_chr17.txt.gz)</dt>
+<dd>Smit AFA, Hubley R, Green P (2013–2015) RepeatMasker Open-4.0. <a href="https://www.repeatmasker.org" target="_blank" rel="noopener">www.repeatmasker.org</a></dd>
+<dd>Kent WJ, Sugnet CW, Furey TS, Roskin KM, Pringle TH, Zahler AM, et al. (2002) The human genome browser at UCSC. <i>Genome Research</i> 12(6): 996–1006. <a href="https://doi.org/10.1101/gr.229102" target="_blank" rel="noopener">doi:10.1101/gr.229102</a></dd>
+<dd>UCSC Genome Browser. RepeatMasker’s repeats on hg38 (GRCh38): the rmsk table. <a href="https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/" target="_blank" rel="noopener">hgdownload.soe.ucsc.edu/goldenPath/hg38/database</a></dd>
+</dl>
+</article>
 <article class="help-page" id="h-tool-render" data-title="Draw a region as a picture" data-group="Tools" data-group-page="h-tools" data-keys="render draw picture png tiff cmyk rgb print region mode reference genotype haplotypes variants palette width scale hilbert layout dpi insertions" hidden>
 <h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>Draw a region as a picture</h1>
 <p class="lede"><code>gpxil render</code> draws a region of a gpxil file as a picture, one pixel (or a square of pixels) a base: a PNG for the screen, or a TIFF in RGB or in CMYK for print. The colours come from a palette when the picture is drawn; the file holds codes, not colours, which is why the same file gives exact colours on a screen and in ink.</p>
@@ -2163,7 +2695,7 @@ print(pxil.read("/home/user/results/my.transcript.pxil.png")[0])</code></pre>
 <tr><td><code>flags</code></td><td>8-bit</td><td>whether the call here was phased, an insertion follows, the call was filtered, a call covers the base</td></tr>
 <tr><td><code>gq</code>, <code>dp</code></td><td>8-bit</td><td>the genotype quality and read depth of the call over the base, up to 254; 255 where there is none</td></tr>
 <tr><td><code>ps</code></td><td>32-bit</td><td>the phase set of a phased call; 0 where there is none</td></tr>
-<tr><td><code>x-…</code></td><td>8, 16 or 32 bits, or floating point</td><td>planes of your own, such as <code>x-methylation</code>; readers ignore those they don’t know</td></tr>
+<tr><td><code>x-…</code></td><td>8, 16 or 32 bits, or floating point</td><td>planes of your own, such as <code>x-methylation</code>; readers ignore those they don’t know. <a href="#h-tool-annotate">gpxil annotate</a> makes them from repeats, BED and bedGraph files, with what they hold in the metadata</td></tr>
 </table>
 <p>A file holds at most one person. One without a person is a reference – <code>ref</code> planes only, like the chromosomes of GRCh38 in <code>/data/grch38</code>. A file can also leave the <code>ref</code> plane out and name its reference by checksums instead (below). A contig with a <code>gt</code> plane always has a <code>flags</code> plane too. <a href="#h-codes">The codes</a> gives every value.</p>
 
@@ -3007,11 +3539,11 @@ python3 serve.py 8000 --reference DIR      # the GRCh38 reference from a copy on
 
 <table>
 <tr><th>Package</th><th>Version</th></tr>
-<tr><td>gpxiltools</td><td>0.7.0</td></tr>
+<tr><td>gpxiltools</td><td>0.8.0</td></tr>
 <tr><td>gpxil2pxil</td><td>0.2.0</td></tr>
 <tr><td>pxil</td><td>0.1.1</td></tr>
 <tr><td>tifffile (which gpxiltools reads and writes TIFF with)</td><td>2026.10.15</td></tr>
-<tr><td>gpxilwb (the studio&#x27;s own runner, not on PyPI)</td><td>1.0.0</td></tr>
+<tr><td>gpxilwb (the studio&#x27;s own runner, not on PyPI)</td><td>1.1.0</td></tr>
 </table>
 <p>Python itself is Pyodide 0.29.5 (Python 3.13), with NumPy 2.2.5, Pillow 11.3.0 and jsonschema 4.23.0 as Pyodide builds them, downloaded from jsDelivr the first time Python starts; matplotlib 3.8.4 follows in the background, for plots. To see what you have, type <code>python --version</code> or <code>pip list</code> in the terminal, or <code>help</code>, which gives the programs’ versions once Python has started.</p>
 
@@ -3181,7 +3713,7 @@ python3 serve.py 8000 --reference DIR      # the GRCh38 reference from a copy on
 <h2>Reporting a fault</h2>
 <p>If a tool fails and shows <i>Python’s traceback (for reporting a fault)</i> under the result, or a file the studio made doesn’t pass its own check, that’s a fault. Report it on the studio’s <a href="https://github.com/comparativechrono/GpxilStudio/issues" target="_blank" rel="noopener">issues page</a>, or on <a href="https://github.com/comparativechrono/Gpxil-tools/issues" target="_blank" rel="noopener">gpxiltools’</a> if it happens on your own computer too. Include the traceback and, if you can, a file that shows the problem: one of the examples, or a small made-up file such as the worked example. Never attach a person’s genome, or a picture of one.</p>
 </article>
-<article class="help-page" id="h-credits" data-title="Credits and licences" data-group="Reference" data-group-page="h-versions" data-keys="credits licences licenses copyright mit bsd mpl apache open source chronomic medicine group cambridge gpxil gpxiltools gpxil2pxil pxil gpxil browser pyodide numpy pillow tifffile jsonschema matplotlib codemirror marked dompurify jszip genome in a bottle nist ensembl grch38 albrecht-buehler third party" hidden>
+<article class="help-page" id="h-credits" data-title="Credits and licences" data-group="Reference" data-group-page="h-versions" data-keys="credits licences licenses copyright mit bsd mpl apache open source chronomic medicine group cambridge gpxil gpxiltools gpxil2pxil pxil gpxil browser pyodide numpy pillow tifffile jsonschema matplotlib codemirror marked dompurify jszip genome in a bottle nist ensembl grch38 albrecht-buehler third party repeatmasker ucsc rmsk repeats" hidden>
 <h1><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 4h6a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4zM20 4h-6a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h7z"/></svg>Credits and licences</h1>
 <p class="lede">GpxilStudio is made by the Chronomic Medicine Group, Department of Genomic Medicine, University of Cambridge. It brings the gpxil toolkit together in one page, on the framework of the group’s Bioinformatics and Pedigree workbenches. It’s built from open-source software, open standards and public data, each under its own licence; <a href="THIRD_PARTY.md" target="_blank" rel="noopener">THIRD_PARTY.md</a> lists them with their versions.</p>
 
@@ -3212,6 +3744,8 @@ python3 serve.py 8000 --reference DIR      # the GRCh38 reference from a copy on
   <li>The genome pixel image is Guenter Albrecht-Buehler’s idea: a genome drawn as pictures, one pixel a base. gpxil takes it from one sequence to a person’s genome, with their genotype at every base, and the gpxi palette keeps his four greys.</li>
   <li>gpxil files are TIFF files, and they name their reference sequences by the GA4GH’s refget checksums. Variants come from VCF files, and bases are written in the IUPAC’s codes.</li>
   <li>The GRCh38 reference is the Genome Reference Consortium’s, as Ensembl release 116 gives it, with Ensembl’s genes and transcripts, and MANE’s choice of transcripts; the Gpxil browser made them into the files the studio reads.</li>
+  <li>Chromosome 17’s repeats in <code>rmsk_chr17.txt.gz</code> are RepeatMasker’s (Smit, Hubley and Green), as the UCSC Genome Browser’s <code>rmsk</code> table for hg38 has them: the UCSC Genome Browser’s sequence and annotation data are freely available for any use, crediting their contributors. Its protein-coding genes in <code>chr17_genes.bed</code> are Ensembl release 116’s.</li>
+  <li>Pure GA-sequences, and the stacks that show the Alu elements before them, are Guenter Albrecht-Buehler’s discoveries, made in his genome pixel images.</li>
   <li>HG002’s genome in the examples is the Genome in a Bottle Consortium’s benchmark (NIST), version 4.2.1 and version 5.0q, for a man of the Personal Genome Project who agreed to its release, and HG003’s and HG004’s, his father’s and mother’s, are their version 4.2.1 benchmarks; the examples were made from them with gpxiltools. TP53’s transcripts in <code>TP53.gtf</code> are Ensembl’s.</li>
   <li>The worked example is the gpxil specification’s.</li>
 </ul>
@@ -3232,6 +3766,11 @@ python3 serve.py 8000 --reference DIR      # the GRCh38 reference from a copy on
 <dt>The Gpxil browser, and its GRCh38 files and gene files</dt>
 <dd>Chronomic Medicine Group, University of Cambridge (2026) The Gpxil browser: the GRCh38 genome as gpxil pictures, in a web browser. <a href="https://comparativechrono.github.io/Gpxil-browser/" target="_blank" rel="noopener">comparativechrono.github.io/Gpxil-browser</a></dd>
 <dt>Genome pixel images (GPxI)</dt>
+<dd>Albrecht-Buehler G (2009) Outline of a genome navigation system based on the properties of GA-sequences and their flanks. <i>PLoS ONE</i> 4(3): e4701. <a href="https://doi.org/10.1371/journal.pone.0004701" target="_blank" rel="noopener">doi:10.1371/journal.pone.0004701</a></dd>
+<dt>Pure GA-sequences, and their flanks</dt>
+<dd class="cite-note">The correction replaces the abstract’s “160 times fewer” point mutations with “many”.</dd>
+<dd>Albrecht-Buehler G (2008) Properties and distribution of pure GA-sequences of mammalian genomes. <i>PLoS ONE</i> 3(11): e3818. <a href="https://doi.org/10.1371/journal.pone.0003818" target="_blank" rel="noopener">doi:10.1371/journal.pone.0003818</a></dd>
+<dd>Albrecht-Buehler G (2009) Correction: Properties and distribution of pure GA-sequences of mammalian genomes. <i>PLoS ONE</i>. <a href="https://doi.org/10.1371/annotation/7126ab55-ca2a-4202-9e66-fac899bd52ee" target="_blank" rel="noopener">doi:10.1371/annotation/7126ab55-ca2a-4202-9e66-fac899bd52ee</a></dd>
 <dd>Albrecht-Buehler G (2009) Outline of a genome navigation system based on the properties of GA-sequences and their flanks. <i>PLoS ONE</i> 4(3): e4701. <a href="https://doi.org/10.1371/journal.pone.0004701" target="_blank" rel="noopener">doi:10.1371/journal.pone.0004701</a></dd>
 <dt>refget sequence identifiers</dt>
 <dd>Yates AD, Adams J, Chaturvedi S, Davies RM, Laird M, Leinonen R, et al. (2021) Refget: standardized access to reference sequences. <i>Bioinformatics</i> 38(1): 299–300. <a href="https://doi.org/10.1093/bioinformatics/btab524" target="_blank" rel="noopener">doi:10.1093/bioinformatics/btab524</a></dd>
@@ -3254,6 +3793,10 @@ python3 serve.py 8000 --reference DIR      # the GRCh38 reference from a copy on
 <dd>Genome in a Bottle Consortium, NIST. HG003 (NA24149) and HG004 (NA24143), the parents of HG002: small-variant benchmarks v4.2.1, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio</a></dd>
 <dd>Hansen NF, Dwarshuis N, Ji HJ, Rhie A, Loucks H, Logsdon GA, et al. (2026) A complete diploid human genome benchmark for personalized genomics. <i>Cell</i> 189(16): 4857–4875.e31. <a href="https://doi.org/10.1016/j.cell.2026.06.016" target="_blank" rel="noopener">doi:10.1016/j.cell.2026.06.016</a></dd>
 <dd>Genome in a Bottle Consortium, NIST. HG002 (NA24385) assembly-based small-variant benchmark v5.0q, GRCh38. <a href="https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q" target="_blank" rel="noopener">ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/v5.0q</a></dd>
+<dt>RepeatMasker, and the UCSC Genome Browser’s table of its repeats on GRCh38 (rmsk_chr17.txt.gz)</dt>
+<dd>Smit AFA, Hubley R, Green P (2013–2015) RepeatMasker Open-4.0. <a href="https://www.repeatmasker.org" target="_blank" rel="noopener">www.repeatmasker.org</a></dd>
+<dd>Kent WJ, Sugnet CW, Furey TS, Roskin KM, Pringle TH, Zahler AM, et al. (2002) The human genome browser at UCSC. <i>Genome Research</i> 12(6): 996–1006. <a href="https://doi.org/10.1101/gr.229102" target="_blank" rel="noopener">doi:10.1101/gr.229102</a></dd>
+<dd>UCSC Genome Browser. RepeatMasker’s repeats on hg38 (GRCh38): the rmsk table. <a href="https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/" target="_blank" rel="noopener">hgdownload.soe.ucsc.edu/goldenPath/hg38/database</a></dd>
 <dt>Pyodide (Python in the browser)</dt>
 <dd>The Pyodide development team. Pyodide: Python with the scientific stack, compiled to WebAssembly. <a href="https://pyodide.org" target="_blank" rel="noopener">pyodide.org</a></dd>
 <dt>NumPy</dt>
@@ -3291,9 +3834,9 @@ python3 serve.py 8000 --reference DIR      # the GRCh38 reference from a copy on
 
 <noscript><p style="padding:20px">This page needs JavaScript.</p></noscript>
 
-<script>window.WB_EXAMPLES = [{"p":"HG002_TP53.bed","s":1144},{"p":"HG002_TP53.gpxil.tif","s":75775},{"p":"HG002_TP53.vcf","s":147019},{"p":"HG002_chr17.gpxil.tif","s":24648834},{"p":"HG002_chr17_v5.0q.noref.gpxil.tif","s":1240880},{"p":"HG003_chr17.noref.gpxil.tif","s":1898116},{"p":"HG004_chr17.noref.gpxil.tif","s":1877604},{"p":"TP53.gtf","s":415424},{"p":"worked-example.fa","s":73},{"p":"worked-example.gpxil.tif","s":6955},{"p":"worked-example.vcf","s":330},{"p":"workflows/family.workflow.json","s":2440},{"p":"workflows/gene-pictures.workflow.json","s":1537},{"p":"workflows/pictures-and-print.workflow.json","s":2024},{"p":"workflows/round-trip.workflow.json","s":2189},{"p":"workflows/vcf-to-gpxil.workflow.json","s":2890}];
+<script>window.WB_EXAMPLES = [{"p":"HG002_TP53.bed","s":1144},{"p":"HG002_TP53.gpxil.tif","s":75775},{"p":"HG002_TP53.vcf","s":147019},{"p":"HG002_chr17.gpxil.tif","s":24648834},{"p":"HG002_chr17_v5.0q.noref.gpxil.tif","s":1240880},{"p":"HG003_chr17.noref.gpxil.tif","s":1898116},{"p":"HG004_chr17.noref.gpxil.tif","s":1877604},{"p":"TP53.gtf","s":415424},{"p":"chr17_genes.bed","s":41010},{"p":"rmsk_chr17.txt.gz","s":4399382},{"p":"worked-example.fa","s":73},{"p":"worked-example.gpxil.tif","s":6955},{"p":"worked-example.vcf","s":330},{"p":"workflows/family.workflow.json","s":2440},{"p":"workflows/ga-sequences.workflow.json","s":2573},{"p":"workflows/gene-pictures.workflow.json","s":1537},{"p":"workflows/pictures-and-print.workflow.json","s":2024},{"p":"workflows/round-trip.workflow.json","s":2189},{"p":"workflows/vcf-to-gpxil.workflow.json","s":2890}];
 window.WB_STARTERS = [{"p":"notebooks/gpxil-in-python.ipynb"}];
-window.WB_BUNDLE = {"archive":"gpxil-tools.zip","sha256":"f17a686712e313fbba10e35dbe5f144443eb54f1954ff8df2e17552e0afc2138","bytes":417856,"packages":{"gpxiltools":"0.7.0","gpxil2pxil":"0.2.0","pxil":"0.1.1","tifffile":"2026.10.15","gpxilwb":"1.0.0"},"pyodide_packages":["numpy","pillow","jsonschema"]};
+window.WB_BUNDLE = {"archive":"gpxil-tools.zip","sha256":"eec8ce8aa7c2ef5c456ed46476b58c42c024083b415381b268e72c7050fee17d","bytes":464887,"packages":{"gpxiltools":"0.8.0","gpxil2pxil":"0.2.0","pxil":"0.1.1","tifffile":"2026.10.15","gpxilwb":"1.1.0"},"pyodide_packages":["numpy","pillow","jsonschema"]};
 window.WB_REFERENCE = {"assembly":"GRCh38","source":"Ensembl release 116: Homo_sapiens.GRCh38.dna_sm.primary_assembly.fa.gz","genes_source":"Ensembl release 116: Homo_sapiens.GRCh38.116.gtf.gz (all transcripts)","base":"https://comparativechrono.github.io/Gpxil-browser/data/grch38/","files":[{"p":"chr1.gpxil.tif","u":"gpxil/chr1.gpxil.tif","s":66743472,"contigs":["chr1"]},{"p":"chr2.gpxil.tif","u":"gpxil/chr2.gpxil.tif","s":70505688,"contigs":["chr2"]},{"p":"chr3.gpxil.tif","u":"gpxil/chr3.gpxil.tif","s":57767884,"contigs":["chr3"]},{"p":"chr4.gpxil.tif","u":"gpxil/chr4.gpxil.tif","s":55527502,"contigs":["chr4"]},{"p":"chr5.gpxil.tif","u":"gpxil/chr5.gpxil.tif","s":52625604,"contigs":["chr5"]},{"p":"chr6.gpxil.tif","u":"gpxil/chr6.gpxil.tif","s":49821294,"contigs":["chr6"]},{"p":"chr7.gpxil.tif","u":"gpxil/chr7.gpxil.tif","s":45568084,"contigs":["chr7"]},{"p":"chr8.gpxil.tif","u":"gpxil/chr8.gpxil.tif","s":42130516,"contigs":["chr8"]},{"p":"chr9.gpxil.tif","u":"gpxil/chr9.gpxil.tif","s":35187824,"contigs":["chr9"]},{"p":"chr10.gpxil.tif","u":"gpxil/chr10.gpxil.tif","s":38569639,"contigs":["chr10"]},{"p":"chr11.gpxil.tif","u":"gpxil/chr11.gpxil.tif","s":38637833,"contigs":["chr11"]},{"p":"chr12.gpxil.tif","u":"gpxil/chr12.gpxil.tif","s":38299323,"contigs":["chr12"]},{"p":"chr13.gpxil.tif","u":"gpxil/chr13.gpxil.tif","s":28531071,"contigs":["chr13"]},{"p":"chr14.gpxil.tif","u":"gpxil/chr14.gpxil.tif","s":26098851,"contigs":["chr14"]},{"p":"chr15.gpxil.tif","u":"gpxil/chr15.gpxil.tif","s":24163955,"contigs":["chr15"]},{"p":"chr16.gpxil.tif","u":"gpxil/chr16.gpxil.tif","s":23165189,"contigs":["chr16"]},{"p":"chr17.gpxil.tif","u":"gpxil/chr17.gpxil.tif","s":22773525,"contigs":["chr17"]},{"p":"chr18.gpxil.tif","u":"gpxil/chr18.gpxil.tif","s":22265231,"contigs":["chr18"]},{"p":"chr19.gpxil.tif","u":"gpxil/chr19.gpxil.tif","s":15551213,"contigs":["chr19"]},{"p":"chr20.gpxil.tif","u":"gpxil/chr20.gpxil.tif","s":17998813,"contigs":["chr20"]},{"p":"chr21.gpxil.tif","u":"gpxil/chr21.gpxil.tif","s":11250873,"contigs":["chr21"]},{"p":"chr22.gpxil.tif","u":"gpxil/chr22.gpxil.tif","s":10739611,"contigs":["chr22"]},{"p":"chrX.gpxil.tif","u":"gpxil/chrX.gpxil.tif","s":44142282,"contigs":["chrX"]},{"p":"chrY.gpxil.tif","u":"gpxil/chrY.gpxil.tif","s":7342464,"contigs":["chrY"]},{"p":"chrM.gpxil.tif","u":"gpxil/chrM.gpxil.tif","s":7163,"contigs":["chrM"]},{"p":"unplaced.gpxil.tif","u":"gpxil/unplaced.gpxil.tif","s":3129299,"contigs":["KI270728.1","KI270727.1","KI270442.1","KI270729.1","GL000225.1","KI270743.1","GL000008.2","GL000009.2","KI270747.1","KI270722.1","GL000194.1","KI270742.1","GL000205.2","GL000195.1","KI270736.1","KI270733.1","GL000224.1","GL000219.1","KI270719.1","GL000216.2","KI270712.1","KI270706.1","KI270725.1","KI270744.1","KI270734.1","GL000213.1","GL000220.1","KI270715.1","GL000218.1","KI270749.1","KI270741.1","GL000221.1","KI270716.1","KI270731.1","KI270751.1","KI270750.1","KI270519.1","GL000214.1","KI270708.1","KI270730.1","KI270438.1","KI270737.1","KI270721.1","KI270738.1","KI270748.1","KI270435.1","GL000208.1","KI270538.1","KI270756.1","KI270739.1","KI270757.1","KI270709.1","KI270746.1","KI270753.1","KI270589.1","KI270726.1","KI270735.1","KI270711.1","KI270745.1","KI270714.1","KI270732.1","KI270713.1","KI270754.1","KI270710.1","KI270717.1","KI270724.1","KI270720.1","KI270723.1","KI270718.1","KI270317.1","KI270740.1","KI270755.1","KI270707.1","KI270579.1","KI270752.1","KI270512.1","KI270322.1","GL000226.1","KI270311.1","KI270366.1","KI270511.1","KI270448.1","KI270521.1","KI270581.1","KI270582.1","KI270515.1","KI270588.1","KI270591.1","KI270522.1","KI270507.1","KI270590.1","KI270584.1","KI270320.1","KI270382.1","KI270468.1","KI270467.1","KI270362.1","KI270517.1","KI270593.1","KI270528.1","KI270587.1","KI270364.1","KI270371.1","KI270333.1","KI270374.1","KI270411.1","KI270414.1","KI270510.1","KI270390.1","KI270375.1","KI270420.1","KI270509.1","KI270315.1","KI270302.1","KI270518.1","KI270530.1","KI270304.1","KI270418.1","KI270424.1","KI270417.1","KI270508.1","KI270303.1","KI270381.1","KI270529.1","KI270425.1","KI270396.1","KI270363.1","KI270386.1","KI270465.1","KI270383.1","KI270384.1","KI270330.1","KI270372.1","KI270548.1","KI270580.1","KI270387.1","KI270391.1","KI270305.1","KI270373.1","KI270422.1","KI270316.1","KI270340.1","KI270338.1","KI270583.1","KI270334.1","KI270429.1","KI270393.1","KI270516.1","KI270389.1","KI270466.1","KI270388.1","KI270544.1","KI270310.1","KI270412.1","KI270395.1","KI270376.1","KI270337.1","KI270335.1","KI270378.1","KI270379.1","KI270329.1","KI270419.1","KI270336.1","KI270312.1","KI270539.1","KI270385.1","KI270423.1","KI270392.1","KI270394.1"]}],"genes":{"index":"genes/index.json.gz","count":78941,"transcripts":646577}};</script>
 <script src="assets/js/config.js"></script>
 <script src="assets/js/core.js"></script>

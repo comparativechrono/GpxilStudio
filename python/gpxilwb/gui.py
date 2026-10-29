@@ -4,8 +4,9 @@ The tab runs its tools as command lines (``run``), so that what it does is
 exactly what the terminal and the packages do. A few things need answers
 rather than files, and those are here: what a file is (``inspect``), a check
 against the gpxil specification (``validate``), the counts of ``gpxil stats``
-(``stats``), genomes compared by ``gpxil compare`` (``compare``) and the
-palettes (``palettes``).
+(``stats``), genomes compared by ``gpxil compare`` (``compare``), a sample's
+substitutions in regions against the rest (``spectrum``, as ``gpxil
+spectrum``) and the palettes (``palettes``).
 
 Every function takes and returns plain JSON-like values, because the page
 calls them through the web worker that runs Python.
@@ -61,6 +62,8 @@ _VCF = re.compile(r"\.vcf(\.b?gz)?$", re.I)
 _FASTA = re.compile(r"\.(fa|fasta|fna)(\.b?gz)?$", re.I)
 _BED = re.compile(r"\.bed(\.gz)?$", re.I)
 _GTF = re.compile(r"\.(gtf|gff3?)(\.gz)?$", re.I)
+_RMSK = re.compile(r"(rmsk[^/]*\.(txt|tsv)|\.(fa|fasta|fna)\.out)(\.gz)?$", re.I)
+_BEDGRAPH = re.compile(r"\.(bedgraph|bdg)(\.gz)?$", re.I)
 
 
 def _open_text(path: str):
@@ -151,6 +154,41 @@ def _bed_summary(path: str) -> Dict[str, Any]:
     return {"kind": "bed", "intervals": n, "bases": bases, "contigs": contigs}
 
 
+def _features_summary(path: str, kind: str) -> Dict[str, Any]:
+    """A RepeatMasker table's repeats, or a bedGraph's intervals: how many, on which contigs, and (a RepeatMasker
+    table) of which classes. Counted line by line as gpxiltools reads the lines, so that a whole genome's table
+    (millions of lines) needs no more memory than a chromosome's."""
+    if kind != "rmsk":
+        return {**_bed_summary(path), "kind": kind}
+    from gpxiltools import features as F
+
+    n, bases, contigs, classes = 0, 0, {}, {}
+    try:
+        layout = None
+        for i, line in F._lines(path):
+            if F._skip(line):
+                continue
+            if layout is None:
+                layout = F._rmsk_kind(line)
+                if layout is None:
+                    if i <= 3 and not line.split()[0].isdigit():
+                        continue  # (a .out file begins with three lines of headings)
+                    raise ValueError(f"{os.path.basename(path)}, line {i}: not a RepeatMasker line")
+            contig, start, end, _strand, _name, cls, _family, _div = F._rmsk_line(layout, line)
+            n += 1
+            bases += end - start
+            contigs[contig] = contigs.get(contig, 0) + 1
+            classes[cls] = classes.get(cls, 0) + 1
+    except AttributeError:  # (gpxiltools' own line readers, if a later version renames them: read it whole)
+        feats = F.read_features(path, "rmsk")
+        n, bases, contigs, classes = len(feats), sum(f.length for f in feats), {}, {}
+        for f in feats:
+            contigs[f.contig] = contigs.get(f.contig, 0) + 1
+            c = f.name.split("/")[0]
+            classes[c] = classes.get(c, 0) + 1
+    return {"kind": "rmsk", "features": n, "bases": bases, "contigs": contigs, "classes": dict(sorted(classes.items(), key=lambda kv: -kv[1]))}
+
+
 def inspect(path: str) -> Dict[str, Any]:
     """What a file holds, in a few lines: for gpxil files their metadata and contigs."""
     name = os.path.basename(path)
@@ -172,6 +210,10 @@ def inspect(path: str) -> Dict[str, Any]:
             return {"path": path, **_fasta_summary(path)}
         if _BED.search(name):
             return {"path": path, **_bed_summary(path)}
+        if _RMSK.search(name):
+            return {"path": path, **_features_summary(path, "rmsk")}
+        if _BEDGRAPH.search(name):
+            return {"path": path, **_features_summary(path, "bedgraph")}
         if _GTF.search(name):
             return {"path": path, "kind": "gtf"}
         return {"path": path, "kind": "other"}
@@ -280,6 +322,53 @@ def compare(
     finally:
         for g in files:
             g.close()
+
+
+def spectrum(
+    path: str,
+    features: str,
+    regions: Optional[List[str]] = None,
+    background: Optional[str] = None,
+    callable: Optional[str] = None,  # noqa: A002 - gpxil spectrum's own word
+    context: int = 3,
+    centre: str = "pyrimidine",
+    stranded: bool = False,
+    isolated: Optional[int] = None,
+    match: Optional[str] = None,
+    min_length: int = 0,
+    out: Optional[str] = None,
+    reference: Optional[str] = None,
+) -> Dict[str, Any]:
+    """A sample's substitutions in the regions of ``features`` (a BED file or a RepeatMasker table) against the rest
+    of the genome, by context, as ``gpxil spectrum --json`` gives them; with ``out``, its table by context and
+    substitution is written there too, as ``gpxil spectrum -o`` writes it."""
+    import sys
+
+    from gpxiltools.container import GpxilFile
+    from gpxiltools.features import read_features
+    from gpxiltools.spectrum import count_spectrum, write_table
+
+    feats = read_features(features, match=match or None, min_length=int(min_length or 0))
+    back = read_features(background) if background else None
+    ok = read_features(callable) if callable else None
+    with GpxilFile(path, reference=reference or None) as g:
+        counter = count_spectrum(
+            g,
+            feats,
+            regions_in(g, regions) or None,
+            background=back,
+            callable=ok,
+            k=int(context),
+            centre=centre,
+            isolated=int(isolated) if isolated else None,
+            stranded=bool(stranded),
+        )
+    res = counter.results()
+    if out:
+        with open(out, "w") as fh:
+            write_table(fh, counter.table())
+        print(f"wrote {out}: by context", file=sys.stderr)
+    return res
 
 
 def regions_in(g, texts: Optional[List[str]]) -> list:

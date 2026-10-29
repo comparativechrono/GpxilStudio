@@ -191,6 +191,63 @@ async (opts) => {
     if (look) look.click();
     await wait(() => V.data && V.data.start === 3343220 && V.data.end === 3343321, 20000).catch(() => null);
     check(MG.app.currentBench === 'viewer' && V.data.start === 3343220 && V.data.end === 3343321, 'Tools: … and the first error, at 3,343,271, in the Viewer');
+    // Look for patterns: the walkthrough's buttons, in order – chromosome 17's pure GA-sequences found, stacked, the
+    // repeats added as a plane and looked at, HG002's substitutions in them counted, one wrapped at its period – and
+    // the skews of its genes' coding strands
+    MG.app.showHelp('h-walk-discover');
+    const walkBtn = (sel) => document.querySelector(`#h-walk-discover ${sel}`);
+    walkBtn('[data-tool="runs"]').click();
+    await wait(() => MG.app.currentBench === 'tools' && val('of') === 'AG', 20000).catch(() => null);
+    check(val('input') === '/data/examples/HG002_chr17.gpxil.tif' && val('min') === '51' && val('both') === true && val('out') === '~/results/HG002_chr17_AG_runs.bed', 'Help: the walkthrough’s button fills in Find runs');
+    res = await runTool();
+    const bed = MG.app.fs.exists('/home/user/results/HG002_chr17_AG_runs.bed') ? await MG.app.fs.readText('/home/user/results/HG002_chr17_AG_runs.bed') : '';
+    check(/1,561 runs of AG of 51 bases or more \(739 on the \+ strand, 822 on the - strand\)/.test(res) && bed.split('\n').filter(Boolean).length === 1561 && /\nchr17\t6793027\t6793302\tAG\t275\t\+\n/.test(bed), 'Tools: chromosome 17’s 1,561 pure GA-sequences, as BED');
+    MG.app.showHelp('h-walk-discover');
+    walkBtn('[data-tool="stack"]').click();
+    await wait(() => MG.app.currentBench === 'tools' && val('features') === '/home/user/results/HG002_chr17_AG_runs.bed', 20000).catch(() => null);
+    check(val('sort') === 'run' && val('runOf') === 'A' && val('labelled') === true && val('out') === '~/results/HG002_chr17_AG_runs_starts.png', `Tools: Stack features sorts runs by their poly(A)s (${val('sort')}, ${val('out')})`);
+    res = await runTool();
+    img = await wait(() => { const i = document.querySelector('.tl-result figure img'); return i && i.complete && i.naturalWidth ? i : null; }, 20000).catch(() => null);
+    check(document.querySelector('.tl-done.ok') && /1,561 rows of 1,561 features/.test(res) && img && img.naturalWidth > 600 && img.naturalHeight > 1561, `Tools: … stacked, sorted by the run of A, the picture shown (${img ? img.naturalWidth + ' x ' + img.naturalHeight : 'none'})`);
+    MG.app.showHelp('h-walk-discover');
+    walkBtn('[data-tool="annotate"]').click();
+    await wait(() => MG.app.currentBench === 'tools' && val('plane') === 'x-repeats', 20000).catch(() => null);
+    check(val('out') === '~/genomes/HG002_chr17.repeats.gpxil.tif' && val('level') === 'family', 'Tools: Add an annotation plane names the plane and the copy');
+    res = await runTool();
+    check(document.querySelector('.tl-done.ok') && /with a x-repeats plane \(category, uint8, 59 labels\) from 170,331 features, over 43,047,843 bases/.test(res), 'Tools: chromosome 17’s repeats, a plane of HG002’s genome');
+    MG.app.showHelp('h-walk-discover');
+    walkBtn('[data-plane="x-repeats"]').click();
+    await wait(() => V.data && V.data.mode === 'x:x-repeats' && V.data.start === 6792800, 30000).catch(() => null);
+    const legend = document.querySelector('.vw-legend').innerText;
+    // (the region holds an L2 (LINE/L2) from its 33rd base, the AluJb (SINE/Alu) from its 104th, the AGAA repeat
+    // (Simple_repeat) from its 262nd and an AluSq from its 513th: point at its 151st base, in the AluJb)
+    const ac = c.getBoundingClientRect(), k = ac.width / c.width, at = 150;
+    c.dispatchEvent(new MouseEvent('mousemove', { clientX: ac.left + ((at % V.data.W) + 0.5) * V.data.scale * k, clientY: ac.top + (Math.floor(at / V.data.W) + 0.5) * V.data.scale * k, bubbles: true }));
+    const hover1 = document.querySelector('.vw-hover').innerText;
+    check(MG.app.currentBench === 'viewer' && V.modeSel.value === 'x:x-repeats' && /SINE\/Alu \(\d+ bases?\)/.test(legend) && /Simple_repeat \(\d+ bases?\)/.test(legend) && /LINE\/L2 \(41 bases\)/.test(legend) && /^chr17:6,792,951 [^]*x-repeats SINE\/Alu/.test(hover1), `Viewer: the repeats plane, its labels in the key, and the label of a base pointed at (${hover1.slice(0, 160)})`);
+    const xi = V.data.planes['x-repeats'];
+    const colourAt = (i) => (V.data.annotation.colour(xi[i]) || ['paper']).join(',');
+    check(xi && xi.length === 600 && new Set([0, 50, 150, 400].map(colourAt)).size === 4 && colourAt(0) === 'paper', 'Viewer: … each label in a colour of its own, and paper where there is none');
+    MG.app.showHelp('h-walk-discover');
+    walkBtn('[data-tool="spectrum"][data-reference]').click();
+    await wait(() => MG.app.currentBench === 'tools' && val('input') === '/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif' && val('reference'), 20000).catch(() => null);
+    check(val('reference') === '/data/examples/HG002_chr17.gpxil.tif' && val('isolated') === '20' && val('centre') === 'purine', 'Help: the spectrum button gives the reference, isolated substitutions and purine contexts');
+    res = await runTool();
+    check(document.querySelector('.tl-done.ok') && /92 substitutions/.test(res) && /expect 78\.4/.test(res) && /1\.17/.test(res) && document.querySelectorAll('table.tl-spectrum tr').length === 7, `Tools: HG002’s isolated substitutions in GA-sequences, 92 against 78.4 expected (${(res.match(/92 substitutions[^\n]*/) || [''])[0].slice(0, 160)})`);
+    MG.app.showHelp('h-walk-discover');
+    walkBtn('[data-tool="period"]').click();
+    await wait(() => MG.app.currentBench === 'tools' && val('region') === 'chr17:6,793,028-6,793,302', 20000).catch(() => null);
+    res = await runTool();
+    img = await wait(() => { const i = document.querySelector('.tl-result figure img'); return i && i.complete && i.naturalWidth ? i : null; }, 20000).catch(() => null);
+    check(document.querySelector('.tl-done.ok') && /period 4, 85 % of bases equal to the base a unit on/.test(res) && img && img.naturalWidth > 300 && img.naturalHeight > 500, `Tools: the GA-sequence wrapped at its period, 4 (${img ? img.naturalWidth + ' x ' + img.naturalHeight : 'no picture'})`);
+    await MG.app.useTool('skew', { input: '/data/examples/HG002_chr17.gpxil.tif', features: '/data/examples/chr17_genes.bed' });
+    await sleep(300);
+    check(val('stranded') === true && val('out') === '~/results/HG002_chr17_skew_100kb.tsv', 'Tools: Strand symmetry reads genes on their own strands');
+    const s0 = Date.now();
+    res = await runTool();
+    img = await wait(() => { const i = document.querySelector('.tl-result figure img'); return i && i.complete && i.naturalWidth ? i : null; }, 20000).catch(() => null);
+    check(document.querySelector('.tl-done.ok') && /over all 47,581,650 bases: GC 0\.465684, GC skew 0\.017679, AT skew -0\.0415/.test(res) && img, `Tools: the skews of chromosome 17’s genes on their coding strands, in ${((Date.now() - s0) / 1000).toFixed(0)} s, with the map`);
+
     // (the examples go together: Make a gpxil file works out the reference from the VCF, and the other way round)
     await MG.app.useTool('encode', {});
     await sleep(300);
@@ -228,7 +285,7 @@ async (opts) => {
     check(JSON.stringify(names) === JSON.stringify(['>ENSP00000269305', '>ENSP00000269305_HG002-hap1', '>ENSP00000269305_HG002-hap2']), `Tools: … each with a name of its own (${names.join(' ')})`);
     MG.app.tools.go({ page: 'start' });
     await wait(() => document.querySelector('.pw-map svg'));
-    check(document.querySelectorAll('.tl-task').length === 8 && fits(), 'Tools: the map and the common tasks');
+    check(document.querySelectorAll('.tl-task').length === 9 && fits(), 'Tools: the map and the common tasks');
 
     // the Files tab: a gpxil file's contigs and planes, read in the page
     await MG.app.editFile('/data/examples/HG002_chr17.gpxil.tif');

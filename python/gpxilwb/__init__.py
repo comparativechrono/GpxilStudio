@@ -11,4 +11,4 @@ install them with pip (``pip install gpxiltools gpxil2pxil pxil``) and call
 them directly.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"

@@ -1,0 +1,55 @@
+<!-- id: h-tool-skew | title: Strand symmetry: skews in windows | group: Tools | summary: gpxil skew: GC content, the GC and AT skews, and how far each strand’s k-mers are from their reverse complements’ counts (Chargaff’s second rule), in windows along a genome, as a table and a map | keys: skew skews gc content gc skew at skew purine pyrimidine keto amino strand symmetry asymmetry chargaff second parity rule k-mers reverse complement windows replication origins cumulative transcription coding strand genes centromere satellite map look for patterns -->
+<h1><!--ICON:contrast-->Strand symmetry: skews in windows</h1>
+<p class="lede"><code>gpxil skew</code> measures, in windows along a genome, how the bases of one strand compare with the other’s. Over long stretches, a strand has as many A as T and as many C as G, and each short word as often as its reverse complement: Chargaff’s second parity rule. Where a stretch breaks it, something has treated the two strands differently – replication, transcription, repeats inserted one way round, runs of one strand’s bases – and the windows show where.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="skew" data-input="/data/examples/HG002_chr17.gpxil.tif">Chromosome 17 in windows of 100,000 bases</button> <button class="do" type="button" data-tool="skew" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="/data/examples/chr17_genes.bed">Its genes, on their coding strands</button></div>
+
+<h2>The measures</h2>
+<table>
+<tr><th>Measure</th><th>What it is</th></tr>
+<tr><td><code>gc</code></td><td>G and C over all four bases</td></tr>
+<tr><td><code>gc_skew</code></td><td>(G − C) / (G + C): above 0 where G outnumbers C on the + strand</td></tr>
+<tr><td><code>at_skew</code></td><td>(A − T) / (A + T)</td></tr>
+<tr><td><code>ry_skew</code></td><td>purines less pyrimidines, (A + G − C − T), over all four</td></tr>
+<tr><td><code>km_skew</code></td><td>keto less amino bases, (G + T − A − C), over all four</td></tr>
+<tr><td><code>asymmetry_k</code></td><td>for words of k bases: how far each word’s count and its reverse complement’s differ, over their counts (palindromes left out): 0 when the strands are alike, 1 when no word’s reverse complement is there</td></tr>
+<tr><td><code>cumulative_gc_skew</code></td><td>the GC skew summed along the sequence: in bacteria, it turns where replication changes direction</td></tr>
+</table>
+<p>The bases counted are the reference’s A, C, G and T, on the + strand; a word is counted in the window of its first base, if all its bases count. Windows are set at multiples of their size along each sequence, so the windows of two files, or of a region and its whole chromosome, line up. You can leave out soft-masked bases (repeats), or count only the bases of some features, each read on its own strand: then the skews of genes are those of their coding strands, and a base under genes on both strands counts on each.</p>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>Its reference is what is measured: the sample’s variants aren’t.</dd>
+  <dt>Bases a window</dt><dd>100,000 to begin with.</dd>
+  <dt>Regions</dt><dd>Contigs or regions; empty, every contig.</dd>
+  <dt>k-mers for the asymmetry</dt><dd>Word lengths of 1 to 6, separated by commas: 1,2,3,4.</dd>
+  <dt>Leave out soft-masked bases</dt><dd>Repeats don’t count.</dd>
+  <dt>Count only the bases of these features</dt><dd>A BED file or a RepeatMasker table, read on each feature’s strand (unless you untick it), with the features to keep.</dd>
+  <dt>Also a map; the map’s measures</dt><dd>A picture: a track for each measure, a pixel a window. Skews run from blue, below 0, through grey to red, above it, to the 99th percentile of their size; GC content and asymmetries from light to dark blue; a window with nothing counted is white.</dd>
+  <dt>Save the table as</dt><dd>A tab-separated file, a window a line: its sequence, start and end, the bases counted, A, C, G and T, the measures, the other bases and the soft-masked ones.</dd>
+</dl>
+
+<h2>What it gives</h2>
+<p>The table and the map, and the measures over all the bases counted.</p>
+
+<h2>Chromosome 17</h2>
+<p>Over its 82,920,204 bases of A, C, G and T, chromosome 17 is 45.3 % G and C; its GC skew is +0.003 and its AT skew −0.001, and the counts of its words differ from their reverse complements’ by 0.2 % for single bases and 1.9 % for words of four: its strands are alike, as Chargaff’s second rule says. Window by window, they differ more, and in one long stretch, from 22.8 to 26.7 Mb, much more: the asymmetry of words of four is 0.39 there, against a median of 0.055 in the chromosome’s other windows, and the GC skew +0.06. That is the centromere: 3.9 Mb of alpha satellite, a unit of 171 bases repeated over and over, 98.6 % of it the same way round, on the + strand, in RepeatMasker’s table.</p>
+<p>Read on their coding strands, chromosome 17’s genes lean to G and T: GC skew +0.018, AT skew −0.042, the asymmetry of single bases 0.030, thirteen times the whole chromosome’s. It is the excess of G and T over A and C on genes’ coding strands that transcription leaves (Green and colleagues, 2003).</p>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil skew /data/examples/HG002_chr17.gpxil.tif -o ~/results/chr17-skew.tsv --picture ~/results/chr17-skew.png --show gc,gc_skew,at_skew,asymmetry_4
+gpxil skew /data/examples/HG002_chr17.gpxil.tif --features /data/examples/chr17_genes.bed --stranded --json | head -20
+gpxil skew /data/examples/HG002_chr17.gpxil.tif chr17:20,000,001-30,000,000 --window 1000000 --k 4 | cut -f 2,9,10,14</code></pre>
+<p>Without <code>-o</code>, the table goes to the terminal; <code>--json</code> gives the totals, by sequence and over all; <code>--show</code> chooses the map’s measures.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.skew import SkewCounter, iter_skew
+
+counter = SkewCounter(window=1_000_000, ks=(1, 4))
+with GpxilFile("/data/examples/HG002_chr17.gpxil.tif") as g:
+    rows = list(iter_skew(g, counter=counter))       # (a dict for each window)
+top = max(rows, key=lambda r: r["asymmetry_4"] or 0)
+print(top["start"], top["end"], top["asymmetry_4"], top["gc_skew"])
+print(counter.totals()["all"])</code></pre>
+<p><code>picture(rows, ["gc_skew", "at_skew"], window=…)</code> draws the map, and <code>write_rows</code> writes the table.</p>
+<!--CITE: gpxiltools chargaff transcription-asymmetry cumulative-skew repeatmasker-->

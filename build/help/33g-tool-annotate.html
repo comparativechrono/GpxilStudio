@@ -1,0 +1,51 @@
+<!-- id: h-tool-annotate | title: Add an annotation plane | group: Tools | summary: gpxil annotate: a copy of a gpxil file with an annotation – repeats, genes, a BED or bedGraph file – as a plane of its own, a value at every base, which the Viewer draws and the tools read | keys: annotate annotation plane extension x- x-repeats track layer repeats repeatmasker rmsk genes bed bedgraph signal replication timing compartment eigenvector category labels presence score value float nan class family name level viewer look for patterns -->
+<h1><!--ICON:tag-->Add an annotation plane</h1>
+<p class="lede"><code>gpxil annotate</code> copies a gpxil file with an annotation as a plane of its own: RepeatMasker’s repeats, a BED file’s genes or regions, a bedGraph’s signal. The plane has a value at every base, like the genome’s own planes, so it lines up with the genome base for base and goes wherever the file goes: the Viewer draws it, Python reads it, and a working copy of a region cuts it out with the rest.</p>
+<div class="tryrow"><button class="do" type="button" data-tool="annotate" data-input="/data/examples/HG002_chr17.gpxil.tif" data-features="/data/examples/rmsk_chr17.txt.gz">Add chromosome 17’s repeats to HG002’s genome</button> <button class="do" type="button" data-tool="annotate" data-input="/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif" data-features="/data/examples/chr17_genes.bed" data-as="presence" data-plane="x-genes">Where the genes are, in his newer benchmark</button></div>
+
+<h2>What a base holds</h2>
+<dl>
+  <dt>a label</dt><dd>From a <b>RepeatMasker table</b>, the repeat over the base: its family by default (<code>SINE/Alu</code>, <code>LINE/L1</code>, <code>Satellite/centr</code> …), or its class (<code>SINE</code>), or its name (<code>SINE/Alu/AluSx</code>). From a <b>BED file</b> with names, the feature’s name. Each label is a number, 1, 2, 3 … in the order of their names, 0 where there is no feature, and the plane’s metadata keeps the labels: 8-bit numbers for up to 255 labels, 16-bit for more.</dd>
+  <dt>where a feature is</dt><dd>1 there, 0 elsewhere: a BED file without names, or any file, as <b>presence</b>.</dd>
+  <dt>a score or a value</dt><dd>A feature’s score (a repeat’s divergence from its family’s consensus, in %), or a <b>bedGraph</b>’s value – replication timing, a Hi-C compartment’s eigenvector, any signal – as a 32-bit floating-point number, and NaN where there is none.</dd>
+  <dt>where features overlap</dt><dd>The shorter one is drawn, so a repeat inside another shows; of two as long, the later in the file.</dd>
+</dl>
+<p>The plane is an extension plane of the gpxil specification (section 5.6): its name is <code>x-</code> and letters, digits, - or _, and readers that don’t know it pass it by. The file’s own planes are copied as they are stored, without decoding them, so a chromosome takes a few seconds, and the plane adds little: chromosome 17’s repeats add 0.7 MB to its 24.6 MB. In a file of windows, each window gets the features over its own stretch of the chromosome.</p>
+
+<h2>The form</h2>
+<dl>
+  <dt>The gpxil file</dt><dd>Any gpxil file, with its reference plane or without.</dd>
+  <dt>The annotation</dt><dd>A RepeatMasker table (UCSC’s <code>rmsk</code> table, or RepeatMasker’s <code>.out</code>), a BED file or a bedGraph file, plain or gzipped.</dd>
+  <dt>The plane’s name</dt><dd><code>x-repeats</code> for repeats, else <code>x-</code> and the file’s name.</dd>
+  <dt>A base holds; a repeat’s label</dt><dd>What fits the file, to begin with: labels for a RepeatMasker table or a BED file with names, values for a bedGraph. A repeat’s label is its family, unless you choose its class or name.</dd>
+  <dt>Only features whose name matches, of at least this many bases</dt><dd>As in <a href="#h-tool-stack">Stack features</a>.</dd>
+  <dt>What it holds; the values’ units</dt><dd>Kept in the plane’s metadata: said from the file if you leave them empty.</dd>
+  <dt>Make the plane again if the file has it</dt><dd>Otherwise a file that has the plane already is refused.</dd>
+  <dt>Save the copy as</dt><dd>A new file, <code>~/genomes/HG002_chr17.repeats.gpxil.tif</code> for the first example: the tool never changes the file it copies.</dd>
+</dl>
+
+<h2>What it gives</h2>
+<p>The copy, and a line saying what was added: the plane, what its bases hold, how many labels, and how many bases have a feature. Chromosome 17’s repeats give 59 labels over 43,047,843 bases, half the chromosome. <b>Look at it in the Viewer</b> opens the plane’s own view: each label in a colour of its own, a repeat class in one hue – SINE red, LINE blue, LTR teal, DNA transposons yellow, simple repeats violet, low-complexity sequence pink, satellites green – its families in lighter and darker shades of it, and paper where there is no feature. Point at a base to read its label. A plane of values is drawn from light to dark blue over the range in view. Any annotation plane of a file is in the Viewer’s <b>Show</b> list.</p>
+<p>Once the first button has made the copy, look at the repeats around a GA-sequence that began as an Alu element’s tail: an AluJb, then a run of AGAA repeated, which RepeatMasker calls a simple repeat.</p>
+<div class="tryrow"><button class="do" type="button" data-viewer="~/genomes/HG002_chr17.repeats.gpxil.tif" data-region="chr17:6,792,801-6,793,400" data-plane="x-repeats">The repeats at chr17:6,792,801-6,793,400</button></div>
+
+<h2>In the terminal</h2>
+<pre class="code" data-run="term"><code>gpxil annotate /data/examples/HG002_chr17.gpxil.tif /data/examples/rmsk_chr17.txt.gz --plane x-repeats -o ~/genomes/HG002_chr17.repeats.gpxil.tif
+gpxil annotate ~/genomes/HG002_chr17.repeats.gpxil.tif /data/examples/rmsk_chr17.txt.gz --plane x-repeat-age --as score --units % \
+    -o ~/genomes/HG002_chr17.repeats-age.gpxil.tif
+gpxil info ~/genomes/HG002_chr17.repeats-age.gpxil.tif
+viewer ~/genomes/HG002_chr17.repeats.gpxil.tif chr17:6,792,801-6,793,400 --plane=x-repeats</code></pre>
+<p>A second plane goes on the copy that has the first. <code>gpxil subset … --planes ref,gt,flags,x-repeats</code> keeps planes by name, and <code>gpxil validate</code> checks the new file.</p>
+
+<h2>In Python</h2>
+<pre class="code" data-run="py"><code>from gpxiltools import GpxilFile
+from gpxiltools.annotate import annotate
+
+summary = annotate("/data/examples/HG002_chr17.gpxil.tif", "/home/user/genomes/HG002_repeats.gpxil.tif",
+                   "/data/examples/rmsk_chr17.txt.gz", plane="x-repeats", log=lambda msg: None)
+print(summary["labels"], "labels over", summary["bases_with_a_feature"], "bases")
+with GpxilFile("/home/user/genomes/HG002_repeats.gpxil.tif") as g:
+    labels = g.metadata["planes"]["x-repeats"]["labels"]   # value -> label
+    values = g["chr17"].read("x-repeats", 6_792_900, 6_793_300)
+print(sorted({labels[str(v)] for v in values.tolist() if v}))</code></pre>
+<!--CITE: gpxiltools repeatmasker ensembl-->
