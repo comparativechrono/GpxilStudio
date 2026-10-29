@@ -462,9 +462,6 @@ warnings.simplefilter('once')
 warnings.filterwarnings('ignore', category=ResourceWarning)
 warnings.filterwarnings('ignore', message='.*non-interactive.*')
 warnings.filterwarnings('ignore', message='.*FigureCanvasAgg.*')
-# (Pillow 11.3 warns that Image.fromarray(array, mode) loses its mode in Pillow 13; gpxiltools 0.8.0's stack pictures
-# give it, and the studio's Pillow is 11.3, so the warning says nothing a reader of a tool's output needs)
-warnings.filterwarnings('ignore', message=".*'mode' parameter is deprecated.*", category=DeprecationWarning)
 
 # ---------------------------------------------------------------- modules that would start threads
 # Python in a web page cannot start threads. SciPy's reader and writer of Matrix Market files (scipy.io.mmread and

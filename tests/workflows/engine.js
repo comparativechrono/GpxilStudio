@@ -264,7 +264,7 @@ async function examplesRun() {
       check(
         /^1,561 runs of AG of 51 bases or more \(739 on the \+ strand, 822 on the - strand\)$/.test(sums[0]) &&
           /^substitutions 0\.767× the expected \(95 % 0\.509–1\.11\); insertions and deletions 20\.1× a base$/.test(sums[1]) &&
-          /x-repeats plane \(category, uint8, 59 labels\)$/.test(sums[2]) &&
+          /x-repeats plane \(category, uint8, 58 labels\)$/.test(sums[2]) &&
           stack && stack.outputs && files.exists(stack.outputs.picture),
         `${f}: chromosome 17’s 1,561 pure GA-sequences, stacked; HG002’s isolated substitutions in them at 0.77 times what their contexts predict, and 20 times the insertions and deletions; the repeats as a plane (${sums.join(' · ')})`
       );

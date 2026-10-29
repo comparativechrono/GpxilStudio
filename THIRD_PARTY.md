@@ -9,12 +9,12 @@ when copying or redistributing its files.
 
 | Component | Version | Licence | Where | Origin |
 |---|---|---|---|---|
-| gpxiltools (Chronomic Medicine Group) | 0.8.0 | MIT | its wheel in `python/vendor`, packed into `assets/py/gpxil-tools.zip` with its licence | [PyPI](https://pypi.org/project/gpxiltools/0.8.0/), unchanged; released from [comparativechrono/Gpxil-tools](https://github.com/comparativechrono/Gpxil-tools) |
+| gpxiltools (Chronomic Medicine Group) | 0.8.1 | MIT | its wheel in `python/vendor`, packed into `assets/py/gpxil-tools.zip` with its licence | [PyPI](https://pypi.org/project/gpxiltools/0.8.1/), unchanged; released from [comparativechrono/Gpxil-tools](https://github.com/comparativechrono/Gpxil-tools) |
 | gpxil2pxil (Chronomic Medicine Group) | 0.2.0 | MIT | the same | [PyPI](https://pypi.org/project/gpxil2pxil/0.2.0/), unchanged; released from [comparativechrono/gpxil2pxil](https://github.com/comparativechrono/gpxil2pxil) |
 | pxil (Chronomic Medicine Group) | 0.1.1 | MIT | the same | [PyPI](https://pypi.org/project/pxil/0.1.1/), unchanged; released from [comparativechrono/pxil](https://github.com/comparativechrono/pxil) |
 | tifffile (Christoph Gohlke) | 2026.10.15 | BSD 3-clause | the same, with its licence | [PyPI](https://pypi.org/project/tifffile/2026.10.15/), unchanged |
 | gpxilwb | 1.1.0 | MIT | `python/gpxilwb`, packed into the same archive | written for the studio |
-| gpxil-read.js, gpxiltools' JavaScript reader (Chronomic Medicine Group) | 0.7.0 (unchanged in 0.8.0) | MIT | `assets/vendor/gpxil-read/`, with `gpxil-read.source.json` | copied unchanged from [comparativechrono/Gpxil-tools](https://github.com/comparativechrono/Gpxil-tools) `js/gpxil-read.js`, at the commit the record names |
+| gpxil-read.js, gpxiltools' JavaScript reader (Chronomic Medicine Group) | 0.7.0 (unchanged in 0.8.1) | MIT | `assets/vendor/gpxil-read/`, with `gpxil-read.source.json` | copied unchanged from [comparativechrono/Gpxil-tools](https://github.com/comparativechrono/Gpxil-tools) `js/gpxil-read.js`, at the commit the record names |
 | CodeMirror | 5.65.18 | MIT | `assets/vendor/codemirror/` (with its `LICENSE`) | [codemirror/codemirror5](https://github.com/codemirror/codemirror5) |
 | marked | 18.0.13 | MIT | `assets/vendor/marked/` (with its `LICENSE`) | [markedjs/marked](https://github.com/markedjs/marked) |
 | DOMPurify | 3.4.16 | Apache License 2.0 or Mozilla Public License 2.0 | `assets/vendor/dompurify/` (with its `LICENSE`) | [cure53/DOMPurify](https://github.com/cure53/DOMPurify) |

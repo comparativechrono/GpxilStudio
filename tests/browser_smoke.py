@@ -214,7 +214,7 @@ async (opts) => {
     await wait(() => MG.app.currentBench === 'tools' && val('plane') === 'x-repeats', 20000).catch(() => null);
     check(val('out') === '~/genomes/HG002_chr17.repeats.gpxil.tif' && val('level') === 'family', 'Tools: Add an annotation plane names the plane and the copy');
     res = await runTool();
-    check(document.querySelector('.tl-done.ok') && /with a x-repeats plane \(category, uint8, 59 labels\) from 170,331 features, over 43,047,843 bases/.test(res), 'Tools: chromosome 17’s repeats, a plane of HG002’s genome');
+    check(document.querySelector('.tl-done.ok') && /with a x-repeats plane \(category, uint8, 58 labels\) from 170,331 features, over 43,047,843 bases/.test(res), 'Tools: chromosome 17’s repeats, a plane of HG002’s genome');
     MG.app.showHelp('h-walk-discover');
     walkBtn('[data-plane="x-repeats"]').click();
     await wait(() => V.data && V.data.mode === 'x:x-repeats' && V.data.start === 6792800, 30000).catch(() => null);
