@@ -208,7 +208,7 @@ async (opts) => {
     check(val('sort') === 'run' && val('runOf') === 'A' && val('labelled') === true && val('out') === '~/results/HG002_chr17_AG_runs_starts.png', `Tools: Stack features sorts runs by their poly(A)s (${val('sort')}, ${val('out')})`);
     res = await runTool();
     img = await wait(() => { const i = document.querySelector('.tl-result figure img'); return i && i.complete && i.naturalWidth ? i : null; }, 20000).catch(() => null);
-    check(document.querySelector('.tl-done.ok') && /1,561 rows of 1,561 features/.test(res) && img && img.naturalWidth > 600 && img.naturalHeight > 1561, `Tools: … stacked, sorted by the run of A, the picture shown (${img ? img.naturalWidth + ' x ' + img.naturalHeight : 'none'})`);
+    check(document.querySelector('.tl-done.ok') && /1,561 rows of 1,561 features/.test(res) && !/DeprecationWarning/.test(res) && img && img.naturalWidth > 600 && img.naturalHeight > 1561, `Tools: … stacked, sorted by the run of A, the picture shown, without a warning of Pillow’s (${img ? img.naturalWidth + ' x ' + img.naturalHeight : 'none'})`);
     MG.app.showHelp('h-walk-discover');
     walkBtn('[data-tool="annotate"]').click();
     await wait(() => MG.app.currentBench === 'tools' && val('plane') === 'x-repeats', 20000).catch(() => null);
@@ -247,6 +247,13 @@ async (opts) => {
     res = await runTool();
     img = await wait(() => { const i = document.querySelector('.tl-result figure img'); return i && i.complete && i.naturalWidth ? i : null; }, 20000).catch(() => null);
     check(document.querySelector('.tl-done.ok') && /over all 47,581,650 bases: GC 0\.465684, GC skew 0\.017679, AT skew -0\.0415/.test(res) && img, `Tools: the skews of chromosome 17’s genes on their coding strands, in ${((Date.now() - s0) / 1000).toFixed(0)} s, with the map`);
+    // Run at once, before the form has read the file (a copy it hasn't seen): the tool reads it first, so the reference
+    // a file written without one needs is given, not left out as a field the form didn't show yet
+    MG.app.fs.copy('/data/examples/HG002_chr17_v5.0q.noref.gpxil.tif', '/home/user/genomes/v5-copy.noref.gpxil.tif');
+    await MG.app.useTool('period', { input: '/home/user/genomes/v5-copy.noref.gpxil.tif', region: 'chr17:6,793,028-6,793,302', reference: '/data/examples/HG002_chr17.gpxil.tif', out: '~/results/v5-copy-period.png' });
+    document.querySelector('.tl-run').click();
+    await wait(() => document.querySelector('.tl-done'), 120000).catch(() => null);
+    check(document.querySelector('.tl-done.ok') && /period 4, 85 %/.test(document.querySelector('.tl-result').innerText), 'Tools: Run at once, before a file without its reference is read: the reference is given');
 
     // (the examples go together: Make a gpxil file works out the reference from the VCF, and the other way round)
     await MG.app.useTool('encode', {});

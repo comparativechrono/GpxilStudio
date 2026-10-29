@@ -50,7 +50,10 @@
   // (the categorical palette of the studio's charts; a repeat class keeps its hue, its families lighter or darker)
   const HUES = [[42, 120, 214], [235, 104, 52], [27, 175, 122], [237, 161, 0], [232, 123, 164], [0, 131, 0], [98, 80, 214], [227, 73, 72]];
   const CLASS_HUE = { SINE: 7, LINE: 0, LTR: 2, DNA: 3, Simple_repeat: 6, Low_complexity: 4, Satellite: 5 };
-  const SHADES = [0, 0.35, -0.25, 0.6, 0.15, -0.4, 0.75, 0.45];
+  // (the commonest families of the human genome in the class's own hue, or a shade of it given here; the rest a shade
+  // of it chosen by their name)
+  const FAMILY_SHADE = { 'SINE/Alu': 0, 'SINE/MIR': -0.35, 'LINE/L1': 0, 'LINE/L2': -0.35, 'LINE/CR1': 0.35, 'LTR/ERVL-MaLR': 0, 'LTR/ERV1': -0.35, 'LTR/ERVL': 0.35, 'LTR/ERVK': -0.55, 'DNA/hAT-Charlie': 0, 'DNA/TcMar-Tigger': -0.35, 'Satellite/centr': 0 };
+  const SHADES = [0.2, -0.2, 0.45, -0.45, 0.3, -0.3, 0.55, -0.1];
   const shade = (c, t) => c.map((v) => Math.round(t >= 0 ? v + (255 - v) * t : v * (1 + t)));
   const hashOf = (s) => {
     let x = 2166136261;
@@ -91,7 +94,7 @@
       // (a repeat class, SINE, in its hue; its families, SINE/Alu, and names, SINE/Alu/AluY, lighter or darker)
       const cls = label.split('/')[0];
       const hue = HUES[CLASS_HUE[cls] != null ? CLASS_HUE[cls] : hashOf(cls) % HUES.length];
-      const t = label === cls && CLASS_HUE[cls] != null ? 0 : SHADES[hashOf(label) % SHADES.length];
+      const t = label === cls && CLASS_HUE[cls] != null ? 0 : FAMILY_SHADE[label] != null ? FAMILY_SHADE[label] : SHADES[hashOf(label) % SHADES.length];
       const c = kind === 'presence' ? HUES[0] : shade(hue, t);
       cache.set(x, c);
       return c;

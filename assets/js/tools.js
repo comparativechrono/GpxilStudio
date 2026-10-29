@@ -1876,6 +1876,14 @@
       tool.fields.forEach((f) => learn(f.key));
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        // (the gpxil files it reads are looked at first, as the workflows do: a field that only shows for some files –
+        // the reference of a file written without one – would otherwise be left out if Run came before the file was)
+        const gpxils = tool.fields.filter((f) => f.type === 'file' && v[f.key] && kindOf(v[f.key]) === 'gpxil').map((f) => expand(v[f.key]));
+        if (gpxils.some((p) => !infoOf(p))) {
+          run.disabled = true;
+          await Promise.race([Promise.all(gpxils.map((p) => wantInfo(p).catch(() => null))), new Promise((r) => setTimeout(r, 20000))]);
+          update();
+        }
         const x = full();
         if (missing(tool, x)) return;
         this.values[tool.id] = Object.assign({}, v);
