@@ -1,9 +1,9 @@
 {
  "archive": "gpxil-tools.zip",
- "sha256": "4485ce4b4acdfad3e11f3b88a537214ae3cbada2b2a61b3124699830c822d8dd",
- "bytes": 465163,
+ "sha256": "9e81a6214088ece8ba9b2478a88efca5ddc53a052be46efc544203722f543c36",
+ "bytes": 465994,
  "packages": {
-  "gpxiltools": "0.8.1",
+  "gpxiltools": "0.8.2",
   "gpxil2pxil": "0.2.0",
   "pxil": "0.1.1",
   "tifffile": "2026.10.15",

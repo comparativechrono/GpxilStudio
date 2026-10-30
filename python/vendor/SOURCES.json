@@ -3,13 +3,13 @@
  "wheels": [
   {
    "project": "gpxiltools",
-   "version": "0.8.1",
-   "wheel": "gpxiltools-0.8.1-py3-none-any.whl",
+   "version": "0.8.2",
+   "wheel": "gpxiltools-0.8.2-py3-none-any.whl",
    "modules": [
     "gpxiltools"
    ],
-   "source": "https://pypi.org/project/gpxiltools/0.8.1/ (released from https://github.com/comparativechrono/Gpxil-tools, tag v0.8.1)",
-   "sha256": "8ce4712fcef6a54243aed9b7ab4cb58972ff333d95c246b71b0123a2aff5ffec"
+   "source": "https://pypi.org/project/gpxiltools/0.8.2/ (released from https://github.com/comparativechrono/Gpxil-tools, tag v0.8.2)",
+   "sha256": "6b3aff4075253d4300d2bcdb121e9cd832e12995d70991b99bf7817bea7e759f"
   },
   {
    "project": "gpxil2pxil",
