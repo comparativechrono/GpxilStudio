@@ -13,13 +13,13 @@
   },
   {
    "project": "gpxil2pxil",
-   "version": "0.2.0",
-   "wheel": "gpxil2pxil-0.2.0-py3-none-any.whl",
+   "version": "0.2.1",
+   "wheel": "gpxil2pxil-0.2.1-py3-none-any.whl",
    "modules": [
     "gpxil2pxil"
    ],
-   "source": "https://pypi.org/project/gpxil2pxil/0.2.0/ (released from https://github.com/comparativechrono/gpxil2pxil, tag v0.2.0)",
-   "sha256": "f073ed7ec835608dfdeec65594e901cc69cdabccbbebe186df47237ec6771ac4"
+   "source": "https://pypi.org/project/gpxil2pxil/0.2.1/ (released from https://github.com/comparativechrono/gpxil2pxil, tag v0.2.1)",
+   "sha256": "9359ea9f9696b7d6a6ea6b43849321a8f04cb4d54fc49c8342ab83c3982ed06a"
   },
   {
    "project": "pxil",
