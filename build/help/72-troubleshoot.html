@@ -17,7 +17,7 @@
 <h2>The reference</h2>
 <dl>
   <dt>A file in <code>/data/grch38</code> couldn’t be read</dt>
-  <dd>The studio reads the GRCh38 reference from the Gpxil browser’s site, comparativechrono.github.io, a piece at a time. Check that you’re online and that your network doesn’t block the site. Your own files and the examples still work without it, and on your own computer you can run the studio with a copy of the reference (<a href="#h-own-computer">On your own computer</a>).</dd>
+  <dd>The studio reads the GRCh38 reference from the Gpxil browser’s site, pixelverse.cam, a piece at a time. Check that you’re online and that your network doesn’t block the site. Your own files and the examples still work without it, and on your own computer you can run the studio with a copy of the reference (<a href="#h-own-computer">On your own computer</a>).</dd>
 
   <dt>“contig chr17 is stored without its reference sequence”</dt>
   <dd>The file was written without its reference plane (<code>--no-ref</code>), so anything that needs its bases needs the reference as well. In the Tools tab, fill in <b>Its reference</b>, which is filled in for you for a file made on GRCh38; in the terminal, add <code>--reference /data/grch38/chr17.gpxil.tif</code>; in Python, <code>GpxilFile(path, reference=…)</code>. For a file made on another reference, give the FASTA file it was made from. The Viewer finds GRCh38 by itself.</dd>

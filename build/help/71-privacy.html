@@ -14,7 +14,7 @@
 <tr><th>When</th><th>From</th><th>What the server learns</th></tr>
 <tr><td>Python first starts</td><td>cdn.jsdelivr.net (Pyodide, NumPy, Pillow, jsonschema and matplotlib)</td><td>nothing of yours: these are ordinary downloads, which your browser then keeps</td></tr>
 <tr><td>The studio’s examples are read</td><td>the studio’s own web site</td><td>which parts of the example files are read</td></tr>
-<tr><td>The GRCh38 reference (<code>/data/grch38</code>) is read, by the Viewer, a tool or Python</td><td>the Gpxil browser’s site, comparativechrono.github.io</td><td>which chromosome is read, and which part of it: the pieces are fetched as they are needed, so the server sees the regions you work on, but nothing from your own files</td></tr>
+<tr><td>The GRCh38 reference (<code>/data/grch38</code>) is read, by the Viewer, a tool or Python</td><td>the Gpxil browser’s site, pixelverse.cam</td><td>which chromosome is read, and which part of it: the pieces are fetched as they are needed, so the server sees the regions you work on, but nothing from your own files</td></tr>
 <tr><td>gpxil2pxil looks up a gene without a GTF file of yours</td><td>the same site (the Gpxil browser’s gene files)</td><td>which genes you looked up</td></tr>
 <tr><td><code>curl</code>, <code>wget</code> or <code>pip install</code>, in the terminal or a notebook</td><td>wherever you point them</td><td>whatever you send</td></tr>
 </table>

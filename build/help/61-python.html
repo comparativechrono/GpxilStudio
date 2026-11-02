@@ -40,7 +40,7 @@ encode("/data/examples/worked-example.fa", "/home/user/genomes/worked-example.no
 with GpxilFile("/home/user/genomes/worked-example.noref.gpxil.tif", reference="/data/examples/worked-example.fa") as g:
     c = g["chrT"]
     print(c.planes, c.has("ref"), c.sequence())</code></pre>
-<p>A gpxil file on a web server opens just as a path does, and is read a piece at a time with range requests: on your own computer, <code>GpxilFile("https://comparativechrono.github.io/Gpxil-browser/data/grch38/gpxil/chr17.gpxil.tif")</code> reads chromosome 17 of GRCh38 from the Gpxil browser’s site. In the studio, use <code>/data/grch38/chr17.gpxil.tif</code>, which is the same file.</p>
+<p>A gpxil file on a web server opens just as a path does, and is read a piece at a time with range requests: on your own computer, <code>GpxilFile("https://pixelverse.cam/data/grch38/gpxil/chr17.gpxil.tif")</code> reads chromosome 17 of GRCh38 from the Gpxil browser’s site. In the studio, use <code>/data/grch38/chr17.gpxil.tif</code>, which is the same file.</p>
 
 <h2>Arrays, and the codes</h2>
 <pre class="code" data-run="py"><code>import numpy as np

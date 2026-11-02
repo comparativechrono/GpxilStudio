@@ -28,7 +28,7 @@
   /* the GRCh38 reference, one gpxil file per chromosome, on the Gpxil browser (window.WB_REFERENCE): Python and the
      viewer read them over the web, a strip at a time */
   const REF = window.WB_REFERENCE || { files: [] };
-  const REF_BASE = new URL(CFG.referenceBase || REF.base || './', typeof location === 'object' && location.href ? location.href : 'https://comparativechrono.github.io/GpxilStudio/').href;
+  const REF_BASE = new URL(CFG.referenceBase || REF.base || './', typeof location === 'object' && location.href ? location.href : 'https://studio.pixelverse.cam/').href;
   const REF_DIR = '/data/grch38';
   const REFERENCE = (REF.files || []).map((f) => ({ path: REF_DIR + '/' + f.p, url: new URL(f.u, REF_BASE).href, size: f.s, contigs: f.contigs, mtime: EX_TIME }));
   MG.app.referenceFiles = REFERENCE;

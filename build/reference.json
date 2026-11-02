@@ -2,7 +2,7 @@
  "assembly": "GRCh38",
  "source": "Ensembl release 116: Homo_sapiens.GRCh38.dna_sm.primary_assembly.fa.gz",
  "genes_source": "Ensembl release 116: Homo_sapiens.GRCh38.116.gtf.gz (all transcripts)",
- "base": "https://comparativechrono.github.io/Gpxil-browser/data/grch38/",
+ "base": "https://pixelverse.cam/data/grch38/",
  "files": [
   {
    "p": "chr1.gpxil.tif",

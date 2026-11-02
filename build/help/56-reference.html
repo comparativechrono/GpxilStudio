@@ -19,7 +19,7 @@
 </table>
 
 <h2>Read from the web, a piece at a time</h2>
-<p>The files live on the Gpxil browser’s web site, <code>comparativechrono.github.io/Gpxil-browser/data/grch38/</code>. Nothing is downloaded whole: the Viewer and the Files tab fetch the strips they show, and Python reads a megabyte at a time, with HTTP range requests, as it needs to (<a href="#h-memory">Big files and memory</a>). The first look at a chromosome takes a moment, and reading the reference needs a connection to the web.</p>
+<p>The files live on the Gpxil browser’s web site, <code>pixelverse.cam/data/grch38/</code>. Nothing is downloaded whole: the Viewer and the Files tab fetch the strips they show, and Python reads a megabyte at a time, with HTTP range requests, as it needs to (<a href="#h-memory">Big files and memory</a>). The first look at a chromosome takes a moment, and reading the reference needs a connection to the web.</p>
 <p>A file of your own on GRCh38 written without its reference plane (<code>--no-ref</code>) borrows its bases from here: the Viewer does so by itself, the tools with <b>Its reference</b>, which they fill in for you, and gpxiltools with <code>reference=</code>. The checksums make sure it is the same reference.</p>
 
 <h2>Using it</h2>
@@ -42,7 +42,7 @@ gpxil render /data/grch38/chrM.gpxil.tif chrM -o ~/results/chrM.png --width 128 
 curl -LO https://github.com/comparativechrono/Gpxil-browser/releases/download/grch38-ensembl116/GRCh38.gpxil.tif.sha256
 sha256sum -c GRCh38.gpxil.tif.sha256          # on a Mac: shasum -a 256 -c GRCh38.gpxil.tif.sha256
 gpxil info GRCh38.gpxil.tif</code></pre>
-<p>If the download stops, the same command with <code>-C -</code> after <code>curl</code> carries on from where it stopped. A chromosome at a time comes from the files the studio reads, such as <code>curl -O https://comparativechrono.github.io/Gpxil-browser/data/grch38/gpxil/chr21.gpxil.tif</code>. With the whole genome on your own computer, <code>gpxil encode GRCh38.gpxil.tif -v my.vcf.gz --callable my.bed --no-ref -o my.gpxil.tif</code> encodes a person’s whole genome in one go (<a href="#h-own-computer">On your own computer</a>). In the studio there is no need: it reads the reference from the web as it is.</p>
+<p>If the download stops, the same command with <code>-C -</code> after <code>curl</code> carries on from where it stopped. A chromosome at a time comes from the files the studio reads, such as <code>curl -O https://pixelverse.cam/data/grch38/gpxil/chr21.gpxil.tif</code>. With the whole genome on your own computer, <code>gpxil encode GRCh38.gpxil.tif -v my.vcf.gz --callable my.bed --no-ref -o my.gpxil.tif</code> encodes a person’s whole genome in one go (<a href="#h-own-computer">On your own computer</a>). In the studio there is no need: it reads the reference from the web as it is.</p>
 
 <h2>Where it comes from</h2>
 <p>GRCh38 is the Genome Reference Consortium’s assembly of the human genome. The sequence, its soft-masking and the genes are Ensembl’s, release 116, and the gene names HGNC’s. The Gpxil browser made the gpxil files with gpxiltools 0.2.0. Cite the assembly and Ensembl when you use them:</p>

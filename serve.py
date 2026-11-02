@@ -5,8 +5,8 @@ Open the page from a server rather than from the file itself: browsers do not
 let a page opened as a file (file://...) start the web worker that runs Python.
 
 The server answers range requests (a piece of a file), which is how the studio
-reads big gpxil files a strip at a time. On GitHub Pages the studio reads the
-GRCh38 reference from the Gpxil browser on the same site. Here, the reference
+reads big gpxil files a strip at a time. On its own site the studio reads the
+GRCh38 reference from the Gpxil browser (pixelverse.cam). Here, the reference
 comes from a copy on your computer if you give one (--reference: a folder with
 gpxil/chr1.gpxil.tif …, as the Gpxil browser's site/data/grch38 holds it), or
 from the Gpxil browser on the web.
@@ -20,7 +20,7 @@ import re
 import socketserver
 from http import HTTPStatus
 
-LIVE = "https://comparativechrono.github.io"
+LIVE = "https://pixelverse.cam/data/grch38/"  # the Gpxil browser's reference, where the page is sent without a copy
 REFERENCE = "/Gpxil-browser/data/grch38/"  # where the page looks for the reference when it is served from here
 _RANGE = re.compile(r"bytes=(\d*)-(\d*)$")
 
@@ -49,7 +49,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         clean = self.path.split("?", 1)[0]
         if clean.startswith(REFERENCE) and not self.reference:
             self.send_response(HTTPStatus.FOUND)
-            self.send_header("Location", LIVE + self.path)
+            self.send_header("Location", LIVE + self.path[len(REFERENCE):])
             self.send_header("Content-Length", "0")
             self.end_headers()
             return None
