@@ -46,7 +46,7 @@ def boxes():
 
 def needs_web(code, kind="term"):
     """a box that reads the GRCh38 reference or the Gpxil browser's genes, which come from the web in the studio"""
-    if "/data/grch38" in code or "comparativechrono.github.io" in code or "BrowserData(" in code:
+    if "/data/grch38" in code or "pixelverse.cam" in code or "BrowserData(" in code:
         return True
     # the command gpxil2pxil without a GTF of its own uses the Gpxil browser's genes: in a terminal box, or on a ! line
     # of a Python box (in Python itself, `from gpxil2pxil import …` needs no web; BrowserData() does, above)
@@ -93,7 +93,7 @@ def main():
         text = text.replace("/data/examples", ex).replace("/home/user", home)
         if have_ref:
             text = text.replace("/data/grch38", os.path.join(reference, "gpxil"))
-            text = text.replace("https://comparativechrono.github.io/Gpxil-browser/data/grch38", reference)
+            text = text.replace("https://pixelverse.cam/data/grch38", reference)
         return text
 
     failed, ran, skipped = [], 0, 0

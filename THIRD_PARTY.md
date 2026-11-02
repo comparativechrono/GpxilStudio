@@ -31,7 +31,7 @@ Pedigree workbenches.
 | Pyodide (CPython for the browser), with micropip | 0.29.5 | Mozilla Public License 2.0 (CPython: PSF licence) | cdn.jsdelivr.net, when Python first starts |
 | NumPy, Pillow and jsonschema (with attrs, referencing, rpds-py and jsonschema-specifications), as Pyodide builds them | 2.2.5, 11.3.0, 4.23.0 | NumPy: BSD 3-clause; Pillow: MIT-CMU; jsonschema and its helpers: MIT | cdn.jsdelivr.net, when Python starts |
 | matplotlib, as Pyodide builds it | 3.8.4 | the matplotlib licence (PSF-based) | cdn.jsdelivr.net, in the background once Python has started, for plots in notebooks |
-| The GRCh38 reference as gpxil files, and the Gpxil browser's gene files (Ensembl release 116) | GRCh38, Ensembl 116 | Ensembl's data are freely available without restriction; the reference is the Genome Reference Consortium's | the [Gpxil browser](https://comparativechrono.github.io/Gpxil-browser/), a piece at a time, when they are read |
+| The GRCh38 reference as gpxil files, and the Gpxil browser's gene files (Ensembl release 116) | GRCh38, Ensembl 116 | Ensembl's data are freely available without restriction; the reference is the Genome Reference Consortium's | the [Gpxil browser](https://pixelverse.cam/), a piece at a time, when they are read |
 
 ## Example data
 

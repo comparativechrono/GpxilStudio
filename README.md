@@ -12,7 +12,7 @@ The help, on the left, walks through all of it – the format, its codes, the
 tools and how to work with a whole genome without running out of memory –
 with a button for every step.
 
-**Open it:** <https://comparativechrono.github.io/GpxilStudio/>
+**Open it:** <https://studio.pixelverse.cam/>
 
 ## Contents
 
@@ -62,7 +62,7 @@ genomes; TP53's lines of the Ensembl GTF; and chromosome 17's repeats
 protein-coding genes (Ensembl 116), for looking for patterns. Six example
 workflows run on them. The GRCh38 reference is there too, as `/data/grch38`: one gpxil file
 per chromosome, read from the
-[Gpxil browser](https://comparativechrono.github.io/Gpxil-browser/) a strip at
+[Gpxil browser](https://pixelverse.cam/) a strip at
 a time.
 
 ## Big files
@@ -102,13 +102,13 @@ Python memory.
 
 ## Put it on GitHub Pages
 
-Settings → Pages → *Deploy from a branch*: `main`, `/ (root)`. The site is
-the repository itself; `.nojekyll` is there so that GitHub serves it as it is.
-On `comparativechrono.github.io` the studio reads the GRCh38 reference from
-the Gpxil browser on the same site (`/Gpxil-browser/data/grch38/`), so the
-Gpxil browser must be published there too; elsewhere it reads it from
-`https://comparativechrono.github.io/Gpxil-browser/data/grch38/`
-(`referenceBase` in `assets/js/config.js`).
+Settings → Pages → *Deploy from a branch*: `main`, `/ (root)`, with the
+custom domain `studio.pixelverse.cam` (the `CNAME` file). The site is the
+repository itself; `.nojekyll` is there so that GitHub serves it as it is.
+The studio reads the GRCh38 reference from the Gpxil browser, at
+`https://pixelverse.cam/data/grch38/` (`referenceBase` in
+`assets/js/config.js`), which lets other sites read its files; from
+`serve.py` on your own computer it reads it from the same server.
 
 The page keeps each person's files in their browser (IndexedDB, under the
 prefix `gpxilstudio`). Python itself comes from jsDelivr the first time it

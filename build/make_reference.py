@@ -12,7 +12,7 @@ import sys
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-BASE = 'https://comparativechrono.github.io/Gpxil-browser/data/grch38/'
+BASE = 'https://pixelverse.cam/data/grch38/'
 
 
 def order(f):
